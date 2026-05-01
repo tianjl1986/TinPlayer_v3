@@ -1,0 +1,48 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Build and Archive
+        run: |
+          xcodebuild archive \
+            -scheme "TinPlayer" \
+            -destination "generic/platform=iOS" \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath ./TinPlayer.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export IPA
+        run: |
+          mkdir -p Payload
+          APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
+          if [ -n "$APP_PATH" ]; then
+            cp -r "$APP_PATH" Payload/
+          else
+            mkdir -p Payload/TinPlayer.app
+            find ./TinPlayer.xcarchive/Products -type f -name "TinPlayer" \
+              -exec cp {} Payload/TinPlayer.app/TinPlayer \;
+          fi
+          zip -qr TinPlayer.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TinPlayer-IPA
+          path: TinPlayer.ipa
