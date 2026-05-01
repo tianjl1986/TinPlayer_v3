@@ -1,26 +1,95 @@
-- name: Archive App
-  run: |
-    cd ${{ env.PROJ_ROOT }}
+name: TinPlayer Final Build
 
-    xcodebuild archive \
-      -scheme "TinPlayer" \
-      -destination "generic/platform=iOS" \
-      -configuration Release \
-      -archivePath ./build/TinPlayer.xcarchive \
-      CODE_SIGNING_ALLOWED=NO
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
-- name: Find App from Archive
-  run: |
-    cd ${{ env.PROJ_ROOT }}
+jobs:
+  build:
+    runs-on: macos-latest
 
-    echo "🔍 从 archive 查找 .app"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    APP_PATH=$(find ./build/TinPlayer.xcarchive -name "*.app" | head -n 1)
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-    if [ -z "$APP_PATH" ]; then
-      echo "❌ archive 中仍然没有 .app"
-      exit 1
-    fi
+      - name: Find Project Root
+        run: |
+          # 寻找代码文件夹
+          SOURCES_DIR=$(find . -name "Sources" -type d | head -n 1)
+          PROJ_ROOT=$(dirname "$SOURCES_DIR")
+          echo "PROJ_ROOT=$PROJ_ROOT" >> $GITHUB_ENV
+          echo "项目根目录: $PROJ_ROOT"
 
-    echo "✅ 找到 .app: $APP_PATH"
-    echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+      - name: Generate Package.swift
+        run: |
+          cd ${{ env.PROJ_ROOT }}
+          # 强制生成正确的项目配置文件
+          rm -f Package.swift
+          cat <<EOF > Package.swift
+          import PackageDescription
+          import AppleProductTypes
+          let package = Package(
+              name: "TinPlayer",
+              platforms: [.iOS(.v16)],
+              products: [.iOSApplication(
+                  name: "TinPlayer",
+                  targets: ["AppModule"],
+                  bundleIdentifier: "com.skeuo.tinplayer",
+                  displayVersion: "1.3.0",
+                  bundleVersion: "12",
+                  appIcon: .asset("AppIcon"),
+                  accentColor: .presetColor(.indigo),
+                  supportedDeviceFamilies: [.phone],
+                  supportedInterfaceOrientations: [.portrait],
+                  capabilities: [
+                      .mediaLibrary(purposeString: "访问本地音乐"),
+                      .outgoingNetworkConnections()
+                  ]
+              )],
+              targets: [.executableTarget(name: "AppModule", path: "Sources")]
+          )
+          EOF
+
+      - name: Build App
+        run: |
+          cd ${{ env.PROJ_ROOT }}
+          # 执行编译
+          xcodebuild build \
+            -scheme "TinPlayer" \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            -derivedDataPath ./build_data \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Find and Package IPA
+        run: |
+          cd ${{ env.PROJ_ROOT }}
+          
+          echo "🔍 正在查找 .app 文件..."
+          APP_PATH=$(find ./build_data -type d -name "*.app" | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ 没找到 .app，列出 build_data 结构："
+            find ./build_data -maxdepth 4
+            exit 1
+          fi
+          
+          echo "✅ 找到 .app: $APP_PATH"
+          
+          # 打包 IPA
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r TinPlayer.ipa Payload
+          
+          # 将 IPA 移动到根目录
+          mv TinPlayer.ipa $GITHUB_WORKSPACE/
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: TinPlayer-IPA
+          path: TinPlayer.ipa
