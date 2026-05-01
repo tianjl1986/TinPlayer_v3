@@ -83,4 +83,11 @@ EOF
           fi
 
       - name: Create Release
-        uses: softprops/action-gh-
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.3.0-final-${{ github.run_number }}"
+          name: "Tin Player Release #${{ github.run_number }}"
+          body: "🎉 编译成功！请在下方 Assets 下载 TinPlayer.ipa"
+          files: TinPlayer.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
