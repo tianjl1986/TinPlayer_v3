@@ -40,12 +40,13 @@ jobs:
           )
           EOF
 
-          # 3. 编译
+          # 3. 编译 (ARCHIVE)
+          echo "🚀 Starting build..."
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 4. 组装 App
+          # 4. 组装 App (核心修复：自动寻找二进制文件)
+          echo "📦 Assembling App bundle..."
           mkdir -p TinPlayer.app
-          cp ./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer TinPlayer.app/
-          chmod +x TinPlayer.app/TinPlayer
-
-          # 5. Info.plist (核心：UILaunchScreen 适配 iPhone 14 Pro 全屏
+          
+          # 自动寻找编译出来的 TinPlayer 二进制文件
+          # 排除掉副本，只找 Products
