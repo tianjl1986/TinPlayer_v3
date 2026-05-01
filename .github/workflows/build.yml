@@ -41,7 +41,7 @@ jobs:
           echo "// swift-tools-version: 5.9" > Package.swift
           echo "import PackageDescription" >> Package.swift
           echo "import AppleProductTypes" >> Package.swift
-          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.iOSApplication(name: \"TinPlayer\", targets: [\"AppModule\"], bundleIdentifier: \"com.skeuo.tinplayer\", displayVersion: \"1.3.6\", bundleVersion: \"18\", appIcon: .asset(\"AppIcon\"), accentColor: .presetColor(.indigo), supportedDeviceFamilies: [.phone], supportedInterfaceOrientations: [.portrait], capabilities: [.mediaLibrary(purposeString: \"播放音乐\"), .outgoingNetworkConnections()])], targets: [.executableTarget(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
+          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.iOSApplication(name: \"TinPlayer\", targets: [\"AppModule\"], bundleIdentifier: \"com.skeuo.tinplayer\", displayVersion: \"1.3.7\", bundleVersion: \"19\", appIcon: .asset(\"AppIcon\"), accentColor: .presetColor(.indigo), supportedDeviceFamilies: [.phone], supportedInterfaceOrientations: [.portrait], capabilities: [.mediaLibrary(purposeString: \"播放音乐\"), .outgoingNetworkConnections()])], targets: [.executableTarget(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
 
           # 4. 编译
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
@@ -51,24 +51,25 @@ jobs:
           cp ./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer TinPlayer.app/
           chmod +x TinPlayer.app/TinPlayer
 
-          # 6. 生成 Info.plist (指向强制注入的图标名)
-          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundleDisplayName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.3.6</string><key>CFBundleVersion</key><string>18</string><key>MinimumOSVersion</key><string>17.0</string><key>LSRequiresIPhoneOS</key><true/><key>UILaunchScreen</key><dict/><key>NSAppleMusicUsageDescription</key><string>需要访问音乐库以播放您的歌曲。</string><key>CFBundleIcons</key><dict><key>CFBundlePrimaryIcon</key><dict><key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array><key>CFBundleIconName</key><string>AppIcon60x60</string></dict></dict><key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array></dict></plist>" > TinPlayer.app/Info.plist
+          # 6. 生成 Info.plist
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundleDisplayName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.3.7</string><key>CFBundleVersion</key><string>19</string><key>MinimumOSVersion</key><string>17.0</string><key>LSRequiresIPhoneOS</key><true/><key>UILaunchScreen</key><dict/><key>NSAppleMusicUsageDescription</key><string>需要访问音乐库以播放您的歌曲。</string><key>CFBundleIcons</key><dict><key>CFBundlePrimaryIcon</key><dict><key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array><key>CFBundleIconName</key><string>AppIcon60x60</string></dict></dict><key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array></dict></plist>" > TinPlayer.app/Info.plist
 
-          # 7. 核心操作：强制提取并注入图标 PNG
-          echo "🖼️ Injecting App Icon..."
-          ICON_SET=$(find . -name "AppIcon.appiconset" -type d | head -n 1)
-          if [ -n "$ICON_SET" ]; then
-            # 找到文件夹里体积最大的 PNG（通常是 1024x1024）
-            BIG_ICON=$(ls -S "$ICON_SET"/*.png | head -n 1)
-            if [ -n "$BIG_ICON" ]; then
-              # 把它拷贝并命名为系统寻找的标准图标名
-              cp "$BIG_ICON" TinPlayer.app/AppIcon60x60@2x.png
-              cp "$BIG_ICON" TinPlayer.app/AppIcon60x60@3x.png
-              echo "✅ Successfully injected $BIG_ICON"
-            fi
+          # 7. 强力图标修复：优先寻找 icon.png
+          echo "🖼️ Searching for correct icon..."
+          ICON_PATH=$(find . -name "icon.png" | head -n 1)
+          if [ -n "$ICON_PATH" ]; then
+            cp "$ICON_PATH" TinPlayer.app/AppIcon60x60@2x.png
+            cp "$ICON_PATH" TinPlayer.app/AppIcon60x60@3x.png
+            echo "✅ Used $ICON_PATH as App Icon"
+          else
+            # 如果找不到，再寻找 AppIcon 目录下的最大图片
+            ICON_SET=$(find . -name "AppIcon.appiconset" -type d | head -n 1)
+            BIG_ICON=$(ls -S "$ICON_SET"/*.png 2>/dev/null | head -n 1)
+            cp "$BIG_ICON" TinPlayer.app/AppIcon60x60@2x.png
+            cp "$BIG_ICON" TinPlayer.app/AppIcon60x60@3x.png
           fi
 
-          # 8. 拷贝编译后的资源
+          # 8. 拷贝 Assets.car
           ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
           if [ -n "$ASSETS_CAR" ]; then
             cp "$ASSETS_CAR" TinPlayer.app/
@@ -82,8 +83,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.6-final-${{ github.run_number }}"
-          name: "Tin Player 满血修复版 #${{ github.run_number }}"
+          tag_name: "v1.3.7-final-${{ github.run_number }}"
+          name: "Tin Player 图标修复版 #${{ github.run_number }}"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
