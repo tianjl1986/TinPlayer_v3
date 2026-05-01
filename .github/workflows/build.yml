@@ -48,34 +48,35 @@ jobs:
           cp ./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer TinPlayer.app/
           chmod +x TinPlayer.app/TinPlayer
 
-          # 5. 生成 Info.plist (改用 echo 模式，避开缩进坑)
+          # 5. 生成 Info.plist
           echo "📝 Creating Info.plist..."
           echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > TinPlayer.app/Info.plist
           echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" >> TinPlayer.app/Info.plist
           echo "<plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.3.0</string><key>CFBundleVersion</key><string>12</string><key>LSRequiresIPhoneOS</key><true/><key>MinimumOSVersion</key><string>17.0</string><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array></dict></plist>" >> TinPlayer.app/Info.plist
 
-          # 6. 集成资源
+          # 6. 集成资源 (Assets.car)
           ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
           if [ -n "$ASSETS_CAR" ]; then
             echo "🎨 Assets found: $ASSETS_CAR"
             cp "$ASSETS_CAR" TinPlayer.app/
           fi
 
-          # 7. 打包 IPA
+          # 7. 打包 IPA (直接打包到根目录，避免 cp 冲突)
           echo "📦 Packaging IPA..."
           mkdir -p Payload
           cp -r TinPlayer.app Payload/
-          zip -r TinPlayer.ipa Payload
-          cp TinPlayer.ipa $GITHUB_WORKSPACE/
+          rm -f "$GITHUB_WORKSPACE/TinPlayer.ipa"
+          zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.3.0-release-${{ github.run_number }}"
-          name: "Tin Player 最终版 #${{ github.run_number }}"
+          name: "Tin Player 正式版 #${{ github.run_number }}"
           body: |
-            🎉 编译成功！
-            请下载下方的 TinPlayer.ipa 并使用 Sideloadly 或 AltStore 安装。
+            🎉 编译圆满成功！
+            
+            IPA 文件已生成，请在下方下载。
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
