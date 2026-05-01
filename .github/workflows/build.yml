@@ -1,4 +1,4 @@
-name: TinPlayer Ultimate Release
+name: TinPlayer Stable Build
 
 on:
   push:
@@ -22,66 +22,43 @@ jobs:
         run: |
           set -e
 
-          # 1. 定位目录
+          # 1. 寻找项目并进入
           SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
           TARGET_DIR=$(dirname "$SRC_PATH")
           cd "$TARGET_DIR"
-          
-          # 2. 解决资源冲突：只保留一个 Assets.xcassets
-          echo "🧹 Cleaning up duplicate resources..."
-          ASSET_COUNT=$(find Sources -name "Assets.xcassets" -type d | wc -l)
-          if [ "$ASSET_COUNT" -gt 1 ]; then
-            echo "⚠️ Found $ASSET_COUNT Assets.xcassets, keeping the first one..."
-            find Sources -name "Assets.xcassets" -type d | tail -n +2 | xargs rm -rf
-          fi
 
-          # 3. 修复图片索引
-          echo "🔧 Fixing Images..."
-          find . -name "Contents.json" -path "*/Assets.xcassets/*" | while read -r file; do
-            sed -i '' 's/"idiom" : "universal"/"idiom" : "universal", "filename" : "placeholder.png"/g' "$file" || true
-            dir=$(dirname "$file")
-            IMG_FILE=$(ls "$dir"/*.png 2>/dev/null | head -n 1 | xargs basename 2>/dev/null || echo "")
-            if [ -n "$IMG_FILE" ]; then
-              sed -i '' "s/\"filename\" : \"placeholder.png\"/\"filename\" : \"$IMG_FILE\"/g" "$file" || true
-            fi
-          done || true
-
-          # 4. 生成 Package.swift
-          echo "🧱 Configuring Project..."
+          # 2. 生成最简版 Package.swift (避免资源冲突)
           echo "// swift-tools-version: 5.9" > Package.swift
           echo "import PackageDescription" >> Package.swift
-          echo "import AppleProductTypes" >> Package.swift
-          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.iOSApplication(name: \"TinPlayer\", targets: [\"AppModule\"], bundleIdentifier: \"com.skeuo.tinplayer\", displayVersion: \"1.3.8\", bundleVersion: \"20\", appIcon: .asset(\"AppIcon\"), accentColor: .presetColor(.indigo), supportedDeviceFamilies: [.phone], supportedInterfaceOrientations: [.portrait], capabilities: [.mediaLibrary(purposeString: \"播放音乐\"), .outgoingNetworkConnections()])], targets: [.executableTarget(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
+          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.library(name: \"AppModule\", targets: [\"AppModule\"])], targets: [.target(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
 
-          # 5. 编译
-          echo "🚀 Building..."
+          # 3. 编译
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 6. 组装
+          # 4. 组装 App 结构
           mkdir -p TinPlayer.app
           cp ./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer TinPlayer.app/
           chmod +x TinPlayer.app/TinPlayer
 
-          # 7. 生成 Info.plist
-          echo "📝 Creating Info.plist..."
+          # 5. 写入全屏适配 & 图标关联的 Info.plist (echo 模式，永不报错)
           echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > TinPlayer.app/Info.plist
           echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" >> TinPlayer.app/Info.plist
-          echo "<plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundleDisplayName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.3.8</string><key>CFBundleVersion</key><string>20</string><key>MinimumOSVersion</key><string>17.0</string><key>LSRequiresIPhoneOS</key><true/><key>UILaunchScreen</key><dict/><key>NSAppleMusicUsageDescription</key><string>需要访问音乐库以播放您的歌曲。</string><key>CFBundleIcons</key><dict><key>CFBundlePrimaryIcon</key><dict><key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array><key>CFBundleIconName</key><string>AppIcon60x60</string></dict></dict><key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array><key>UIRequiredDeviceCapabilities</key><array><string>arm64</string></array><key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array></dict></plist>" >> TinPlayer.app/Info.plist
+          echo "<plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.3.9</string><key>CFBundleVersion</key><string>21</string><key>MinimumOSVersion</key><string>17.0</string><key>LSRequiresIPhoneOS</key><true/><key>UILaunchScreen</key><dict/><key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string><key>CFBundleIcons</key><dict><key>CFBundlePrimaryIcon</key><dict><key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array></dict></dict></dict></plist>" >> TinPlayer.app/Info.plist
 
-          # 8. 图标注入
-          ICON_PATH=$(find Sources -name "icon.png" | head -n 1)
-          if [ -n "$ICON_PATH" ]; then
-            cp "$ICON_PATH" TinPlayer.app/AppIcon60x60@2x.png
-            cp "$ICON_PATH" TinPlayer.app/AppIcon60x60@3x.png
+          # 6. 图标精准注入：直接用项目里的 icon.png
+          ICON_SRC=$(find Sources -name "icon.png" | head -n 1)
+          if [ -n "$ICON_SRC" ]; then
+            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@2x.png
+            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@3x.png
           fi
 
-          # 9. 提取资源
+          # 7. 拷贝编译出来的资源
           ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
           if [ -n "$ASSETS_CAR" ]; then
             cp "$ASSETS_CAR" TinPlayer.app/
           fi
 
-          # 10. 打包
+          # 8. 打包 IPA
           mkdir -p Payload
           cp -r TinPlayer.app Payload/
           zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
@@ -89,8 +66,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.8-final-${{ github.run_number }}"
-          name: "Tin Player 资源去重版 #${{ github.run_number }}"
+          tag_name: "v1.3.9-stable"
+          name: "Tin Player 稳定图标版"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
