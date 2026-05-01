@@ -15,7 +15,7 @@ let package = Package(
             displayVersion: "1.3.0",
             bundleVersion: "12",
             appIcon: .asset("AppIcon"),
-            accentColor: .presetColor(.black),
+            accentColor: .presetColor(.indigo),
             supportedDeviceFamilies: [
                 .phone
             ],
