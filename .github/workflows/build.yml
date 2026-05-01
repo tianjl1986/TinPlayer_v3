@@ -1,4 +1,4 @@
-name: TinPlayer Stable Build
+name: TinPlayer 14Pro Version
 
 on:
   push:
@@ -22,37 +22,30 @@ jobs:
         run: |
           set -e
 
-          # 1. 寻找项目并进入
+          # 1. 寻找项目路径
           SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
           TARGET_DIR=$(dirname "$SRC_PATH")
           cd "$TARGET_DIR"
 
-          # 2. 【核心修复】深度清理重复文件
-          echo "🧹 Cleaning up all duplicates..."
-          # 删掉重复的资源文件夹
-          find . -name "Assets.xcassets" -type d | tail -n +2 | xargs rm -rf || true
-          # 删掉重复的 DesignTokens.swift (只留一个)
-          find Sources -name "DesignTokens.swift" | tail -n +2 | xargs rm -f || true
-          # 通用的重复 Swift 文件清理 (防止还有其他重名文件)
-          find Sources -name "*.swift" | sed 's/.*\///' | sort | uniq -d | while read -r name; do
-            find Sources -name "$name" | tail -n +2 | xargs rm -f || true
-          done
+          # 2. 生成 Package.swift
+          echo "🧱 Generating Package Config..."
+          cat <<EOF > Package.swift
+          // swift-tools-version: 5.9
+          import PackageDescription
+          let package = Package(
+              name: "TinPlayer",
+              platforms: [.iOS(.v17)],
+              products: [.library(name: "AppModule", targets: ["AppModule"])],
+              targets: [.target(name: "AppModule", path: "Sources")]
+          )
+          EOF
 
-          # 3. 生成最简版 Package.swift
-          echo "🧱 Configuring Package.swift..."
-          echo "// swift-tools-version: 5.9" > Package.swift
-          echo "import PackageDescription" >> Package.swift
-          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.library(name: \"AppModule\", targets: [\"AppModule\"])], targets: [.target(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
-
-          # 4. 编译
-          echo "🚀 Starting build..."
+          # 3. 编译
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 5. 组装 App
+          # 4. 组装 App
           mkdir -p TinPlayer.app
           cp ./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer TinPlayer.app/
           chmod +x TinPlayer.app/TinPlayer
 
-          # 6. 写入 Info.plist (全屏 + 图标关联)
-          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > TinPlayer.app/Info.plist
-          echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple
+          # 5. Info.plist (核心：UILaunchScreen 适配 iPhone 14 Pro 全屏
