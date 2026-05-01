@@ -1,14 +1,33 @@
-      - name: Generate Modern Package.swift
+name: TinPlayer Ultimate Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Find Project Root
+        run: |
+          # 寻找代码文件夹
+          SOURCES_DIR=$(find . -name "Sources" -type d | head -n 1)
+          PROJ_ROOT=$(dirname "$SOURCES_DIR")
+          echo "PROJ_ROOT=$PROJ_ROOT" >> $GITHUB_ENV
+
+      - name: Generate Package.swift
         run: |
           cd ${{ env.PROJ_ROOT }}
-
-          # 1. 彻底清除干扰
-          rm -f Package.swift
-          rm -f package.swift
-          rm -rf .swiftpm
-          rm -rf .build
-
-          # 2. 生成符合 Xcode 16 标准的现代配置文件
+          # 清理并生成全新的配置文件
+          rm -f Package.swift package.swift
           cat <<EOF > Package.swift
           // swift-tools-version: 5.9
           import PackageDescription
@@ -29,7 +48,7 @@
                       supportedDeviceFamilies: [.phone],
                       supportedInterfaceOrientations: [.portrait],
                       capabilities: [
-                          .mediaLibrary(purposeString: "访问本地音乐"),
+                          .mediaLibrary(purposeString: "访问音乐库"),
                           .outgoingNetworkConnections()
                       ]
                   )
@@ -37,4 +56,24 @@
               targets: [
                   .executableTarget(
                       name: "AppModule",
-                      path:
+                      path: "Sources"
+                  )
+              ]
+          )
+          EOF
+
+      - name: Build App
+        run: |
+          cd ${{ env.PROJ_ROOT }}
+          # 强制解析并编译
+          xcodebuild build \
+            -scheme "TinPlayer" \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            -derivedDataPath ./build_data \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package IPA
+        run: |
+          cd ${{ env.PROJ_ROOT }}
+          APP_PATH=$(find ./build_data -type d -name "*.app" | head -n 1
