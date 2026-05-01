@@ -1,4 +1,4 @@
-name: Build iOS IPA
+name: Debug and Build
 
 on:
   push:
@@ -13,20 +13,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Find Package Directory
-        id: find_path
+      - name: List All Files (Debug)
         run: |
-          # 寻找 Package.swift 所在的目录
-          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
-          echo "项目根目录是: $PKG_PATH"
-          echo "path=$PKG_PATH" >> $GITHUB_OUTPUT
+          echo "=== 当前所有文件列表 ==="
+          ls -R
+          echo "========================"
 
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Build and Archive
-        working-directory: ${{ steps.find_path.outputs.path }}
+      - name: Try Build (Auto Detect)
         run: |
+          # 寻找 Package.swift 所在的目录
+          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
+          
+          if [ -z "$PKG_PATH" ]; then
+            echo "❌ 错误：在你的仓库里找不到 Package.swift！请检查是否已经上传了该文件。"
+            exit 1
+          fi
+          
+          echo "找到项目在: $PKG_PATH"
+          cd "$PKG_PATH"
+          
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -37,32 +45,19 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Export IPA
-        working-directory: ${{ steps.find_path.outputs.path }}
+      - name: Export and Upload
+        if: success()
         run: |
+          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
+          cd "$PKG_PATH"
           mkdir -p Payload/TinPlayer.app
-          
-          # 查找二进制文件
-          BIN_PATH=$(find ./TinPlayer.xcarchive/Products -type f -name "TinPlayer" | head -n 1)
-          echo "找到二进制文件: $BIN_PATH"
-          
-          if [ -n "$BIN_PATH" ]; then
-            cp "$BIN_PATH" Payload/TinPlayer.app/
-            chmod +x Payload/TinPlayer.app/TinPlayer
-          else
-            echo "❌ 无法定位二进制文件，列出所有文件结构："
-            find ./TinPlayer.xcarchive
-            exit 1
-          fi
-          
-          # 拷贝资源
+          find ./TinPlayer.xcarchive/Products -type f -name "TinPlayer" -exec cp {} Payload/TinPlayer.app/ \;
           find ./TinPlayer.xcarchive -name "Info.plist" -exec cp {} Payload/TinPlayer.app/ \;
           find ./TinPlayer.xcarchive -name "*.car" -exec cp {} Payload/TinPlayer.app/ \;
-          
           zip -qr TinPlayer.ipa Payload
-          cp TinPlayer.ipa ../../ # 移动到根目录方便上传
+          mv TinPlayer.ipa $GITHUB_WORKSPACE/
 
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: TinPlayer-IPA
