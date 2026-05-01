@@ -1,4 +1,4 @@
-name: TinPlayer Final Fix
+name: TinPlayer Final Assembly
 
 on:
   push:
@@ -22,11 +22,11 @@ jobs:
         run: |
           set -e
 
-          # 1. 寻找源码目录并进入
+          # 1. 寻找源码目录
           SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
           cd $(dirname "$SRC_PATH")
 
-          # 2. 生成配置 (Executable)
+          # 2. 生成配置
           cat <<EOF > Package.swift
           // swift-tools-version: 5.9
           import PackageDescription
@@ -41,22 +41,30 @@ jobs:
           # 3. 编译
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 4. 手动组装 (关键：从命令行路径提取已链接的二进制)
+          # 4. 手动组装 (改用更强的搜索模式)
           echo "📦 Assembling App bundle..."
           mkdir -p TinPlayer.app
           
-          # 定位真正的二进制程序 (在 InstallationBuildProductsLocation 下)
-          BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -path "*/usr/local/bin/TinPlayer" -type f | head -n 1)
+          # 在 DerivedData 目录下寻找名为 TinPlayer 的可执行文件
+          # 排除 plist 和其他干扰项，直奔 usr/local/bin 产物
+          BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "TinPlayer" -type f | grep "usr/local/bin" | head -n 1)
+          
+          # 如果上面没找到，尝试万能搜索
+          if [ -z "$BINARY" ]; then
+            echo "⚠️ Fallback binary search..."
+            BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "TinPlayer" -type f -perm +111 | head -n 1)
+          fi
+
           echo "Found Binary: $BINARY"
           cp "$BINARY" TinPlayer.app/TinPlayer
           chmod +x TinPlayer.app/TinPlayer
 
-          # 定位编译出的资源文件 Assets.car
+          # 寻找并拷贝编译好的 UI 资源
           ASSETS=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -type f | head -n 1)
           echo "Found Assets: $ASSETS"
           cp "$ASSETS" TinPlayer.app/
 
-          # 5. 生成 Info.plist (包含 14 Pro 全屏适配)
+          # 5. 生成 Info.plist (iPhone 14 Pro 适配)
           cat <<EOF > TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,7 +74,7 @@ jobs:
               <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
               <key>CFBundleName</key><string>TinPlayer</string>
               <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.5.4</string>
+              <key>CFBundleShortVersionString</key><string>1.5.5</string>
               <key>CFBundleVersion</key><string>1</string>
               <key>MinimumOSVersion</key><string>17.0</string>
               <key>UILaunchScreen</key><dict/>
@@ -83,8 +91,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.5.4"
-          name: "Tin Player Final Fix"
+          tag_name: "v1.5.5"
+          name: "Tin Player Final Assembly"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
