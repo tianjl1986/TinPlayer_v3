@@ -22,22 +22,46 @@ jobs:
         run: |
           # 1. 定位项目目录
           TARGET_DIR=$(find . -name "Sources" -type d -exec dirname {} \; | head -n 1)
+          echo "Target directory: $TARGET_DIR"
           cd "$TARGET_DIR"
           
-          # 2. 生成项目配置文件
-          echo "// swift-tools-version: 5.9" > Package.swift
-          echo "import PackageDescription" >> Package.swift
-          echo "import AppleProductTypes" >> Package.swift
-          echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.iOSApplication(name: \"TinPlayer\", targets: [\"AppModule\"], bundleIdentifier: \"com.skeuo.tinplayer\", displayVersion: \"1.3.0\", bundleVersion: \"12\", appIcon: .asset(\"AppIcon\"), accentColor: .presetColor(.indigo), supportedDeviceFamilies: [.phone], supportedInterfaceOrientations: [.portrait], capabilities: [.mediaLibrary(purposeString: \"Music\"), .outgoingNetworkConnections()])], targets: [.executableTarget(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
+          # 2. 生成项目配置文件 (使用更安全的 Heredoc 语法)
+          cat << 'EOF' > Package.swift
+// swift-tools-version: 5.9
+import PackageDescription
+import AppleProductTypes
 
-          # 3. 执行 Archive 打包
+let package = Package(
+    name: "TinPlayer",
+    platforms: [.iOS(.v17)],
+    products: [
+        .iOSApplication(
+            name: "TinPlayer",
+            targets: ["AppModule"],
+            bundleIdentifier: "com.skeuo.tinplayer",
+            displayVersion: "1.3.0",
+            bundleVersion: "12",
+            appIcon: .asset("AppIcon"),
+            accentColor: .presetColor(.indigo),
+            supportedDeviceFamilies: [.phone],
+            supportedInterfaceOrientations: [.portrait],
+            capabilities: [
+                .mediaLibrary(purposeString: "Music"),
+                .outgoingNetworkConnections()
+            ]
+        )
+    ],
+    targets: [
+        .executableTarget(
+            name: "AppModule",
+            path: "Sources"
+        )
+    ]
+)
+EOF
+
+          # 3. 执行 Archive 打包 (我们已经知道这步是通的)
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -archivePath ./TinPlayer.xcarchive \
-            CODE_SIGNING_ALLOWED=NO
-
-          # 4. 提取 .app 并制作 IPA
-          APP_PATH=$(find ./TinPlayer.xcarchive/Products -name "*.app" -type d | head -n 1)
-          if [ -d "$APP_PATH" ]; then
-            echo "
+            -archivePath
