@@ -27,10 +27,16 @@ jobs:
           TARGET_DIR=$(dirname "$SRC_PATH")
           cd "$TARGET_DIR"
 
-          # 2. 【核心修复】强力删除重复资源，解决 Exit Code 74
-          echo "🧹 Removing duplicate Assets.xcassets..."
-          # 找出所有资源文件夹，保留第一个，删掉其余所有
+          # 2. 【核心修复】深度清理重复文件
+          echo "🧹 Cleaning up all duplicates..."
+          # 删掉重复的资源文件夹
           find . -name "Assets.xcassets" -type d | tail -n +2 | xargs rm -rf || true
+          # 删掉重复的 DesignTokens.swift (只留一个)
+          find Sources -name "DesignTokens.swift" | tail -n +2 | xargs rm -f || true
+          # 通用的重复 Swift 文件清理 (防止还有其他重名文件)
+          find Sources -name "*.swift" | sed 's/.*\///' | sort | uniq -d | while read -r name; do
+            find Sources -name "$name" | tail -n +2 | xargs rm -f || true
+          done
 
           # 3. 生成最简版 Package.swift
           echo "🧱 Configuring Package.swift..."
@@ -39,7 +45,7 @@ jobs:
           echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.library(name: \"AppModule\", targets: [\"AppModule\"])], targets: [.target(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
 
           # 4. 编译
-          echo "🚀 Starting xcodebuild..."
+          echo "🚀 Starting build..."
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
           # 5. 组装 App
@@ -49,32 +55,4 @@ jobs:
 
           # 6. 写入 Info.plist (全屏 + 图标关联)
           echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > TinPlayer.app/Info.plist
-          echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">" >> TinPlayer.app/Info.plist
-          echo "<plist version=\"1.0\"><dict><key>CFBundleExecutable</key><string>TinPlayer</string><key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string><key>CFBundleName</key><string>TinPlayer</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleShortVersionString</key><string>1.4.0</string><key>CFBundleVersion</key><string>22</string><key>MinimumOSVersion</key><string>17.0</string><key>LSRequiresIPhoneOS</key><true/><key>UILaunchScreen</key><dict/><key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string><key>CFBundleIcons</key><dict><key>CFBundlePrimaryIcon</key><dict><key>CFBundleIconFiles</key><array><string>AppIcon60x60</string></array></dict></dict></dict></plist>" >> TinPlayer.app/Info.plist
-
-          # 7. 注入图标
-          ICON_SRC=$(find Sources -name "icon.png" | head -n 1)
-          if [ -n "$ICON_SRC" ]; then
-            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@2x.png
-            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@3x.png
-          fi
-
-          # 8. 提取资源文件
-          ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
-          if [ -n "$ASSETS_CAR" ]; then
-            cp "$ASSETS_CAR" TinPlayer.app/
-          fi
-
-          # 9. 打包 IPA
-          mkdir -p Payload
-          cp -r TinPlayer.app Payload/
-          zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v1.4.0-stable"
-          name: "Tin Player 稳定版 v1.4.0"
-          files: TinPlayer.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple
