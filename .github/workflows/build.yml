@@ -25,7 +25,7 @@ jobs:
           echo "Target directory: $TARGET_DIR"
           cd "$TARGET_DIR"
           
-          # 2. 生成项目配置文件 (使用更安全的 Heredoc 语法)
+          # 2. 生成项目配置文件
           cat << 'EOF' > Package.swift
 // swift-tools-version: 5.9
 import PackageDescription
@@ -60,8 +60,27 @@ let package = Package(
 )
 EOF
 
-          # 3. 执行 Archive 打包 (我们已经知道这步是通的)
+          # 3. 执行 Archive 打包
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -archivePath
+            -archivePath ./TinPlayer.xcarchive \
+            CODE_SIGNING_ALLOWED=NO
+
+          # 4. 提取 .app 并制作 IPA
+          APP_PATH=$(find ./TinPlayer.xcarchive/Products -name "*.app" -type d | head -n 1)
+          
+          if [ -n "$APP_PATH" ] && [ -d "$APP_PATH" ]; then
+            echo "✅ 成功找到 App: $APP_PATH"
+            mkdir -p Payload
+            cp -r "$APP_PATH" Payload/
+            zip -r TinPlayer.ipa Payload
+            mv TinPlayer.ipa "$GITHUB_WORKSPACE/"
+          else
+            echo "❌ 找不到编译产物"
+            ls -R ./TinPlayer.xcarchive
+            exit 1
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-
