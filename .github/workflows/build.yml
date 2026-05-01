@@ -1,4 +1,4 @@
-name: TinPlayer 14Pro Version
+name: TinPlayer 14Pro Reversion
 
 on:
   push:
@@ -22,12 +22,11 @@ jobs:
         run: |
           set -e
 
-          # 1. 寻找项目路径
+          # 1. 寻找源码目录并进入项目根目录
           SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
-          TARGET_DIR=$(dirname "$SRC_PATH")
-          cd "$TARGET_DIR"
+          cd $(dirname "$SRC_PATH")
 
-          # 2. 生成正确的 Package.swift (定义为 executable)
+          # 2. 生成最基础的 Package.swift
           echo "🧱 Generating Package Config..."
           cat <<EOF > Package.swift
           // swift-tools-version: 5.9
@@ -35,46 +34,57 @@ jobs:
           let package = Package(
               name: "TinPlayer",
               platforms: [.iOS(.v17)],
-              products: [.executable(name: "TinPlayer", targets: ["AppModule"])],
-              targets: [.executableTarget(name: "AppModule", path: "Sources", resources: [.process("TinPlayer/Assets.xcassets")])]
+              products: [.library(name: "AppModule", targets: ["AppModule"])],
+              targets: [.target(name: "AppModule", path: "Sources")]
           )
           EOF
 
-          # 3. 编译 (ARCHIVE)
+          # 3. 编译 Archive (此时会产生 Assets.car 和二进制目标)
           echo "🚀 Starting build..."
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 4. 提取 .app 并准备 Payload
-          echo "📦 Packaging IPA..."
-          mkdir -p Payload
-          # 从编译产物中直接拷贝生成的 .app 目录
-          APP_PATH=$(find ./TinPlayer.xcarchive/Products/Applications -name "*.app" -type d | head -n 1)
-          cp -r "$APP_PATH" Payload/
+          # 4. 手动组装 App 结构 (核心：解决分辨率黑边问题)
+          echo "📦 Assembling App bundle..."
+          mkdir -p TinPlayer.app
           
-          # 获取实际的 App 文件夹名称
-          APP_NAME=$(basename "$APP_PATH")
+          # 寻找编译出的二进制文件并放入 App 文件夹
+          # 我们在 DerivedData 中寻找最新生成的可执行文件或 .o 文件
+          BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "AppModule.o" -type f | head -n 1)
+          cp "$BINARY" TinPlayer.app/TinPlayer
+          chmod +x TinPlayer.app/TinPlayer
 
-          # 5. 注入 14 Pro 适配和权限 (覆盖 Info.plist)
-          # 注意：必须注入到 Payload 里的那个 app 目录下
-          /usr/libexec/PlistBuddy -c "Add :UILaunchScreen dict" "Payload/$APP_NAME/Info.plist" || true
-          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.skeuo.tinplayer" "Payload/$APP_NAME/Info.plist"
-          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '需要访问音乐库以播放音频。'" "Payload/$APP_NAME/Info.plist" || true
+          # 5. 生成 Info.plist (显式包含 UILaunchScreen 修复黑边)
+          cat <<EOF > TinPlayer.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key><string>TinPlayer</string>
+              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
+              <key>CFBundleName</key><string>TinPlayer</string>
+              <key>CFBundlePackageType</key><string>APPL</string>
+              <key>CFBundleShortVersionString</key><string>1.5.0</string>
+              <key>CFBundleVersion</key><string>1</string>
+              <key>MinimumOSVersion</key><string>17.0</string>
+              <key>UILaunchScreen</key><dict/>
+              <key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string>
+          </dict>
+          </plist>
+          EOF
 
-          # 6. 确保图标存在
-          ICON_SRC=$(find Sources -name "icon.png" | head -n 1)
-          if [ -n "$ICON_SRC" ]; then
-            cp "$ICON_SRC" "Payload/$APP_NAME/AppIcon60x60@2x.png"
-            cp "$ICON_SRC" "Payload/$APP_NAME/AppIcon60x60@3x.png"
-          fi
+          # 6. 拷贝编译出的资源文件 (Assets.car)
+          find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -exec cp {} TinPlayer.app/ \;
 
-          # 7. 打包成 IPA
+          # 7. 打包成可分发的 IPA
+          mkdir -p Payload
+          cp -r TinPlayer.app Payload/
           zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.5.2"
-          name: "Tin Player 14Pro Optimized v1.5.2"
+          tag_name: "v1.5.0-14pro"
+          name: "Tin Player 14Pro Resolution Fixed"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
