@@ -1,4 +1,4 @@
-name: TinPlayer 14Pro Reversion
+name: TinPlayer Fix Crash & 14Pro
 
 on:
   push:
@@ -22,69 +22,49 @@ jobs:
         run: |
           set -e
 
-          # 1. 寻找源码目录并进入项目根目录
+          # 1. 寻找源码目录并进入
           SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
           cd $(dirname "$SRC_PATH")
 
-          # 2. 生成最基础的 Package.swift
-          echo "🧱 Generating Package Config..."
+          # 2. 生成正确的 Package.swift (必须是 executable 才能运行)
+          echo "🧱 Generating Executable Config..."
           cat <<EOF > Package.swift
           // swift-tools-version: 5.9
           import PackageDescription
           let package = Package(
               name: "TinPlayer",
               platforms: [.iOS(.v17)],
-              products: [.library(name: "AppModule", targets: ["AppModule"])],
-              targets: [.target(name: "AppModule", path: "Sources")]
+              products: [.executable(name: "TinPlayer", targets: ["AppModule"])],
+              targets: [.executableTarget(name: "AppModule", path: "Sources")]
           )
           EOF
 
-          # 3. 编译 Archive (此时会产生 Assets.car 和二进制目标)
+          # 3. 编译 Archive
           echo "🚀 Starting build..."
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 4. 手动组装 App 结构 (核心：解决分辨率黑边问题)
-          echo "📦 Assembling App bundle..."
-          mkdir -p TinPlayer.app
-          
-          # 寻找编译出的二进制文件并放入 App 文件夹
-          # 我们在 DerivedData 中寻找最新生成的可执行文件或 .o 文件
-          BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "AppModule.o" -type f | head -n 1)
-          cp "$BINARY" TinPlayer.app/TinPlayer
-          chmod +x TinPlayer.app/TinPlayer
-
-          # 5. 生成 Info.plist (显式包含 UILaunchScreen 修复黑边)
-          cat <<EOF > TinPlayer.app/Info.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.5.0</string>
-              <key>CFBundleVersion</key><string>1</string>
-              <key>MinimumOSVersion</key><string>17.0</string>
-              <key>UILaunchScreen</key><dict/>
-              <key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string>
-          </dict>
-          </plist>
-          EOF
-
-          # 6. 拷贝编译出的资源文件 (Assets.car)
-          find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -exec cp {} TinPlayer.app/ \;
-
-          # 7. 打包成可分发的 IPA
+          # 4. 提取生成的 .app 包 (Xcode 会自动生成完整的结构)
+          echo "📦 Extracting .app bundle..."
           mkdir -p Payload
-          cp -r TinPlayer.app Payload/
+          APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
+          cp -r "$APP_PATH" Payload/
+          
+          APP_NAME=$(basename "$APP_PATH")
+
+          # 5. 注入 14 Pro 适配 (在自动生成的 Info.plist 基础上添加)
+          echo "📱 Fixing Resolution for 14 Pro..."
+          /usr/libexec/PlistBuddy -c "Add :UILaunchScreen dict" "Payload/$APP_NAME/Info.plist" || true
+          # 确保 Bundle ID 一致
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.skeuo.tinplayer" "Payload/$APP_NAME/Info.plist"
+
+          # 6. 打包 IPA
           zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.5.0-14pro"
-          name: "Tin Player 14Pro Resolution Fixed"
+          tag_name: "v1.5.3"
+          name: "Tin Player Fixed (No Crash)"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
