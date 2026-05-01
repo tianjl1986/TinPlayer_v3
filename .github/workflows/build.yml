@@ -13,10 +13,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Find Package Directory
+        id: find_path
+        run: |
+          # 寻找 Package.swift 所在的目录
+          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
+          echo "项目根目录是: $PKG_PATH"
+          echo "path=$PKG_PATH" >> $GITHUB_OUTPUT
+
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
       - name: Build and Archive
+        working-directory: ${{ steps.find_path.outputs.path }}
         run: |
           xcodebuild archive \
             -scheme "TinPlayer" \
@@ -28,48 +37,33 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Show Archive Contents
-        run: |
-          echo "=== Archive 目录结构 ==="
-          find ./TinPlayer.xcarchive -type d | head -40
-          echo ""
-          echo "=== 所有 .app 包 ==="
-          find ./TinPlayer.xcarchive -name "*.app" -type d
-
       - name: Export IPA
+        working-directory: ${{ steps.find_path.outputs.path }}
         run: |
-          # 查找完整的 .app 目录
-          APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
-          echo "找到 .app 路径: $APP_PATH"
+          mkdir -p Payload/TinPlayer.app
           
-          if [ -z "$APP_PATH" ]; then
-            echo "❌ 错误：找不到 .app 目录，显示 archive 全部内容："
+          # 查找二进制文件
+          BIN_PATH=$(find ./TinPlayer.xcarchive/Products -type f -name "TinPlayer" | head -n 1)
+          echo "找到二进制文件: $BIN_PATH"
+          
+          if [ -n "$BIN_PATH" ]; then
+            cp "$BIN_PATH" Payload/TinPlayer.app/
+            chmod +x Payload/TinPlayer.app/TinPlayer
+          else
+            echo "❌ 无法定位二进制文件，列出所有文件结构："
             find ./TinPlayer.xcarchive
             exit 1
           fi
           
-          # 验证 .app 里有可执行文件
-          echo "=== .app 内容 ==="
-          ls -la "$APP_PATH"
+          # 拷贝资源
+          find ./TinPlayer.xcarchive -name "Info.plist" -exec cp {} Payload/TinPlayer.app/ \;
+          find ./TinPlayer.xcarchive -name "*.car" -exec cp {} Payload/TinPlayer.app/ \;
           
-          # 打包成 IPA
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          
-          APP_NAME=$(basename "$APP_PATH")
-          echo "打包 $APP_NAME 成 IPA..."
           zip -qr TinPlayer.ipa Payload
-          
-          # 验证 IPA 大小
-          echo "=== IPA 文件大小 ==="
-          ls -lh TinPlayer.ipa
-          
-          # 显示 IPA 内容（前20行）
-          echo "=== IPA 内容预览 ==="
-          unzip -l TinPlayer.ipa | head -20
+          cp TinPlayer.ipa ../../ # 移动到根目录方便上传
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TinPlayer-IPA
-          path: TinPlayer.ipa
+          path: "*.ipa"
