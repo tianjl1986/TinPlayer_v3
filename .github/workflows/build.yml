@@ -1,4 +1,4 @@
-name: Debug and Build
+name: TinPlayer Build
 
 on:
   push:
@@ -13,51 +13,49 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: List All Files (Debug)
+      - name: Debug Path
         run: |
-          echo "=== 当前所有文件列表 ==="
+          echo "=== 检查项目文件 ==="
           ls -R
-          echo "========================"
+          # 查找 Package.swift 并进入其目录
+          PROJ_DIR=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
+          echo "PROJECT_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Try Build (Auto Detect)
+      - name: Build App
         run: |
-          # 寻找 Package.swift 所在的目录
-          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
+          cd ${{ env.PROJECT_DIR }}
+          # 使用 build 替代 archive，这对 SPM 项目更友好
+          xcodebuild build \
+            -scheme "TinPlayer" \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
+            -derivedDataPath ./build_data \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package IPA
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          # 找到编译出来的 .app 文件夹
+          APP_PATH=$(find ./build_data -name "*.app" -type d | head -n 1)
+          echo "找到编译产物: $APP_PATH"
           
-          if [ -z "$PKG_PATH" ]; then
-            echo "❌ 错误：在你的仓库里找不到 Package.swift！请检查是否已经上传了该文件。"
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ 找不到编译出来的 App！"
             exit 1
           fi
           
-          echo "找到项目在: $PKG_PATH"
-          cd "$PKG_PATH"
-          
-          xcodebuild archive \
-            -scheme "TinPlayer" \
-            -destination "generic/platform=iOS" \
-            -sdk iphoneos \
-            -configuration Release \
-            -archivePath ./TinPlayer.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Export and Upload
-        if: success()
-        run: |
-          PKG_PATH=$(find . -name "Package.swift" -exec dirname {} \; | head -n 1)
-          cd "$PKG_PATH"
-          mkdir -p Payload/TinPlayer.app
-          find ./TinPlayer.xcarchive/Products -type f -name "TinPlayer" -exec cp {} Payload/TinPlayer.app/ \;
-          find ./TinPlayer.xcarchive -name "Info.plist" -exec cp {} Payload/TinPlayer.app/ \;
-          find ./TinPlayer.xcarchive -name "*.car" -exec cp {} Payload/TinPlayer.app/ \;
+          # 手动构建 IPA 结构
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
           zip -qr TinPlayer.ipa Payload
+          
+          # 移动到根目录
           mv TinPlayer.ipa $GITHUB_WORKSPACE/
 
-      - name: Upload IPA
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TinPlayer-IPA
