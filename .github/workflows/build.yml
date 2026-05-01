@@ -1,20 +1,22 @@
-      - name: Generate Package.swift
+      - name: Generate Modern Package.swift
         run: |
           cd ${{ env.PROJ_ROOT }}
 
-          # 彻底清理掉可能存在的各种大小写形式的配置文件
+          # 1. 彻底清除干扰
           rm -f Package.swift
           rm -f package.swift
-          
-          # 重新生成，这次带上正确的版本声明
+          rm -rf .swiftpm
+          rm -rf .build
+
+          # 2. 生成符合 Xcode 16 标准的现代配置文件
           cat <<EOF > Package.swift
-          // swift-tools-version: 5.8
+          // swift-tools-version: 5.9
           import PackageDescription
           import AppleProductTypes
 
           let package = Package(
               name: "TinPlayer",
-              platforms: [.iOS(.v16)],
+              platforms: [.iOS(.v17)],
               products: [
                   .iOSApplication(
                       name: "TinPlayer",
@@ -27,7 +29,7 @@
                       supportedDeviceFamilies: [.phone],
                       supportedInterfaceOrientations: [.portrait],
                       capabilities: [
-                          .mediaLibrary(purposeString: "我们需要访问您的本地音乐库以进行扫描和播放。"),
+                          .mediaLibrary(purposeString: "访问本地音乐"),
                           .outgoingNetworkConnections()
                       ]
                   )
@@ -35,8 +37,4 @@
               targets: [
                   .executableTarget(
                       name: "AppModule",
-                      path: "Sources"
-                  )
-              ]
-          )
-          EOF
+                      path:
