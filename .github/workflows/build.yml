@@ -22,28 +22,27 @@ jobs:
         run: |
           set -e
           
+          # 0. 清理旧产物
+          rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive
+          
           echo "🚀 Starting build..."
-          # 1. 执行 Archive 打包 (生成 Mach-O 二进制)
+          # 1. 执行 Archive 打包
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
             -archivePath ./TinPlayer.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
-            SKIP_INSTALL=NO \
-            OTHER_SWIFT_FLAGS="-D RELEASE"
+            SKIP_INSTALL=NO
 
           echo "📦 Assembling App bundle..."
           
           # 2. 创建 Payload 结构
           mkdir -p Payload/TinPlayer.app
           
-          # 3. 寻找并提取二进制执行文件 (核心修复：解决闪退)
+          # 3. 提取二进制执行文件
           echo "🔍 Searching for executable binary..."
-          # 搜索 Products 目录下具有执行权限的文件，排除 plist 和 shell 脚本
           BINARY_PATH=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
-          
           if [ -z "$BINARY_PATH" ]; then
-             echo "⚠️ Not found in Products, searching full archive..."
              BINARY_PATH=$(find ./TinPlayer.xcarchive -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
           fi
           
@@ -53,18 +52,20 @@ jobs:
             chmod +x Payload/TinPlayer.app/TinPlayer
           else
             echo "❌ Fatal Error: Executable binary not found!"
-            find ./TinPlayer.xcarchive -maxdepth 4
             exit 1
           fi
           
-          # 4. 提取 Asset Catalog (图标和资源)
-          ASSETS_CAR=$(find ./TinPlayer.xcarchive -name "Assets.car" | head -n 1)
+          # 4. 提取 Asset Catalog (从编译缓存中抓取，确保图标存在)
+          echo "🔍 Searching for Assets.car..."
+          ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
           if [ -n "$ASSETS_CAR" ]; then
             echo "✅ Found Assets.car: $ASSETS_CAR"
             cp "$ASSETS_CAR" Payload/TinPlayer.app/
+          else
+            echo "⚠️ Assets.car not found."
           fi
           
-          # 5. 生成 Info.plist (核心修复：iPhone 14 Pro 分辨率适配)
+          # 5. 生成 Info.plist (iPhone 14 Pro 分辨率适配)
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -102,17 +103,17 @@ jobs:
           </plist>
           EOF
           
-          # 6. 打包 IPA
+          # 6. 打包 IPA (在当前目录生成)
           echo "🗜️ Packaging IPA..."
-          zip -r TinPlayer.ipa Payload
-          mv TinPlayer.ipa "$GITHUB_WORKSPACE/"
+          zip -q -r TinPlayer.ipa Payload
+          echo "✅ IPA Created: $(pwd)/TinPlayer.ipa"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.3.0-final-${{ github.run_number }}"
           name: "Tin Player Release #${{ github.run_number }}"
-          body: "🎉 最终修复版：包含 14 Pro 分辨率适配，并确保了二进制文件的正确打包。请使用 AltStore 签名。"
+          body: "🎉 最终修复版：适配了 14 Pro 分辨率，并修正了打包逻辑。请使用 AltStore 签名安装。"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
