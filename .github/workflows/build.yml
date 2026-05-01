@@ -1,4 +1,4 @@
-name: TinPlayer Build
+name: TinPlayer Auto Release
 
 on:
   push:
@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    permissions:
+      contents: write # 必须有这个权限才能创建 Release
 
     steps:
       - name: Checkout
@@ -15,19 +17,38 @@ jobs:
 
       - name: Build and Package
         run: |
-          # 1. 选择 Xcode 版本
           sudo xcode-select -s /Applications/Xcode_16.4.app
-          
-          # 2. 定位并进入项目目录
           TARGET_DIR=$(find . -name "Sources" -type d -exec dirname {} \; | head -n 1)
           cd "$TARGET_DIR"
-          echo "进入目录: $(pwd)"
           
-          # 3. 强制重写 Package.swift
-          rm -f Package.swift package.swift
+          # 生成 Package.swift
           echo "// swift-tools-version: 5.9" > Package.swift
           echo "import PackageDescription" >> Package.swift
           echo "import AppleProductTypes" >> Package.swift
           echo "let package = Package(name: \"TinPlayer\", platforms: [.iOS(.v17)], products: [.iOSApplication(name: \"TinPlayer\", targets: [\"AppModule\"], bundleIdentifier: \"com.skeuo.tinplayer\", displayVersion: \"1.3.0\", bundleVersion: \"12\", appIcon: .asset(\"AppIcon\"), accentColor: .presetColor(.indigo), supportedDeviceFamilies: [.phone], supportedInterfaceOrientations: [.portrait], capabilities: [.mediaLibrary(purposeString: \"Music\"), .outgoingNetworkConnections()])], targets: [.executableTarget(name: \"AppModule\", path: \"Sources\")])" >> Package.swift
 
-          # 4. 编译
+          # 编译
+          xcodebuild build -scheme "TinPlayer" -destination "generic/platform=iOS" -configuration Release -derivedDataPath ./build_data CODE_SIGNING_ALLOWED=NO
+          
+          # 打包
+          APP_PATH=$(find ./build_data -name "*.app" -type d | head -n 1)
+          if [ -d "$APP_PATH" ]; then
+            mkdir -p Payload
+            cp -r "$APP_PATH" Payload/
+            zip -r TinPlayer.ipa Payload
+            mv TinPlayer.ipa "$GITHUB_WORKSPACE/"
+          else
+            echo "找不到编译产物"
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.3.0-build-${{ github.run_number }}"
+          name: "Tin Player Build #${{ github.run_number }}"
+          files: TinPlayer.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
