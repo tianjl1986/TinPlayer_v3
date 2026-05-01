@@ -1,4 +1,4 @@
-name: TinPlayer Final Assembly
+name: TinPlayer Ultimate Fix
 
 on:
   push:
@@ -21,78 +21,98 @@ jobs:
       - name: Build and Package
         run: |
           set -e
+          
+          echo "🚀 Starting build..."
+          # 1. 执行 Archive 打包 (生成 Mach-O 二进制)
+          xcodebuild archive \
+            -scheme "TinPlayer" \
+            -destination "generic/platform=iOS" \
+            -archivePath ./TinPlayer.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            SKIP_INSTALL=NO \
+            OTHER_SWIFT_FLAGS="-D RELEASE"
 
-          # 1. 寻找源码目录
-          SRC_PATH=$(find . -name "Sources" -type d | head -n 1)
-          cd $(dirname "$SRC_PATH")
-
-          # 2. 生成配置
-          cat <<EOF > Package.swift
-          // swift-tools-version: 5.9
-          import PackageDescription
-          let package = Package(
-              name: "TinPlayer",
-              platforms: [.iOS(.v17)],
-              products: [.executable(name: "TinPlayer", targets: ["AppModule"])],
-              targets: [.executableTarget(name: "AppModule", path: "Sources")]
-          )
-          EOF
-
-          # 3. 编译
-          xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
-
-          # 4. 手动组装 (改用更强的搜索模式)
           echo "📦 Assembling App bundle..."
-          mkdir -p TinPlayer.app
           
-          # 在 DerivedData 目录下寻找名为 TinPlayer 的可执行文件
-          # 排除 plist 和其他干扰项，直奔 usr/local/bin 产物
-          BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "TinPlayer" -type f | grep "usr/local/bin" | head -n 1)
+          # 2. 创建 Payload 结构
+          mkdir -p Payload/TinPlayer.app
           
-          # 如果上面没找到，尝试万能搜索
-          if [ -z "$BINARY" ]; then
-            echo "⚠️ Fallback binary search..."
-            BINARY=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "TinPlayer" -type f -perm +111 | head -n 1)
+          # 3. 寻找并提取二进制执行文件 (核心修复：解决闪退)
+          echo "🔍 Searching for executable binary..."
+          # 搜索 Products 目录下具有执行权限的文件，排除 plist 和 shell 脚本
+          BINARY_PATH=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
+          
+          if [ -z "$BINARY_PATH" ]; then
+             echo "⚠️ Not found in Products, searching full archive..."
+             BINARY_PATH=$(find ./TinPlayer.xcarchive -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
           fi
-
-          echo "Found Binary: $BINARY"
-          cp "$BINARY" TinPlayer.app/TinPlayer
-          chmod +x TinPlayer.app/TinPlayer
-
-          # 寻找并拷贝编译好的 UI 资源
-          ASSETS=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -type f | head -n 1)
-          echo "Found Assets: $ASSETS"
-          cp "$ASSETS" TinPlayer.app/
-
-          # 5. 生成 Info.plist (iPhone 14 Pro 适配)
-          cat <<EOF > TinPlayer.app/Info.plist
+          
+          if [ -n "$BINARY_PATH" ]; then
+            echo "✅ Found Binary: $BINARY_PATH"
+            cp "$BINARY_PATH" Payload/TinPlayer.app/TinPlayer
+            chmod +x Payload/TinPlayer.app/TinPlayer
+          else
+            echo "❌ Fatal Error: Executable binary not found!"
+            find ./TinPlayer.xcarchive -maxdepth 4
+            exit 1
+          fi
+          
+          # 4. 提取 Asset Catalog (图标和资源)
+          ASSETS_CAR=$(find ./TinPlayer.xcarchive -name "Assets.car" | head -n 1)
+          if [ -n "$ASSETS_CAR" ]; then
+            echo "✅ Found Assets.car: $ASSETS_CAR"
+            cp "$ASSETS_CAR" Payload/TinPlayer.app/
+          fi
+          
+          # 5. 生成 Info.plist (核心修复：iPhone 14 Pro 分辨率适配)
+          cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.5.5</string>
-              <key>CFBundleVersion</key><string>1</string>
-              <key>MinimumOSVersion</key><string>17.0</string>
-              <key>UILaunchScreen</key><dict/>
-              <key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string>
+              <key>CFBundleExecutable</key>
+              <string>TinPlayer</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.skeuo.tinplayer</string>
+              <key>CFBundleInfoDictionaryVersion</key>
+              <string>6.0</string>
+              <key>CFBundleName</key>
+              <string>TinPlayer</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.3.0</string>
+              <key>CFBundleVersion</key>
+              <string>12</string>
+              <key>LSRequiresIPhoneOS</key>
+              <true/>
+              <key>UILaunchScreen</key>
+              <dict/>
+              <key>UISupportedInterfaceOrientations</key>
+              <array>
+                  <string>UIInterfaceOrientationPortrait</string>
+              </array>
+              <key>MinimumOSVersion</key>
+              <string>17.0</string>
+              <key>UIDeviceFamily</key>
+              <array>
+                  <integer>1</integer>
+              </array>
           </dict>
           </plist>
           EOF
-
+          
           # 6. 打包 IPA
-          mkdir -p Payload
-          cp -r TinPlayer.app Payload/
-          zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
+          echo "🗜️ Packaging IPA..."
+          zip -r TinPlayer.ipa Payload
+          mv TinPlayer.ipa "$GITHUB_WORKSPACE/"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.5.5"
-          name: "Tin Player Final Assembly"
+          tag_name: "v1.3.0-final-${{ github.run_number }}"
+          name: "Tin Player Release #${{ github.run_number }}"
+          body: "🎉 最终修复版：包含 14 Pro 分辨率适配，并确保了二进制文件的正确打包。请使用 AltStore 签名。"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
