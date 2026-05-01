@@ -27,7 +27,7 @@ jobs:
           TARGET_DIR=$(dirname "$SRC_PATH")
           cd "$TARGET_DIR"
 
-          # 2. 生成 Package.swift
+          # 2. 生成正确的 Package.swift (定义为 executable)
           echo "🧱 Generating Package Config..."
           cat <<EOF > Package.swift
           // swift-tools-version: 5.9
@@ -35,8 +35,8 @@ jobs:
           let package = Package(
               name: "TinPlayer",
               platforms: [.iOS(.v17)],
-              products: [.library(name: "AppModule", targets: ["AppModule"])],
-              targets: [.target(name: "AppModule", path: "Sources")]
+              products: [.executable(name: "TinPlayer", targets: ["AppModule"])],
+              targets: [.executableTarget(name: "AppModule", path: "Sources", resources: [.process("TinPlayer/Assets.xcassets")])]
           )
           EOF
 
@@ -44,68 +44,37 @@ jobs:
           echo "🚀 Starting build..."
           xcodebuild archive -scheme "TinPlayer" -destination "generic/platform=iOS" -archivePath ./TinPlayer.xcarchive CODE_SIGNING_ALLOWED=NO
 
-          # 4. 组装 App (核心修复：自动寻找二进制文件)
-          echo "📦 Assembling App bundle..."
-          mkdir -p TinPlayer.app
+          # 4. 提取 .app 并准备 Payload
+          echo "📦 Packaging IPA..."
+          mkdir -p Payload
+          # 从编译产物中直接拷贝生成的 .app 目录
+          APP_PATH=$(find ./TinPlayer.xcarchive/Products/Applications -name "*.app" -type d | head -n 1)
+          cp -r "$APP_PATH" Payload/
           
-          # 自动寻找编译出来的 TinPlayer 二进制文件
-          # 排除掉副本，只找 Products 目录下的
-          BIN_PATH=$(find ./TinPlayer.xcarchive/Products -name "TinPlayer" -type f | head -n 1)
-          echo "Found binary at: $BIN_PATH"
-          cp "$BIN_PATH" TinPlayer.app/TinPlayer
-          chmod +x TinPlayer.app/TinPlayer
+          # 获取实际的 App 文件夹名称
+          APP_NAME=$(basename "$APP_PATH")
 
-          # 5. Info.plist (适配 14 Pro 全屏 + 图标 + 权限)
-          cat <<EOF > TinPlayer.app/Info.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.5.1</string>
-              <key>CFBundleVersion</key><string>1</string>
-              <key>MinimumOSVersion</key><string>17.0</string>
-              <key>LSRequiresIPhoneOS</key><true/>
-              <key>UILaunchScreen</key><dict/>
-              <key>NSAppleMusicUsageDescription</key><string>需要访问音乐库。</string>
-              <key>CFBundleIcons</key>
-              <dict>
-                  <key>CFBundlePrimaryIcon</key>
-                  <dict>
-                      <key>CFBundleIconFiles</key>
-                      <array><string>AppIcon60x60</string></array>
-                  </dict>
-              </dict>
-          </dict>
-          </plist>
-          EOF
+          # 5. 注入 14 Pro 适配和权限 (覆盖 Info.plist)
+          # 注意：必须注入到 Payload 里的那个 app 目录下
+          /usr/libexec/PlistBuddy -c "Add :UILaunchScreen dict" "Payload/$APP_NAME/Info.plist" || true
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.skeuo.tinplayer" "Payload/$APP_NAME/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '需要访问音乐库以播放音频。'" "Payload/$APP_NAME/Info.plist" || true
 
-          # 6. 注入图标
+          # 6. 确保图标存在
           ICON_SRC=$(find Sources -name "icon.png" | head -n 1)
           if [ -n "$ICON_SRC" ]; then
-            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@2x.png
-            cp "$ICON_SRC" TinPlayer.app/AppIcon60x60@3x.png
+            cp "$ICON_SRC" "Payload/$APP_NAME/AppIcon60x60@2x.png"
+            cp "$ICON_SRC" "Payload/$APP_NAME/AppIcon60x60@3x.png"
           fi
 
-          # 7. 拷贝资源文件 (Assets.car)
-          CAR_PATH=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
-          if [ -n "$CAR_PATH" ]; then
-            cp "$CAR_PATH" TinPlayer.app/
-          fi
-
-          # 8. 打包 IPA
-          mkdir -p Payload
-          cp -r TinPlayer.app Payload/
+          # 7. 打包成 IPA
           zip -r "$GITHUB_WORKSPACE/TinPlayer.ipa" Payload
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.5.1"
-          name: "Tin Player 14Pro Optimized v1.5.1"
+          tag_name: "v1.5.2"
+          name: "Tin Player 14Pro Optimized v1.5.2"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
