@@ -9,7 +9,7 @@ struct SkeuoPlayerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            LibraryGridView()
+            HomeView()
                 .environmentObject(musicPlayer)
                 .environmentObject(libraryService)
                 .environmentObject(localizationManager)

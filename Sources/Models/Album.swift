@@ -2,9 +2,10 @@ import Foundation
 import UIKit
 
 struct Track: Identifiable, Equatable {
-    let id = UUID()
+    // 🚀 核心修复：使用 fileName 作为 ID 确保稳定性，防止视图刷新导致 ID 变更引起的闪退
+    var id: String { fileName }
     let title: String
-    let artist: String  // 🚀 补全：修复 NowPlayingView 报错所需的 artist 属性
+    let artist: String
     let fileName: String
     let duration: String
     
@@ -14,10 +15,10 @@ struct Track: Identifiable, Equatable {
 }
 
 struct Album: Identifiable {
-    let id = UUID()
+    // 🚀 核心修复：使用 title+artist 作为 ID
+    var id: String { title + artist }
     let title: String
     let artist: String
-    // 🚀 核心修复：将 let 改为 var，允许扫描到封面后进行更新
     var coverImage: UIImage?
     let trackCount: Int
     let releaseYear: String
@@ -33,8 +34,8 @@ extension Album {
             trackCount: 2,
             releaseYear: "2013",
             tracks: [
-                Track(title: "Give Life Back to Music", artist: "Daft Punk", fileName: "", duration: "4:34"),
-                Track(title: "The Game of Love", artist: "Daft Punk", fileName: "", duration: "3:52")
+                Track(title: "Give Life Back to Music", artist: "Daft Punk", fileName: "sample1", duration: "4:34"),
+                Track(title: "The Game of Love", artist: "Daft Punk", fileName: "sample2", duration: "3:52")
             ]
         )
     ]
