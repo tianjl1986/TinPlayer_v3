@@ -1,8 +1,6 @@
 import SwiftUI
 
-// MARK: - 音乐库页（1:1 还原 Figma 9897:14820 / 9897:14821）
-// Grid视图：MY COLLECTION，两列专辑网格
-// Bookshelf视图：MY COLLECTION，专辑+曲目列表
+// MARK: - 音乐库页
 struct LibraryGridView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
@@ -20,7 +18,7 @@ struct LibraryGridView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // ── Top Bar（Figma: MY COLLECTION，左<，右=）──
+                // ── Top Bar ──
                 AppHeader(
                     title: "MY COLLECTION".localized,
                     leftItem: AnyView(
@@ -44,7 +42,6 @@ struct LibraryGridView: View {
                 // ── 内容区 ──
                 ZStack {
                     if libraryService.isScanning {
-                        // 扫描中
                         VStack(spacing: 16) {
                             ProgressView()
                                 .scaleEffect(1.2)
@@ -56,13 +53,12 @@ struct LibraryGridView: View {
                         .frame(maxHeight: .infinity)
 
                     } else if libraryService.tracks.isEmpty {
-                        // 空库提示
+                        // 空库提示组件
                         EmptyLibraryView {
                             libraryService.requestPermissionAndScan()
                         }
 
                     } else if isShelfMode {
-                        // ── Bookshelf 模式（按专辑分组）──
                         ScrollView(showsIndicators: false) {
                             VStack(spacing: 0) {
                                 ForEach(groupedAlbums, id: \.key) { group in
@@ -83,7 +79,6 @@ struct LibraryGridView: View {
                             .padding(.top, 8)
                         }
                     } else {
-                        // ── Grid 模式（两列专辑封面）──
                         ScrollView(showsIndicators: false) {
                             LazyVGrid(columns: columns, spacing: 16) {
                                 ForEach(groupedAlbums, id: \.key) { group in
@@ -106,7 +101,6 @@ struct LibraryGridView: View {
             .sheet(isPresented: $showSettings) { SettingsView() }
             .fullScreenCover(isPresented: $showPlayer) { NowPlayingView() }
             .onAppear {
-                // 自动扫描（已授权时）
                 if libraryService.tracks.isEmpty {
                     libraryService.requestPermissionAndScan()
                 }
@@ -114,7 +108,6 @@ struct LibraryGridView: View {
         }
     }
 
-    // 按专辑分组 (优化后的编译器友好版本)
     private var groupedAlbums: [AlbumGroup] {
         let dict = Dictionary(grouping: libraryService.tracks, by: { $0.album })
         let groups = dict.map { (key, value) -> AlbumGroup in
@@ -125,6 +118,42 @@ struct LibraryGridView: View {
     }
 }
 
+// MARK: - 空库提示组件
+struct EmptyLibraryView: View {
+    let onScan: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 64))
+                .foregroundColor(AppColors.textSecondary.opacity(0.3))
+            
+            VStack(spacing: 8) {
+                Text("YOUR LIBRARY IS EMPTY".localized)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+                
+                Text("Add music to your device or tap scan below".localized)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.horizontal, 40)
+            
+            Button(action: onScan) {
+                Text("SCAN LIBRARY".localized)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .frame(width: 200, height: 50)
+                    .background(AppColors.background)
+                    .skeuoRaised(cornerRadius: 25)
+            }
+        }
+        .frame(maxHeight: .infinity)
+    }
+}
+
+// MARK: - 辅助结构
 struct AlbumGroup {
     let key: String
     let tracks: [LocalTrack]
@@ -138,7 +167,6 @@ struct AlbumGridCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 封面图
             ZStack {
                 if let img = artwork {
                     Image(uiImage: img)
@@ -157,21 +185,17 @@ struct AlbumGridCard: View {
             .cornerRadius(4)
             .clipped()
 
-            // 标题
             Text(title)
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(AppColors.textPrimary)
                 .lineLimit(2)
                 .padding(.top, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 艺术家
             Text(artist)
                 .font(.system(size: 12, weight: .regular))
                 .foregroundColor(AppColors.textSecondary)
                 .lineLimit(1)
                 .padding(.top, 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(0)
     }
@@ -187,7 +211,6 @@ struct AlbumShelfRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 专辑标题行
             Button(action: onTap) {
                 ZStack(alignment: .leading) {
                     if let artwork = tracks.first?.artwork {
@@ -222,7 +245,6 @@ struct AlbumShelfRow: View {
             }
             .buttonStyle(PlainButtonStyle())
 
-            // 展开的曲目列表
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(tracks.indices, id: \.self) { i in
