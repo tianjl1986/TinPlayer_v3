@@ -13,31 +13,31 @@ class ThemeManager: ObservableObject {
     @AppStorage("appTheme") var currentTheme: AppTheme = .light
     
     var background: Color {
-        currentTheme == .light ? Color(hex: "#F2F2F2") : Color(hex: "#1A1A1A")
+        currentTheme == .light ? Color(hex: "#e5e5e5") : Color(hex: "#121212")
     }
     
     var textPrimary: Color {
-        currentTheme == .light ? Color(hex: "#000000") : Color(hex: "#FFFFFF")
+        currentTheme == .light ? Color(hex: "#18181b") : Color(hex: "#fafafa")
     }
     
     var textSecondary: Color {
-        currentTheme == .light ? Color(hex: "#808080") : Color(hex: "#A0A0A0")
+        currentTheme == .light ? Color(hex: "#71717a") : Color(hex: "#a1a1aa")
     }
     
     var shadowLight: Color {
-        currentTheme == .light ? Color.white : Color(hex: "#252525")
+        currentTheme == .light ? Color.white : Color(hex: "#1e1e1e")
     }
     
     var shadowDark: Color {
-        currentTheme == .light ? Color(hex: "#C8C8C8") : Color(hex: "#000000")
+        currentTheme == .light ? Color(hex: "#b3b3b3") : Color(hex: "#000000")
     }
     
     var vinylBlack: Color {
-        Color(hex: "#1A1A1A")
+        Color(hex: "#09090b")
     }
     
     var separator: Color {
-        currentTheme == .light ? Color(hex: "#D0D0D0") : Color(hex: "#333333")
+        currentTheme == .light ? Color(hex: "#d4d4d8") : Color(hex: "#27272a")
     }
 }
 
@@ -85,8 +85,8 @@ struct SkeuoRaised: ViewModifier {
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(AppColors.background)
-                    .shadow(color: AppColors.shadowLight, radius: 6, x: -3, y: -3)
-                    .shadow(color: AppColors.shadowDark, radius: 6, x: 3, y: 3)
+                    .shadow(color: AppColors.shadowLight, radius: 8, x: -4, y: -4)
+                    .shadow(color: AppColors.shadowDark, radius: 8, x: 4, y: 4)
             )
     }
 }
@@ -100,18 +100,21 @@ struct SkeuoSunken: ViewModifier {
                 ZStack {
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .fill(AppColors.background)
-                    // 内阴影：左上深
+                    
+                    // 🚀 核心修复：1:1 还原 Figma 内阴影效果
+                    // 右下深色
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(AppColors.shadowDark.opacity(0.5), lineWidth: 1)
-                        .blur(radius: 2)
-                        .offset(x: 1, y: 1)
-                        .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(.black))
-                    // 内阴影：右下亮
+                        .stroke(AppColors.shadowDark, lineWidth: 2)
+                        .blur(radius: 4)
+                        .offset(x: 2, y: 2)
+                        .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
+                    
+                    // 左上亮色
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(AppColors.shadowLight, lineWidth: 1)
-                        .blur(radius: 2)
-                        .offset(x: -1, y: -1)
-                        .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(.black))
+                        .stroke(AppColors.shadowLight, lineWidth: 2)
+                        .blur(radius: 4)
+                        .offset(x: -2, y: -2)
+                        .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black]), startPoint: .topLeading, endPoint: .bottomTrailing)))
                 }
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))

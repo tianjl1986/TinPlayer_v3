@@ -13,7 +13,8 @@ struct SkeuoPlayerApp: App {
                 .environmentObject(musicPlayer)
                 .environmentObject(libraryService)
                 .environmentObject(localizationManager)
-                .preferredColorScheme(.dark) // 🚀 修复：强制深色模式，使状态栏图标变白
+                .environmentObject(themeManager)
+                .preferredColorScheme(themeManager.currentTheme == .light ? .light : .dark)
         }
     }
 }

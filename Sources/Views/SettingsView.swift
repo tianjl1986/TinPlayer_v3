@@ -7,21 +7,19 @@ struct SettingsView: View {
     
     var body: some View {
         ZStack {
-            AppColors.background.edgesIgnoringSafeArea(.all)
+            AppColors.background.ignoresSafeArea()
             VStack(spacing: 0) {
-                HStack {
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(AppColors.textPrimary)
-                            .font(.title3)
-                    }
-                    Spacer()
-                    Text(LocalizationManager.shared.t("SETTINGS"))
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
-                        .tracking(2)
-                    Spacer()
-                }.padding(.horizontal, 20).padding(.top, 20)
+                AppHeader(
+                    title: "SETTINGS".localized,
+                    leftItem: AnyView(
+                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20))
+                                .foregroundColor(AppColors.textPrimary)
+                                .frame(width: 40, height: 40)
+                        }
+                    )
+                )
                 
                 Form {
                     Section(header: Text("MEDIA FOLDERS".localized).foregroundColor(AppColors.textSecondary)) {

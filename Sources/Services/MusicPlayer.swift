@@ -16,7 +16,9 @@ enum PlaybackMode {
 class MusicPlayer: ObservableObject {
     static let shared = MusicPlayer()
     
-    var player: AVAudioPlayer?
+    var player: AVPlayer?
+    private var playerItemContext = 0
+    
     @Published var isPlaying = false
     @Published var currentTrack: Track?
     @Published var currentTime: TimeInterval = 0
@@ -26,7 +28,7 @@ class MusicPlayer: ObservableObject {
     // 兼容旧代码的别名
     var playbackTime: TimeInterval { currentTime }
     
-    private var timer: Timer?
+    private var timeObserver: Any?
     private var playlist: [Track] = []
     
     init() {
@@ -46,49 +48,89 @@ class MusicPlayer: ObservableObject {
         commandCenter.pauseCommand.addTarget { [unowned self] _ in self.pause(); return .success }
     }
     
+    private var playerObserver: Any?
+    
     func playTrack(_ track: Track, in list: [Track] = []) {
         if !list.isEmpty { self.playlist = list }
+        self.currentTrack = track
         
-        let url: URL
-        if track.fileName.isEmpty {
-            guard let bundleURL = Bundle.main.url(forResource: track.title, withExtension: "mp3") else { return }
-            url = bundleURL
+        let url: URL?
+        if track.fileName.hasPrefix("ipod-library://") {
+            url = URL(string: track.fileName)
+        } else if track.fileName.isEmpty {
+            url = Bundle.main.url(forResource: track.title, withExtension: "mp3")
         } else {
             url = URL(fileURLWithPath: track.fileName)
         }
         
-        do {
-            player = try AVAudioPlayer(contentsOf: url)
-            player?.play()
-            self.currentTrack = track
-            self.isPlaying = true
-            self.duration = player?.duration ?? 0
-            startTimer()
-        } catch { print("Play error: \(error)") }
+        guard let validURL = url else { return }
+        
+        // 清理旧的通知监听
+        if let observer = playerObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        
+        let playerItem = AVPlayerItem(url: validURL)
+        player = AVPlayer(playerItem: playerItem)
+        
+        Task {
+            if let duration = try? await playerItem.asset.load(.duration) {
+                await MainActor.run {
+                    self.duration = duration.seconds
+                }
+            }
+        }
+        
+        player?.play()
+        self.isPlaying = true
+        startObserver()
+        
+        // 监听播放结束，严格遵守播放模式
+        playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
+            guard let self = self else { return }
+            if self.playbackMode == .loop {
+                self.seek(to: 0)
+                self.resume()
+            } else {
+                self.skipNext()
+            }
+        }
     }
     
     func togglePlayPause() {
         if isPlaying { pause() } else { resume() }
     }
     
-    func pause() { player?.pause(); isPlaying = false; stopTimer() }
-    func resume() { player?.play(); isPlaying = true; startTimer() }
+    func pause() { player?.pause(); isPlaying = false }
+    func resume() { player?.play(); isPlaying = true }
     
     func skipNext() {
         guard !playlist.isEmpty, let current = currentTrack, let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
-        let nextIdx = (idx + 1) % playlist.count
+        
+        let nextIdx: Int
+        if playbackMode == .shuffle {
+            nextIdx = Int.random(in: 0..<playlist.count)
+        } else {
+            nextIdx = (idx + 1) % playlist.count
+        }
         playTrack(playlist[nextIdx])
     }
     
     func skipPrevious() {
         guard !playlist.isEmpty, let current = currentTrack, let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
-        let prevIdx = (idx - 1 + playlist.count) % playlist.count
+        
+        let prevIdx: Int
+        if playbackMode == .shuffle {
+            prevIdx = Int.random(in: 0..<playlist.count)
+        } else {
+            prevIdx = (idx - 1 + playlist.count) % playlist.count
+        }
         playTrack(playlist[prevIdx])
     }
     
     func seek(to time: TimeInterval) {
-        player?.currentTime = time
-        currentTime = time
+        let cmTime = CMTime(seconds: time, preferredTimescale: 600)
+        player?.seek(to: cmTime)
     }
     
     func togglePlaybackMode() {
@@ -99,11 +141,14 @@ class MusicPlayer: ObservableObject {
         }
     }
     
-    private func startTimer() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.currentTime = self?.player?.currentTime ?? 0
+    private func startObserver() {
+        if let observer = timeObserver {
+            player?.removeTimeObserver(observer)
+        }
+        
+        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+            self?.currentTime = time.seconds
         }
     }
-    private func stopTimer() { timer?.invalidate() }
 }

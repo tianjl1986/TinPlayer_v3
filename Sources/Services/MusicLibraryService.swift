@@ -20,30 +20,30 @@ class MusicLibraryService: ObservableObject {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? ""
         self.mediaFolders = saved.isEmpty ? [docs] : saved
         
-        if self.albums.isEmpty {
-            self.albums = Album.sampleData 
-        }
-        
-        if autoScan {
-            scanLibrary()
-        }
+        // 🚀 核心修改：无论 autoScan 状态，启动即尝试获取权限并扫描
+        // 这样可以确保系统弹出权限申请框
+        scanLibrary()
     }
     
     func clearLibrary() {
-        self.albums = []
-    }
-    
-    func scanLibrary() {
-        // 在主线程重置
         DispatchQueue.main.async {
             self.albums = []
         }
+    }
+    
+    func scanLibrary() {
+        self.isScanning = true
+        clearLibrary()
         
         Task {
-            // 1. 扫描 App 沙盒文件夹
-            await scanLocalFolders()
-            // 2. 扫描系统媒体库
-            await scanSystemLibrary()
+            // 🚀 核心优化：并行执行本地和系统库扫描，互不阻塞
+            async let localScan: Void = scanLocalFolders()
+            async let systemScan: Void = scanSystemLibrary()
+            _ = await [localScan, systemScan]
+            
+            await MainActor.run {
+                self.isScanning = false
+            }
         }
     }
     
