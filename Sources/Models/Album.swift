@@ -17,7 +17,8 @@ struct Album: Identifiable {
     let id = UUID()
     let title: String
     let artist: String
-    let coverImage: UIImage?
+    // 🚀 核心修复：将 let 改为 var，允许扫描到封面后进行更新
+    var coverImage: UIImage?
     let trackCount: Int
     let releaseYear: String
     var tracks: [Track]
