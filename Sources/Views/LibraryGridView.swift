@@ -3,161 +3,109 @@ import SwiftUI
 struct LibraryGridView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
-    @State private var isShelfView = true 
+    @Environment(\.presentationMode) var presentationMode
+    
+    private let columns = [
+        GridItem(.flexible(), spacing: 24),
+        GridItem(.flexible(), spacing: 24)
+    ]
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            AppHeader(
-                title: isShelfView ? "ALBUMS" : "LIBRARY",
-                leftItem: AnyView(
-                    Button(action: { /* Back */ }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(AppColors.textPrimary)
-                    }
-                ),
-                rightItem: AnyView(
-                    Button(action: { isShelfView.toggle() }) {
-                        Image(systemName: isShelfView ? "square.grid.2x2.fill" : "list.bullet")
-                            .font(.system(size: 20))
-                            .foregroundColor(AppColors.textPrimary)
-                            .padding(10)
-                            .skeuoRaised(cornerRadius: 10)
-                    }
-                )
-            )
-            
-            ScrollView(showsIndicators: false) {
-                if isShelfView {
-                    ShelfView(items: groupedAlbums)
-                } else {
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 28) {
-                        ForEach(libraryService.playlist) { track in
-                            AlbumCard(track: track)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                }
-            }
-        }
-        .background(AppColors.background.ignoresSafeArea())
-    }
-    
-    private var groupedAlbums: [GroupedAlbum] {
-        // Using playlist as the track source from libraryService
-        let tracks = libraryService.playlist
-        let groups = Dictionary(grouping: tracks, by: { $0.artist })
-        return groups.map { (key, tracks) in
-            GroupedAlbum(id: key, title: key, subtitle: "Artist", tracks: tracks)
-        }.sorted { $0.title < $1.title }
-    }
-}
-
-struct GroupedAlbum: Identifiable {
-    let id: String
-    let title: String
-    let subtitle: String
-    let tracks: [Track]
-}
-
-struct ShelfRow: View {
-    let item: GroupedAlbum
-    @Binding var expandedId: String?
-    @StateObject var player = MusicPlayer.shared
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 16) {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.1))
-                    .frame(width: 60, height: 60)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(item.title)
-                        .font(.system(size: 16, weight: .bold))
+            HStack {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(AppColors.textPrimary)
-                    Text("\(item.tracks.count)首曲目")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(AppColors.textSecondary)
+                        .padding(12)
+                        .skeuoRaised(cornerRadius: 12)
                 }
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(AppColors.textSecondary.opacity(0.5))
-                    .rotationEffect(.degrees(expandedId == item.id ? 90 : 0))
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(Color.white.opacity(0.001))
-            .onTapGesture {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    expandedId = (expandedId == item.id) ? nil : item.id
+                Text("ALBUMS")
+                    .font(.system(size: 16, weight: .black))
+                    .kerning(2)
+                    .foregroundColor(AppColors.textPrimary)
+                
+                Spacer()
+                
+                // View Switcher (Figma 样式)
+                Button(action: { /* Switch View */ }) {
+                    Image(systemName: "square.grid.2x2.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(AppColors.textActive)
+                        .padding(12)
+                        .skeuoSunken(cornerRadius: 12)
                 }
             }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .padding(.bottom, 20)
             
-            if expandedId == item.id {
-                VStack(spacing: 0) {
-                    ForEach(item.tracks) { track in
-                        Button(action: {
-                            player.playTrack(track, in: item.tracks)
-                        }) {
-                            HStack {
-                                Text(track.title)
-                                    .font(.system(size: 15, weight: .bold))
-                                    .foregroundColor(player.currentTrack?.id == track.id ? AppColors.textActive : AppColors.textPrimary)
-                                Spacer()
-                                Text(track.duration)
-                                    .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(AppColors.textSecondary)
-                            }
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 24)
-                            .background(player.currentTrack?.id == track.id ? Color.black.opacity(0.05) : Color.clear)
+            ScrollView(showsIndicators: false) {
+                LazyVGrid(columns: columns, spacing: 32) {
+                    ForEach(libraryService.albums) { album in
+                        NavigationLink(destination: AlbumDetailView(album: album)) {
+                            AlbumCard(album: album)
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        Divider().padding(.leading, 24).opacity(0.1)
                     }
                 }
-            }
-            Divider().padding(.horizontal, 20).opacity(0.05)
-        }
-    }
-}
-
-struct ShelfView: View {
-    let items: [GroupedAlbum]
-    @State private var expandedId: String? = nil
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            ForEach(items) { item in
-                ShelfRow(item: item, expandedId: $expandedId)
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
+                .padding(.bottom, 100)
             }
         }
+        .background(AppColors.background.ignoresSafeArea())
+        .navigationBarHidden(true)
     }
 }
 
 struct AlbumCard: View {
-    let track: Track
-    @StateObject var player = MusicPlayer.shared
+    let album: Album
     
     var body: some View {
-        Button(action: { player.playTrack(track) }) {
-            VStack(alignment: .leading, spacing: 12) {
-                Rectangle().fill(Color.gray.opacity(0.1))
-                    .frame(width: (UIScreen.main.bounds.width - 60) / 2, height: (UIScreen.main.bounds.width - 60) / 2)
-                    .cornerRadius(12)
+        VStack(alignment: .leading, spacing: 14) {
+            // 拟物化封面容器 (模仿黑胶封套)
+            ZStack(alignment: .trailing) {
+                // 模拟露出一角的黑胶唱片
+                Circle()
+                    .fill(Color.black.opacity(0.9))
+                    .frame(width: 140, height: 140)
+                    .offset(x: 10)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(track.title).font(.system(size: 15, weight: .black)).foregroundColor(AppColors.textPrimary).lineLimit(1)
-                    Text(track.artist).font(.system(size: 13, weight: .bold)).foregroundColor(AppColors.textSecondary).lineLimit(1)
+                // 专辑封面
+                if let cover = album.coverImage {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 150, height: 150)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 150, height: 150)
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .foregroundColor(.white.opacity(0.3))
+                        )
                 }
             }
+            .skeuoRaised(cornerRadius: 12, radius: 10, offset: 5)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(album.title)
+                    .font(.system(size: 15, weight: .black))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                
+                Text(album.artist)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
+            .padding(.leading, 4)
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }

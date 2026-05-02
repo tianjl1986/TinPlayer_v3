@@ -2,136 +2,102 @@ import SwiftUI
 
 struct NowPlayingView: View {
     @StateObject private var player = MusicPlayer.shared
-    @State private var isLyricsPresented = false
-    @State private var isDragging = false
-    @State private var dragProgress: Double = 0
+    @State private var showLyrics = false
     @Environment(\.presentationMode) var presentationMode
     
-    private var displayProgress: Double {
-        isDragging ? dragProgress : (player.duration > 0 ? player.currentTime / player.duration : 0)
-    }
+    // Figma 1:1 标尺
+    private let vSpacing: CGFloat = 40
+    private let controlSectionHeight: CGFloat = 200
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // 1. Header (1:1 还原)
             AppHeader(
                 title: "NOW PLAYING",
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.down")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(AppColors.textPrimary)
+                            .padding(12)
+                            .skeuoRaised(cornerRadius: 12)
                     }
                 ),
                 rightItem: AnyView(
-                    Button(action: { isLyricsPresented.toggle() }) {
+                    Button(action: { showLyrics = true }) {
                         Image(systemName: "quote.bubble.fill")
-                            .font(.system(size: 20))
+                            .font(.system(size: 16))
                             .foregroundColor(AppColors.textPrimary)
-                            .padding(10)
-                            .skeuoRaised(cornerRadius: 10)
+                            .padding(12)
+                            .skeuoRaised(cornerRadius: 12)
                     }
                 )
             )
             
-            Spacer()
-            
-            // Vinyl Player Section
+            // 2. 黑胶唱机 (核心拟物组件)
+            // 它是页面的视觉中心，高度自适应但保持黄金比例偏移
             VinylTurntableView()
-                .frame(height: 380)
-                .padding(.vertical, 20)
+                .padding(.top, 20)
             
-            // Track Info
+            Spacer(minLength: 20)
+            
+            // 3. 歌曲信息 (1:1 字体)
             VStack(spacing: 8) {
-                Text(player.currentTrack?.title ?? "Not Playing")
-                    .font(.system(size: 24, weight: .black))
+                Text(player.currentTrack?.title ?? "No Track")
+                    .font(.system(size: 28, weight: .black))
                     .foregroundColor(AppColors.textPrimary)
-                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
                 
-                Text(player.currentTrack?.artist ?? "Select a track to start")
-                    .font(.system(size: 16, weight: .bold))
+                Text(player.currentTrack?.artist ?? "Unknown Artist")
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
             }
-            .padding(.top, 20)
+            .padding(.horizontal, 40)
             
-            Spacer()
+            Spacer(minLength: 30)
             
-            // Progress Bar
+            // 4. 进度条 (拟物化槽位)
             VStack(spacing: 12) {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(AppColors.textSecondary.opacity(0.1)).frame(height: 4)
-                        Capsule().fill(AppColors.textPrimary).frame(width: geo.size.width * CGFloat(displayProgress), height: 4)
-                        Circle().fill(AppColors.textPrimary).frame(width: 14, height: 14)
-                            .offset(x: geo.size.width * CGFloat(displayProgress) - 7)
-                    }
-                    .contentShape(Rectangle())
-                    .gesture(DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            isDragging = true
-                            dragProgress = min(max(0, value.location.x / geo.size.width), 1)
-                        }
-                        .onEnded { _ in
-                            player.seek(to: dragProgress * player.duration)
-                            isDragging = false
-                        }
-                    )
+                ZStack(alignment: .leading) {
+                    // 进度条背景槽 (Sunken)
+                    Capsule()
+                        .fill(AppColors.background)
+                        .skeuoSunken(cornerRadius: 3)
+                        .frame(height: 6)
+                    
+                    // 进度条填充 (Active)
+                    Capsule()
+                        .fill(AppColors.textActive)
+                        .frame(width: CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * (UIScreen.main.bounds.width - 80), height: 6)
+                    
+                    // 滑块 (Handle)
+                    Circle()
+                        .fill(AppColors.textPrimary)
+                        .frame(width: 14, height: 14)
+                        .skeuoRaised(cornerRadius: 7)
+                        .offset(x: CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * (UIScreen.main.bounds.width - 80) - 7)
                 }
-                .frame(height: 14)
                 
                 HStack {
-                    Text(formatDuration(isDragging ? dragProgress * player.duration : player.currentTime))
+                    Text(formatDuration(player.currentTime))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                     Spacer()
                     Text(formatDuration(player.duration))
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
                 }
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundColor(AppColors.textSecondary)
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 40)
             
-            // Controls
-            HStack(spacing: 40) {
-                Button(action: { player.togglePlaybackMode() }) {
-                    Image(systemName: player.playbackMode.iconName)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(player.playbackMode != .list ? AppColors.textActive : AppColors.textPrimary)
-                }
-                
-                Button(action: { player.skipPrevious() }) {
-                    Image(systemName: "backward.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(AppColors.textPrimary)
-                        .padding(20)
-                        .skeuoRaised(cornerRadius: 32)
-                }
-                
-                Button(action: { player.togglePlayPause() }) {
-                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(AppColors.textPrimary)
-                        .padding(24)
-                        .skeuoRaised(cornerRadius: 40)
-                }
-                
-                Button(action: { player.skipNext() }) {
-                    Image(systemName: "forward.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(AppColors.textPrimary)
-                        .padding(20)
-                        .skeuoRaised(cornerRadius: 32)
-                }
-                
-                Button(action: { /* More/Menu */ }) {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
-                }
-            }
-            .padding(.top, 20)
-            .padding(.bottom, 40)
+            Spacer(minLength: 40)
+            
+            // 5. 控制面板 (像素级对齐)
+            BottomControlsView()
+                .padding(.bottom, 50)
         }
         .background(AppColors.background.ignoresSafeArea())
-        .sheet(isPresented: $isLyricsPresented) {
+        .sheet(isPresented: $showLyrics) {
             LyricsView()
         }
     }
