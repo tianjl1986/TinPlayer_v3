@@ -8,11 +8,11 @@ struct SkeuoPlayerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            LibraryGridView() // 🚀 直接进入书架
+            LibraryGridView()
                 .environmentObject(musicPlayer)
                 .environmentObject(libraryService)
                 .environmentObject(localizationManager)
-                .preferredColorScheme(.dark) // 🚀 修复状态栏颜色
+                .preferredColorScheme(.dark) // 🚀 确保系统状态栏变白
         }
     }
 }
