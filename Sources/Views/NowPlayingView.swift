@@ -1,120 +1,195 @@
 import SwiftUI
 
 struct NowPlayingView: View {
+    @StateObject private var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
-    @ObservedObject private var player = MusicPlayer.shared
-    @ObservedObject private var themeManager = ThemeManager.shared
-    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showLyrics = false
+    @State private var dragProgress: Double = 0
     @State private var isDragging = false
-    @State private var dragTime: TimeInterval = 0
+    
+    var displayProgress: Double {
+        isDragging ? dragProgress : (player.duration > 0 ? player.playbackTime / player.duration : 0)
+    }
+    
+    var body: some View {
+        ZStack {
+            // Main Playing View
+            VStack(spacing: 0) {
+                // Header (Floating Style)
+                AppHeader(
+                    title: "正在播放",
+                    leftItem: AnyView(
+                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(AppColors.textPrimary)
+                                .padding(10)
+                        }
+                    ),
+                    rightItem: AnyView(
+                        Button(action: { showLyrics = true }) {
+                            Image(systemName: "music.note.list")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(AppColors.textPrimary)
+                                .padding(10)
+                        }
+                    )
+                )
+                
+                Spacer(minLength: 10)
+                
+                // Turntable (All Assets)
+                VinylTurntableView()
+                    .frame(width: UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.width - 40)
+                
+                Spacer(minLength: 20)
+                
+                // Info
+                VStack(spacing: 8) {
+                    Text(player.currentTrack?.title ?? "未在播放")
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundColor(AppColors.textPrimary)
+                        .lineLimit(1)
+                    
+                    Text(player.currentTrack?.artist ?? "Artist")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundColor(AppColors.textSecondary)
+                }
+                
+                // Progress
+                VStack(spacing: 12) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.black.opacity(0.1)).frame(height: 4)
+                            Capsule().fill(AppColors.textPrimary).frame(width: geo.size.width * CGFloat(displayProgress), height: 4)
+                            Circle().fill(AppColors.textPrimary).frame(width: 14, height: 14)
+                                .offset(x: geo.size.width * CGFloat(displayProgress) - 7)
+                        }
+                        .contentShape(Rectangle())
+                        .gesture(DragGesture(minimumDistance: 0).onChanged { v in
+                            isDragging = true
+                            dragProgress = Double(min(max(0, v.location.x / geo.size.width), 1))
+                        }.onEnded { _ in
+                            player.seek(to: player.duration * dragProgress)
+                            isDragging = false
+                        })
+                    }
+                    .frame(height: 14)
+                    
+                    HStack {
+                        Text(timeString(time: isDragging ? dragProgress * player.duration : player.playbackTime))
+                        Spacer()
+                        Text("-" + timeString(time: max(0, player.duration - (isDragging ? dragProgress * player.duration : player.playbackTime))))
+                    }
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(AppColors.textSecondary)
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 24)
+                
+                Spacer(minLength: 20)
+                
+                // Controls (Skeuomorphic)
+                HStack(spacing: 24) {
+                    Button(action: { player.toggleShuffleMode() }) {
+                        Text("LRC").font(.system(size: 11, weight: .black))
+                            .foregroundColor(player.shuffleMode != .off ? AppColors.textActive : AppColors.textPrimary)
+                            .frame(width: 48, height: 48).skeuoRaised(cornerRadius: 24)
+                    }
+                    
+                    HStack(spacing: 30) {
+                        Button(action: { player.skipPrevious() }) {
+                            Image(systemName: "backward.end.fill").font(.system(size: 20))
+                                .frame(width: 64, height: 64).skeuoRaised(cornerRadius: 32)
+                        }
+                        Button(action: { player.togglePlayPause() }) {
+                            Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").font(.system(size: 28))
+                                .frame(width: 88, height: 88).skeuoRaised(cornerRadius: 44)
+                        }
+                        Button(action: { player.skipNext() }) {
+                            Image(systemName: "forward.end.fill").font(.system(size: 20))
+                                .frame(width: 64, height: 64).skeuoRaised(cornerRadius: 32)
+                        }
+                    }
+                    .foregroundColor(AppColors.textPrimary)
+                    
+                    Button(action: { player.toggleRepeatMode() }) {
+                        Text("Q").font(.system(size: 11, weight: .black))
+                            .foregroundColor(player.repeatMode != .none ? AppColors.textActive : AppColors.textPrimary)
+                            .frame(width: 48, height: 48).skeuoRaised(cornerRadius: 24)
+                    }
+                }
+                .padding(.bottom, 40)
+            }
+            .background(AppColors.background.ignoresSafeArea())
+            
+            // Lyrics Overlay
+            if showLyrics {
+                LyricsView(showLyrics: $showLyrics)
+                    .transition(.move(edge: .bottom))
+                    .zIndex(10)
+            }
+        }
+    }
+    
+    private func timeString(time: Double) -> String {
+        let mins = Int(time) / 60
+        let secs = Int(time) % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+}
 
+struct LyricsView: View {
+    @Binding var showLyrics: Bool
+    @StateObject var player = MusicPlayer.shared
+    
     var body: some View {
         VStack(spacing: 0) {
+            // Header
             AppHeader(
-                title: localizationManager.t("NOW PLAYING"),
+                title: "LYRICS / 歌词",
                 leftItem: AnyView(
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "chevron.down")
-                            .foregroundColor(themeManager.textPrimary)
-                            .frame(width: 44, height: 44)
+                    Button(action: { showLyrics = false }) {
+                        Image(systemName: "chevron.down").font(.system(size: 20, weight: .bold))
+                            .foregroundColor(AppColors.textPrimary).padding(10)
                     }
-                )
+                ),
+                rightItem: AnyView(Color.clear.frame(width: 40))
             )
             
-            Spacer()
-            
-            // 1. 黑胶唱机 (320pt)
-            VinylTurntableView()
-                .padding(.bottom, 60)
-            
-            // 2. 歌曲信息 (间距对齐 Figma)
-            VStack(spacing: 8) {
-                Text(player.currentTrack?.title ?? localizationManager.t("UNKNOWN_TITLE"))
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(themeManager.textPrimary)
-                Text(player.currentTrack?.artist ?? localizationManager.t("UNKNOWN_ARTIST"))
-                    .font(.system(size: 16))
-                    .foregroundColor(themeManager.textSecondary)
+            // Top Knobs (Physical Assets)
+            HStack {
+                Image("knob").resizable().aspectRatio(contentMode: .fit).frame(width: 52, height: 52)
+                Spacer()
+                RoundedRectangle(cornerRadius: 3).fill(Color.black.opacity(0.8)).frame(height: 6).padding(.horizontal, -15)
+                Spacer()
+                Image("knob").resizable().aspectRatio(contentMode: .fit).frame(width: 52, height: 52)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 48)
+            .padding(.horizontal, 24).padding(.top, 10)
             
-            VStack(spacing: 12) {
-                HStack(spacing: 16) { // 🚀 Figma 9880:14744
-                    Text(formatDuration(player.currentTime))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(themeManager.textSecondary)
+            // Lyrics Paper Panel
+            ZStack {
+                RoundedRectangle(cornerRadius: 12).fill(Color.white)
+                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                
+                VStack(spacing: 20) {
+                    Text(player.currentTrack?.title ?? "Title").font(.system(size: 18, weight: .black))
+                    Text(player.currentTrack?.artist ?? "Artist").font(.system(size: 14, weight: .bold)).foregroundColor(.gray)
                     
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(themeManager.currentTheme == .light ? Color(hex: "#E5E5E5") : Color(hex: "#222222"))
-                            .frame(height: 8)
-                            .skeuoSunken(radius: 8, offset: 4) // 🚀 Figma 9880:14746
-                        
-                        Capsule()
-                            .fill(themeManager.currentTheme == .light ? Color(hex: "#404040") : Color.orange)
-                            .frame(width: max(0, (UIScreen.main.bounds.width - 160) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 8)
+                    ScrollView(showsIndicators: false) {
+                        Text("Lyrics content goes here...\n(1:1 Design Restoration Mode)")
+                            .font(.system(size: 16, weight: .medium, design: .serif))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(10)
+                            .padding(.top, 40)
                     }
-                    
-                    Text(formatDuration(player.duration))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(themeManager.textSecondary)
                 }
-                .padding(.horizontal, 24)
+                .padding(30)
             }
-            .padding(.bottom, 48)
-
+            .padding(.horizontal, 24).padding(.top, 10).padding(.bottom, 40)
+            
             Spacer()
-
-            // 🚀 拟物化控制台 (Raised Buttons)
-            HStack(spacing: 0) {
-                Button(action: { showLyrics = true }) {
-                    Text("LRC")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(themeManager.textSecondary)
-                        .frame(width: 40, height: 40) // 🚀 Figma 9880:14749
-                        .skeuoRaised(cornerRadius: 20)
-                }
-                Spacer()
-                Button(action: { player.skipPrevious() }) {
-                    Image(systemName: "backward.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 56, height: 56) // 🚀 Figma 9880:14751
-                        .skeuoRaised(cornerRadius: 28)
-                }
-                Spacer()
-                Button(action: { player.togglePlayPause() }) {
-                    Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 72, height: 72) // 🚀 Figma 9880:14753
-                        .skeuoRaised(cornerRadius: 36)
-                }
-                Spacer()
-                Button(action: { player.skipNext() }) {
-                    Image(systemName: "forward.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 56, height: 56) // 🚀 Figma 9880:14755
-                        .skeuoRaised(cornerRadius: 28)
-                }
-                Spacer()
-                Button(action: { player.togglePlaybackMode() }) {
-                    Text("Q")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(themeManager.textSecondary)
-                        .frame(width: 40, height: 40) // 🚀 Figma 9880:14757
-                        .skeuoRaised(cornerRadius: 20)
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 60)
         }
-        .background(themeManager.background.ignoresSafeArea())
-        .fullScreenCover(isPresented: $showLyrics) {
-            LyricsView()
-        }
+        .background(AppColors.background.ignoresSafeArea())
     }
 }
