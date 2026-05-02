@@ -27,7 +27,7 @@ jobs:
           
           echo "🚀 Starting build..."
           # 1. 执行 Archive 打包
-          xcodebuild archive \
+          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
             -archivePath ./TinPlayer.xcarchive \
@@ -55,17 +55,26 @@ jobs:
             exit 1
           fi
           
-          # 4. 提取 Asset Catalog (从编译缓存中抓取，确保图标存在)
+          # 4. 提取 Asset Catalog (增强搜索模式，解决文件过小问题)
           echo "🔍 Searching for Assets.car..."
-          ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" | head -n 1)
+          # 优先在编译结果中找
+          ASSETS_CAR=$(find . -name "Assets.car" | head -n 1)
+          if [ -z "$ASSETS_CAR" ]; then
+             # 如果没找到，去系统缓存深度搜索
+             ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -path "*/TinPlayer*/*" | head -n 1)
+          fi
+          
           if [ -n "$ASSETS_CAR" ]; then
             echo "✅ Found Assets.car: $ASSETS_CAR"
             cp "$ASSETS_CAR" Payload/TinPlayer.app/
           else
-            echo "⚠️ Assets.car not found."
+            echo "⚠️ Warning: Assets.car not found. App icons might be missing."
           fi
           
-          # 5. 生成 Info.plist (iPhone 14 Pro 分辨率适配)
+          # 5. 复制其他资源 (本地化文件等)
+          find . -name "*.lproj" -exec cp -r {} Payload/TinPlayer.app/ \; || true
+          
+          # 6. 生成 Info.plist (确保分辨率和基本配置正确)
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -101,19 +110,3 @@ jobs:
               </array>
           </dict>
           </plist>
-          EOF
-          
-          # 6. 打包 IPA (在当前目录生成)
-          echo "🗜️ Packaging IPA..."
-          zip -q -r TinPlayer.ipa Payload
-          echo "✅ IPA Created: $(pwd)/TinPlayer.ipa"
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v1.3.0-final-${{ github.run_number }}"
-          name: "Tin Player Release #${{ github.run_number }}"
-          body: "🎉 最终修复版：适配了 14 Pro 分辨率，并修正了打包逻辑。请使用 AltStore 签名安装。"
-          files: TinPlayer.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
