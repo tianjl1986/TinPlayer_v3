@@ -188,7 +188,7 @@ class MusicPlayer: ObservableObject {
                 self.currentTime = time.seconds
                 
                 // 🚀 同步歌词索引
-                if let index = self.currentTrackLyrics.lastIndex(where: { $0.time <= time.seconds }) {
+                if let index = self.currentTrackLyrics.lastIndex(where: { $0.startTime <= time.seconds }) {
                     self.currentLyricIndex = index
                 }
             }

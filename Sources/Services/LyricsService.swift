@@ -9,13 +9,13 @@ class LyricsService {
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
         return [
-            LyricLine(time: 0, text: "Scanning for lyrics..."),
-            LyricLine(time: 5, text: "Found: \(title)"),
-            LyricLine(time: 10, text: "Artist: \(artist)"),
-            LyricLine(time: 15, text: "This is a skeuomorphic experience."),
-            LyricLine(time: 20, text: "Enjoy the vinyl sound."),
-            LyricLine(time: 25, text: "Restored by Antigravity."),
-            LyricLine(time: 30, text: "--- End of Lyrics ---")
+            LyricLine(text: "Scanning for lyrics...", startTime: 0),
+            LyricLine(text: "Found: \(title)", startTime: 5),
+            LyricLine(text: "Artist: \(artist)", startTime: 10),
+            LyricLine(text: "This is a skeuomorphic experience.", startTime: 15),
+            LyricLine(text: "Enjoy the vinyl sound.", startTime: 20),
+            LyricLine(text: "Restored by Antigravity.", startTime: 25),
+            LyricLine(text: "--- End of Lyrics ---", startTime: 30)
         ]
     }
 }
