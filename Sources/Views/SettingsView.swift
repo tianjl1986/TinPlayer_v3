@@ -24,29 +24,42 @@ struct SettingsView: View {
                 }.padding(.horizontal, 20).padding(.top, 20)
                 
                 Form {
-                    Section(header: Text("MEDIA FOLDERS").foregroundColor(AppColors.textSecondary)) {
+                    Section(header: Text("MEDIA FOLDERS".localized).foregroundColor(AppColors.textSecondary)) {
                         ForEach(libraryService.mediaFolders, id: \.self) { folder in
                             Text(folder).font(.caption).foregroundColor(AppColors.textSecondary)
                         }
                         Button("+ Add Folder") { /* Logic */ }.foregroundColor(.blue)
                     }
                     
-                    Section(header: Text("SCANNING OPTIONS").foregroundColor(AppColors.textSecondary)) {
+                    Section(header: Text("SCANNING OPTIONS".localized).foregroundColor(AppColors.textSecondary)) {
+                        Toggle("Parse .cue sheets".localized, isOn: $libraryService.parseCue)
+                        Toggle("Search for .lrc lyrics".localized, isOn: $libraryService.searchLrc)
+                        Toggle("Auto-scan on startup".localized, isOn: $libraryService.autoScan)
+                    }
+                    
+                    Section(header: Text("MAINTENANCE".localized).foregroundColor(AppColors.textSecondary)) {
                         Button(action: { libraryService.scanLibrary() }) {
                             HStack {
-                                Text("Rescan Now").foregroundColor(AppColors.textPrimary)
+                                Text("Rescan Now".localized).foregroundColor(AppColors.textPrimary)
                                 Spacer()
                                 if libraryService.isScanning { ProgressView() }
                             }
                         }
+                        Button(action: { libraryService.clearLibrary() }) {
+                            Text("Clear Library".localized).foregroundColor(.red)
+                        }
                     }
                     
-                    Section(header: Text("GENERAL SETTINGS").foregroundColor(AppColors.textSecondary)) {
-                        Picker(LocalizationManager.shared.t("Interface Language"), selection: $localizationManager.language) {
+                    Section(header: Text("GENERAL SETTINGS".localized).foregroundColor(AppColors.textSecondary)) {
+                        Picker("Interface Language".localized, selection: $localizationManager.language) {
                             Text("English").tag("en")
                             Text("简体中文").tag("zh")
                         }
-                        .foregroundColor(AppColors.textPrimary)
+                        
+                        Picker("Theme".localized, selection: ThemeManager.shared.$currentTheme) {
+                            Text("Light".localized).tag(AppTheme.light)
+                            Text("Dark".localized).tag(AppTheme.dark)
+                        }
                     }
                 }
                 .scrollContentBackground(.hidden)

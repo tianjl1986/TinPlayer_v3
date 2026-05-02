@@ -3,31 +3,26 @@ import SwiftUI
 struct LibraryGridView: View {
     @EnvironmentObject var libraryService: MusicLibraryService
     @EnvironmentObject var musicPlayer: MusicPlayer
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var expandedAlbumId: UUID? = nil
     
     var body: some View {
         NavigationView {
-            ZStack {
+            ZStack(alignment: .bottom) {
                 AppColors.background.edgesIgnoringSafeArea(.all)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         headerView
                         ForEach(libraryService.albums) { album in
-                            VStack(spacing: 0) {
-                                AlbumRowHeader(album: album, isExpanded: expandedAlbumId == album.id)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                            expandedAlbumId = (expandedAlbumId == album.id) ? nil : album.id
-                                        }
-                                    }
-                                if expandedAlbumId == album.id {
-                                    TrackExpansionView(album: album)
-                                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
-                                }
+                            NavigationLink(destination: AlbumDetailView(album: album)) {
+                                AlbumRowHeader(album: album, isExpanded: false)
                             }
                         }
+                        Spacer(minLength: 100)
                     }
                 }
+                
+                MiniPlayerView()
             }
             .navigationBarHidden(true)
         }

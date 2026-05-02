@@ -1,17 +1,36 @@
 import Foundation
 import AVFoundation
 import UIKit
+import SwiftUI
 
 class MusicLibraryService: ObservableObject {
     static let shared = MusicLibraryService()
     
-    @Published var albums: [Album] = Album.sampleData
+    @Published var albums: [Album] = []
     @Published var isScanning = false
     @Published var mediaFolders: [String] = []
     
+    @AppStorage("parse_cue") var parseCue = true
+    @AppStorage("search_lrc") var searchLrc = true
+    @AppStorage("auto_scan") var autoScan = false
+    
     init() {
         let saved = UserDefaults.standard.stringArray(forKey: "media_folders") ?? []
-        self.mediaFolders = saved.isEmpty ? [FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? ""] : saved
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? ""
+        self.mediaFolders = saved.isEmpty ? [docs] : saved
+        
+        // 如果为空且有默认文件夹，且开启了自动扫描，则扫描
+        if self.albums.isEmpty {
+            self.albums = Album.sampleData // 默认保留样例数据，直到扫描到新东西
+        }
+        
+        if autoScan {
+            scanLibrary()
+        }
+    }
+    
+    func clearLibrary() {
+        self.albums = []
     }
     
     func scanLibrary() {
@@ -19,7 +38,7 @@ class MusicLibraryService: ObservableObject {
         isScanning = true
         
         Task {
-            var newAlbums = Album.sampleData
+            var newAlbums: [Album] = []
             let fm = FileManager.default
             
             for folder in self.mediaFolders {
@@ -45,32 +64,39 @@ class MusicLibraryService: ObservableObject {
         var title = url.deletingPathExtension().lastPathComponent
         var artist = "Unknown Artist"
         var albumName = "Local Music"
+        var artwork: UIImage? = nil
         
-        // 🚀 使用 iOS 16+ 推荐的异步加载方式
         if let metadata = try? await asset.load(.metadata) {
             for item in metadata {
                 guard let key = item.commonKey?.rawValue else { continue }
                 let value = try? await item.load(.value)
                 
-                if let stringValue = value as? String {
-                    if key == "title" { title = stringValue }
-                    else if key == "artist" { artist = stringValue }
-                    else if key == "albumName" { albumName = stringValue }
-                }
+                if key == "title", let stringValue = value as? String { title = stringValue }
+                else if key == "artist", let stringValue = value as? String { artist = stringValue }
+                else if key == "albumName", let stringValue = value as? String { albumName = stringValue }
+                else if key == "artwork", let data = value as? Data { artwork = UIImage(data: data) }
             }
         }
         
-        let track = Track(title: title, artist: artist, fileName: url.path, duration: "--:--")
+        // 🚀 获取时长
+        let durationValue = (try? await asset.load(.duration))?.seconds ?? 0
+        let durationStr = formatDuration(durationValue)
+        
+        let track = Track(title: title, artist: artist, fileName: url.path, duration: durationStr)
         
         if let idx = albumsList.firstIndex(where: { $0.title == albumName }) {
             if !albumsList[idx].tracks.contains(where: { $0.title == track.title }) {
                 albumsList[idx].tracks.append(track)
+                // 如果专辑还没有封面，用这个曲目的
+                if albumsList[idx].coverImage == nil {
+                    albumsList[idx].coverImage = artwork
+                }
             }
         } else {
             albumsList.append(Album(
                 title: albumName,
                 artist: artist,
-                coverImage: nil, // 🚀 修复属性名不匹配问题
+                coverImage: artwork,
                 trackCount: 1,
                 releaseYear: "2024",
                 tracks: [track]

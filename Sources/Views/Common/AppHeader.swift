@@ -2,6 +2,7 @@ import SwiftUI
 
 // MARK: - AppHeader（严格按Figma设计：高度60，左中右三区）
 struct AppHeader: View {
+    @ObservedObject var themeManager = ThemeManager.shared
     let title: String
     var leftItem: AnyView? = nil
     var rightItem: AnyView? = nil

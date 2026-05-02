@@ -3,6 +3,7 @@ import SwiftUI
 struct NowPlayingView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject private var player = MusicPlayer.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var showLyrics = false
     @State private var isDragging = false
     @State private var dragTime: TimeInterval = 0
