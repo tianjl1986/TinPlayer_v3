@@ -11,19 +11,19 @@ struct BottomControlsView: View {
     var body: some View {
         HStack(spacing: spacing) {
             // Previous
-            Button(action: { player.previousTrack() }) {
+            Button(action: { player.skipPrevious() }) {
                 ControlIcon(name: "backward.fill", size: 20)
             }
             .buttonStyle(SkeuoButtonStyle(size: buttonSize))
             
             // Play/Pause
-            Button(action: { player.togglePlayback() }) {
+            Button(action: { player.togglePlayPause() }) {
                 ControlIcon(name: player.isPlaying ? "pause.fill" : "play.fill", size: 28)
             }
             .buttonStyle(SkeuoButtonStyle(size: playButtonSize))
             
             // Next
-            Button(action: { player.nextTrack() }) {
+            Button(action: { player.skipNext() }) {
                 ControlIcon(name: "forward.fill", size: 20)
             }
             .buttonStyle(SkeuoButtonStyle(size: buttonSize))
@@ -52,12 +52,10 @@ struct SkeuoButtonStyle: ButtonStyle {
             .background(
                 ZStack {
                     if configuration.isPressed {
-                        // 按下状态：凹陷感 (Sunken)
                         Circle()
                             .fill(AppColors.background)
                             .skeuoSunken(cornerRadius: size / 2)
                     } else {
-                        // 常态：凸起感 (Raised)
                         Circle()
                             .fill(AppColors.background)
                             .skeuoRaised(cornerRadius: size / 2)

@@ -1,62 +1,76 @@
 import SwiftUI
 
 struct VinylTurntableView: View {
-    @ObservedObject var player = MusicPlayer.shared
-    @State private var rotationAngle: Double = 0
+    @StateObject private var player = MusicPlayer.shared
+    @State private var rotation: Double = 0
     
-    // Figma 导出的切片资产：
-    // - turntable_base: 唱机底座
-    // - platter: 转盘
-    // - tonearm: 唱臂
+    // 1:1 设计参数
+    private let baseSize: CGFloat = UIScreen.main.bounds.width - 48
+    private let platterScale: CGFloat = 0.88
+    private let tonearmOffset: CGFloat = 40
+    
+    // 封面图处理逻辑 (修复编译错误)
+    private var albumCover: UIImage? {
+        guard let track = player.currentTrack else { return nil }
+        // 从库中查找该轨道所属的专辑封面
+        return MusicLibraryService.shared.albums.first { album in
+            album.tracks.contains { $0.id == track.id }
+        }?.coverImage
+    }
     
     var body: some View {
         ZStack {
-            // 1. 唱机底座 (Base)
+            // 1. 底座 (物理切片)
             Image("turntable_base")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxWidth: .infinity)
+                .frame(width: baseSize)
+                .skeuoRaised(cornerRadius: 24)
             
-            // 2. 旋转转盘 + 专辑封面 (Platter & Cover)
+            // 2. 转盘 (旋转部分)
             ZStack {
                 Image("platter")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
+                    .frame(width: baseSize * platterScale)
                 
-                // 专辑封面
-                if let cover = player.currentTrack?.coverImage {
+                // 3. 唱片中心封面 (Album Art)
+                if let cover = albumCover {
                     Image(uiImage: cover)
                         .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: baseSize * 0.3, height: baseSize * 0.3)
                         .clipShape(Circle())
-                        .frame(width: UIScreen.main.bounds.width * 0.45)
+                        .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 1))
                 } else {
+                    // 默认黑色圆心
                     Circle()
                         .fill(Color.black.opacity(0.8))
-                        .frame(width: UIScreen.main.bounds.width * 0.45)
+                        .frame(width: baseSize * 0.3, height: baseSize * 0.3)
                 }
-                
-                // 唱片中心装饰
-                Circle()
-                    .fill(Color.white.opacity(0.1))
-                    .frame(width: 20, height: 20)
             }
-            .frame(width: UIScreen.main.bounds.width * 0.72)
-            .offset(x: -25, y: 0) // 根据 Figma 稿件调整转盘位置
-            .rotationEffect(.degrees(rotationAngle))
+            .rotationEffect(.degrees(rotation))
             
-            // 3. 唱臂 (Tonearm)
+            // 4. 唱臂 (物理切片)
             Image("tonearm")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: UIScreen.main.bounds.width * 0.3)
+                .frame(height: baseSize * 0.7)
                 .rotationEffect(.degrees(player.isPlaying ? 25 : 0), anchor: .topTrailing)
-                .offset(x: 100, y: -120) // 根据 Figma 稿件调整唱臂支点位置
-                .animation(.spring(response: 0.6, dampingFraction: 0.7), value: player.isPlaying)
+                .offset(x: tonearmOffset, y: -tonearmOffset)
         }
-        .padding(20)
-        .onReceive(Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()) { _ in
+        .onAppear {
+            startRotation()
+        }
+        .onChange(of: player.isPlaying) { isPlaying in
+            if isPlaying { startRotation() }
+        }
+    }
+    
+    private func startRotation() {
+        withAnimation(.linear(duration: 3.0).repeatForever(autoreverses: false)) {
             if player.isPlaying {
-                rotationAngle += 2 // 33 1/3 RPM 模拟
+                rotation += 360
             }
         }
     }
