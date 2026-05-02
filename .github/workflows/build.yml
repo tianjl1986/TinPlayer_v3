@@ -23,16 +23,16 @@ jobs:
           set -e
           
           echo "🚀 Preparing project structure..."
-          # 获取原始文件夹名以便后续还原
+          # 获取原始文件夹名并清理残留入口文件，防止重复定义报错
           ORIGINAL_FOLDER=$(basename $(pwd))
-          echo "Current folder is $ORIGINAL_FOLDER, renaming to TinPlayer.swiftpm"
+          rm -f Sources/SkeuoPlayerApp.swift
           
-          # 重命名目录
+          # 临时重命名为 .swiftpm 以激活 Swift Playgrounds App 构建逻辑
           cd ..
           mv "$ORIGINAL_FOLDER" TinPlayer.swiftpm
           cd TinPlayer.swiftpm
           
-          # 清理旧产物
+          # 清理旧缓存
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive DerivedData
           
           echo "🚀 Building TinPlayer.swiftpm..."
@@ -46,33 +46,28 @@ jobs:
             SKIP_INSTALL=NO
           
           echo "📦 Assembling Bundle..."
-          mkdir -p Payload/TinPlayer.app
+          # 直接提取 Xcode 已经完整组装好的 .app 包（包含二进制、图标、Info.plist）
+          APP_BUNDLE=$(find ./DerivedData -name "TinPlayer.app" -type d | grep "InstallationBuildProductsLocation" | head -n 1)
           
-          # 🔍 寻找真正的二进制文件
-          echo "🔍 Searching for the real executable binary..."
-          REAL_BINARY=$(find ./DerivedData -type f -perm +111 ! -name "*.*" -size +1M | head -n 1)
-          
-          if [ -z "$REAL_BINARY" ]; then
-             echo "⚠️ Not found in DerivedData, checking xcarchive..."
-             REAL_BINARY=$(find ./TinPlayer.xcarchive -type f -perm +111 ! -name "*.*" -size +1M | head -n 1)
-          fi
-          
-          if [ -n "$REAL_BINARY" ]; then
-            echo "✅ Found Real Binary: $REAL_BINARY"
-            cp "$REAL_BINARY" Payload/TinPlayer.app/TinPlayer
-            chmod +x Payload/TinPlayer.app/TinPlayer
+          if [ -n "$APP_BUNDLE" ]; then
+            echo "✅ Found Compiled App Bundle in DerivedData: $APP_BUNDLE"
+            mkdir -p Payload
+            cp -R "$APP_BUNDLE" Payload/
           else
-            echo "❌ ERROR: No executable binary found (> 1MB)!"
-            exit 1
+            echo "⚠️ Bundle not in DerivedData, checking xcarchive..."
+            APP_BUNDLE="./TinPlayer.xcarchive/Products/Applications/TinPlayer.app"
+            if [ -d "$APP_BUNDLE" ]; then
+                echo "✅ Found in xcarchive: $APP_BUNDLE"
+                mkdir -p Payload
+                cp -R "$APP_BUNDLE" Payload/
+            else
+                echo "❌ ERROR: Cannot find TinPlayer.app anywhere!"
+                find . -name "*.app" -type d
+                exit 1
+            fi
           fi
           
-          # 🔍 寻找资源文件
-          ASSETS_CAR=$(find ./DerivedData ./TinPlayer.xcarchive -name "Assets.car" | head -n 1)
-          if [ -n "$ASSETS_CAR" ]; then
-            cp "$ASSETS_CAR" Payload/TinPlayer.app/
-          fi
-          
-          # 📝 生成 Info.plist
+          # 📝 注入关键 Info.plist 配置，确保 AltStore 识别及系统兼容性
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -83,7 +78,7 @@ jobs:
               <key>CFBundleName</key><string>TinPlayer</string>
               <key>CFBundlePackageType</key><string>APPL</string>
               <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>22</string>
+              <key>CFBundleVersion</key><string>26</string>
               <key>LSRequiresIPhoneOS</key><true/>
               <key>UILaunchScreen</key><dict/>
               <key>MinimumOSVersion</key><string>16.0</string>
@@ -98,14 +93,16 @@ jobs:
           </plist>
           EOF
           
-          echo "📊 Final Payload size: $(du -sh Payload | cut -f1)"
+          echo "📊 Final IPA Analysis:"
+          echo "Bundle Size: $(du -sh Payload | cut -f1)"
+          
+          # 打包 IPA
           zip -q -r TinPlayer.ipa Payload
           
-          # 【重要：还原目录名】防止 GitHub Actions 清理失败
-          echo "🔄 Restoring folder name..."
+          # 🔄 必须还原目录名，否则 GitHub Actions 无法正常完成清理工作
           cd ..
           mv TinPlayer.swiftpm "$ORIGINAL_FOLDER"
-          echo "✅ Done! IPA Created."
+          echo "✅ Build Process Complete!"
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
@@ -119,5 +116,3 @@ jobs:
           tag_name: "v1.3.0-final-${{ github.run_number }}"
           name: "Tin Player Release #${{ github.run_number }}"
           files: TinPlayer.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
