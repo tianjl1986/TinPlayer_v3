@@ -59,7 +59,7 @@ struct AlbumDetailView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(album.tracks.enumerated()), id: \.offset) { index, track in
                             Button(action: {
-                                player.play(track: track)
+                                player.playTrack(track, in: album.tracks)
                             }) {
                                 HStack(spacing: 20) {
                                     Text(String(format: "%02d", index + 1))

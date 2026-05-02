@@ -33,7 +33,7 @@ struct LibraryGridView: View {
                     ShelfView(items: groupedAlbums)
                 } else {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 28) {
-                        ForEach(libraryService.tracks) { track in
+                        ForEach(libraryService.playlist) { track in
                             AlbumCard(track: track)
                         }
                     }
@@ -46,7 +46,9 @@ struct LibraryGridView: View {
     }
     
     private var groupedAlbums: [GroupedAlbum] {
-        let groups = Dictionary(grouping: libraryService.tracks, by: { $0.artist }) // Grouping by artist for shelf logic
+        // Using playlist as the track source from libraryService
+        let tracks = libraryService.playlist
+        let groups = Dictionary(grouping: tracks, by: { $0.artist })
         return groups.map { (key, tracks) in
             GroupedAlbum(id: key, title: key, subtitle: "Artist", tracks: tracks)
         }.sorted { $0.title < $1.title }
@@ -101,12 +103,12 @@ struct ShelfRow: View {
                 VStack(spacing: 0) {
                     ForEach(item.tracks) { track in
                         Button(action: {
-                            player.play(track: track)
+                            player.playTrack(track, in: item.tracks)
                         }) {
                             HStack {
                                 Text(track.title)
                                     .font(.system(size: 15, weight: .bold))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(player.currentTrack?.id == track.id ? AppColors.textActive : AppColors.textPrimary)
                                 Spacer()
                                 Text(track.duration)
                                     .font(.system(size: 12, design: .monospaced))
@@ -114,7 +116,7 @@ struct ShelfRow: View {
                             }
                             .padding(.vertical, 14)
                             .padding(.horizontal, 24)
-                            .background(Color.black.opacity(0.02))
+                            .background(player.currentTrack?.id == track.id ? Color.black.opacity(0.05) : Color.clear)
                         }
                         .buttonStyle(PlainButtonStyle())
                         Divider().padding(.leading, 24).opacity(0.1)
@@ -144,7 +146,7 @@ struct AlbumCard: View {
     @StateObject var player = MusicPlayer.shared
     
     var body: some View {
-        Button(action: { player.play(track: track) }) {
+        Button(action: { player.playTrack(track) }) {
             VStack(alignment: .leading, spacing: 12) {
                 Rectangle().fill(Color.gray.opacity(0.1))
                     .frame(width: (UIScreen.main.bounds.width - 60) / 2, height: (UIScreen.main.bounds.width - 60) / 2)

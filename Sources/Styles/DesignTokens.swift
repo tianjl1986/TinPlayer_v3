@@ -6,6 +6,16 @@ enum AppTheme: String, CaseIterable {
     case dark = "Dark"
 }
 
+// MARK: - 全局便捷颜色访问 (1:1 设计还原)
+struct AppColors {
+    static var background: Color { ThemeManager.shared.background }
+    static var textPrimary: Color { ThemeManager.shared.textPrimary }
+    static var textSecondary: Color { ThemeManager.shared.textSecondary }
+    static var textActive: Color { Color.orange } // 选中的激活色
+    static var shadowLight: Color { ThemeManager.shared.shadowLight }
+    static var shadowDark: Color { ThemeManager.shared.shadowDark }
+}
+
 // MARK: - 颜色系统（支持主题切换）
 class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
@@ -31,66 +41,9 @@ class ThemeManager: ObservableObject {
     var shadowDark: Color {
         currentTheme == .light ? Color(hex: "#b3b3b3") : Color(hex: "#000000")
     }
-    
-    var vinylBlack: Color {
-        Color(hex: "#09090b")
-    }
-    
-    var separator: Color {
-        currentTheme == .light ? Color(hex: "#d4d4d8") : Color(hex: "#27272a")
-    }
 }
 
-struct SkeuoToggleStyle: ToggleStyle {
-    @ObservedObject var themeManager = ThemeManager.shared
-    
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.label
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(themeManager.textPrimary)
-            Spacer()
-            Button(action: { configuration.isOn.toggle() }) {
-                ZStack {
-                    Capsule()
-                        .fill(themeManager.background)
-                        .skeuoSunken(cornerRadius: 15)
-                        .frame(width: 54, height: 28)
-                    
-                    Circle()
-                        .fill(configuration.isOn ? Color.orange : themeManager.textSecondary.opacity(0.3))
-                        .skeuoRaised(cornerRadius: 12)
-                        .frame(width: 24, height: 24)
-                        .offset(x: configuration.isOn ? 13 : -13)
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                }
-            }
-            .buttonStyle(PlainButtonStyle())
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isOn)
-        }
-    }
-}
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 200, 200, 200)
-        }
-        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: Double(a) / 255)
-    }
-}
-
+// MARK: - 拟物化阴影修饰器
 struct SkeuoRaised: ViewModifier {
     var cornerRadius: CGFloat
     var radius: CGFloat
@@ -145,10 +98,22 @@ extension View {
     }
 }
 
-// MARK: - 时间格式化
-public func formatDuration(_ time: TimeInterval) -> String {
-    guard time.isFinite && !time.isNaN && time >= 0 else { return "00:00" }
-    let mins = Int(time) / 60
-    let secs = Int(time) % 60
-    return String(format: "%02d:%02d", mins, secs)
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3:
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6:
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8:
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 200, 200, 200)
+        }
+        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: Double(a) / 255)
+    }
 }

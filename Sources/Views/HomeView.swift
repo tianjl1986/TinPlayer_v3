@@ -1,183 +1,109 @@
 import SwiftUI
 
 struct HomeView: View {
-    @EnvironmentObject var libraryService: MusicLibraryService
-    @EnvironmentObject var musicPlayer: MusicPlayer
-    @EnvironmentObject var themeManager: ThemeManager
-    @ObservedObject var localizationManager = LocalizationManager.shared
+    @StateObject private var player = MusicPlayer.shared
+    @StateObject private var libraryService = MusicLibraryService.shared
     
     var body: some View {
         NavigationView {
-            ZStack {
-                themeManager.background.ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    AppHeader(title: "TIN PLAYER")
-                    
-                    ScrollView {
-                        VStack(spacing: 32) {
-                            // 🚀 Top Section: Large Category Entry Buttons
-                            HStack(spacing: 24) {
-                                NavigationLink(destination: LibraryGridView(filter: .album)) {
-                                    VStack(spacing: 12) {
-                                        Image(systemName: "square.stack.3d.down.right.fill")
-                                            .font(.system(size: 32))
-                                        Text("ALBUMS".localized)
-                                            .font(.system(size: 14, weight: .bold))
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 120)
-                                    .background(themeManager.background)
-                                    .skeuoRaised(cornerRadius: 15)
-                                    .foregroundColor(themeManager.textPrimary)
+            ZStack(alignment: .bottom) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 32) {
+                        // Top Bar
+                        TopBarView()
+                        
+                        // Categories / Quick Navigation
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 20) {
+                                NavigationLink(destination: LibraryGridView()) {
+                                    HomeCategoryCard(title: "Library", icon: "music.note.list", color: .blue)
                                 }
                                 
-                                NavigationLink(destination: LibraryGridView(filter: .artist)) {
-                                    VStack(spacing: 12) {
-                                        Image(systemName: "person.2.fill")
-                                            .font(.system(size: 32))
-                                        Text("ARTISTS".localized)
-                                            .font(.system(size: 14, weight: .bold))
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 120)
-                                    .background(themeManager.background)
-                                    .skeuoRaised(cornerRadius: 15)
-                                    .foregroundColor(themeManager.textPrimary)
+                                NavigationLink(destination: SettingsView()) {
+                                    HomeCategoryCard(title: "Settings", icon: "gearshape.fill", color: .gray)
                                 }
                             }
                             .padding(.horizontal, 24)
-                            .padding(.top, 24)
-                            
-                            // 🚀 Media Folders Section (Standardized with Home layout)
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("MEDIA FOLDERS".localized)
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(themeManager.textSecondary)
-                                    .padding(.horizontal, 24)
-                                
-                                VStack(spacing: 12) {
-                                    ForEach(libraryService.mediaFolders, id: \.self) { folder in
-                                        HStack {
-                                            Image(systemName: "folder.fill")
-                                                .foregroundColor(.orange)
-                                            Text(folder)
-                                                .font(.system(size: 14))
-                                                .lineLimit(1)
-                                            Spacer()
-                                        }
-                                        .padding()
-                                        .background(themeManager.background)
-                                        .skeuoSunken(cornerRadius: 12)
-                                    }
-                                    
-                                    Button(action: { /* Add Folder Action */ }) {
-                                        HStack {
-                                            Image(systemName: "plus.circle.fill")
-                                            Text("Add Folder".localized)
-                                        }
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(themeManager.textPrimary)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(themeManager.background)
-                                        .skeuoRaised(cornerRadius: 12)
-                                    }
-                                }
-                                .padding(.horizontal, 24)
-                            }
-                            
-                            // 🚀 Scan Options Section
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("SCAN OPTIONS".localized)
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(themeManager.textSecondary)
-                                    .padding(.horizontal, 24)
-                                
-                                VStack(spacing: 0) {
-                                    Toggle("Parse .cue sheets".localized, isOn: $libraryService.parseCue)
-                                        .toggleStyle(SkeuoToggleStyle())
-                                        .padding()
-                                    Divider().padding(.horizontal, 20)
-                                    Toggle("Search for .lrc lyrics".localized, isOn: $libraryService.searchLrc)
-                                        .toggleStyle(SkeuoToggleStyle())
-                                        .padding()
-                                }
-                                .background(themeManager.background)
-                                .skeuoSunken(cornerRadius: 16)
-                                .padding(.horizontal, 24)
-                            }
-                            
-                            // 🚀 Maintenance Section
-                            VStack(spacing: 12) {
-                                Button(action: { libraryService.scanLibrary() }) {
-                                    HStack {
-                                        Text("Rescan Now".localized)
-                                        Spacer()
-                                        if libraryService.isScanning { ProgressView() }
-                                        else { Image(systemName: "arrow.clockwise") }
-                                    }
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(themeManager.textPrimary)
-                                    .padding()
-                                    .background(themeManager.background)
-                                    .skeuoRaised(cornerRadius: 12)
-                                }
-                                
-                                Button(action: { libraryService.clearLibrary() }) {
-                                    Text("Clear Library".localized)
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(.red)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(themeManager.background)
-                                        .skeuoRaised(cornerRadius: 12)
-                                }
-                            }
-                            .padding(.horizontal, 24)
-                            
-                            // 🚀 App Settings
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("GENERAL".localized)
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(themeManager.textSecondary)
-                                    .padding(.horizontal, 24)
-                                
-                                HStack {
-                                    Text("Theme".localized)
-                                        .font(.system(size: 14))
-                                    Spacer()
-                                    Picker("", selection: ThemeManager.shared.$currentTheme) {
-                                        Text("Light".localized).tag(AppTheme.light)
-                                        Text("Dark".localized).tag(AppTheme.dark)
-                                    }
-                                    .pickerStyle(.segmented)
-                                    .frame(width: 150)
-                                }
-                                .padding()
-                                .background(themeManager.background)
-                                .skeuoSunken(cornerRadius: 16)
-                                .padding(.horizontal, 24)
-                            }
-                            
-                            Spacer(minLength: 120)
                         }
+                        
+                        // Recent / Recommendation Section
+                        VStack(alignment: .leading, spacing: 20) {
+                            HStack {
+                                Text("Recently Played")
+                                    .font(.system(size: 20, weight: .black))
+                                    .foregroundColor(AppColors.textPrimary)
+                                Spacer()
+                                NavigationLink(destination: LibraryGridView()) {
+                                    Text("See All")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(AppColors.textActive)
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 20) {
+                                    ForEach(libraryService.playlist.prefix(5)) { track in
+                                        Button(action: { player.playTrack(track) }) {
+                                            VStack(alignment: .leading, spacing: 12) {
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .fill(Color.gray.opacity(0.1))
+                                                    .frame(width: 160, height: 160)
+                                                    .skeuoRaised(cornerRadius: 16)
+                                                
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Text(track.title)
+                                                        .font(.system(size: 15, weight: .bold))
+                                                        .foregroundColor(AppColors.textPrimary)
+                                                        .lineLimit(1)
+                                                    Text(track.artist)
+                                                        .font(.system(size: 13, weight: .medium))
+                                                        .foregroundColor(AppColors.textSecondary)
+                                                        .lineLimit(1)
+                                                }
+                                            }
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                            }
+                        }
+                        
+                        Spacer(minLength: 100)
                     }
+                    .padding(.vertical, 20)
                 }
                 
-                // 🚀 MiniPlayer Overlay
-                VStack {
-                    Spacer()
+                // Mini Player
+                if player.currentTrack != nil {
                     MiniPlayerView()
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 20)
                 }
             }
+            .background(AppColors.background.ignoresSafeArea())
             .navigationBarHidden(true)
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 
-enum LibraryFilter {
-    case album
-    case artist
+struct HomeCategoryCard: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(AppColors.textPrimary)
+            Text(title)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(AppColors.textPrimary)
+        }
+        .frame(width: 100, height: 100)
+        .skeuoRaised(cornerRadius: 20)
+    }
 }
-
