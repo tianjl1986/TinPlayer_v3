@@ -11,7 +11,7 @@ struct VinylTurntableView: View {
             // 🚀 1. 唱机机身底座 (Pure Code Restoration - Figma 9880:14740)
             RoundedRectangle(cornerRadius: 12)
                 .fill(themeManager.currentTheme == .light ? Color(hex: "#F5F5F5") : Color(hex: "#1A1A1A"))
-                .frame(width: 320, height: 320)
+                .frame(width: 340, height: 340) // 🚀 Figma 10411:1945
                 .skeuoRaised(radius: 12, offset: 6)
                 .overlay(
                     // 底座金属纹理
@@ -28,7 +28,7 @@ struct VinylTurntableView: View {
                         Color(hex: "#222222")
                     ], startPoint: .topLeading, endPoint: .bottomTrailing)
                 )
-                .frame(width: 290, height: 290)
+                .frame(width: 330, height: 330)
                 .skeuoRaised(radius: 4, offset: 2)
             
             // 🚀 3. 黑胶唱片主体 (Restored with Rings)
@@ -36,7 +36,7 @@ struct VinylTurntableView: View {
                 // Record Base
                 Circle()
                     .fill(Color(hex: "#050505"))
-                    .frame(width: 280, height: 280)
+                    .frame(width: 322, height: 322) // 🚀 Figma 10411:1948
                 
                 // Groove Rings
                 ForEach(0..<15) { i in
@@ -53,7 +53,7 @@ struct VinylTurntableView: View {
                         Image(uiImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 110, height: 110)
+                            .frame(width: 106, height: 106) // 🚀 Figma 10411:1949
                             .clipShape(Circle())
                             .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 4))
                     } else {
@@ -73,7 +73,7 @@ struct VinylTurntableView: View {
             
             // 🚀 4. 拟物化唱臂 (Pure Code Restoration - Figma 10411:1952)
             TonearmView(isPlaying: player.isPlaying)
-                .offset(x: 100, y: -70)
+                .offset(x: 110, y: -80) // 🚀 Refined positioning
         }
         .frame(width: 390, height: 390)
         .onReceive(timer) { _ in

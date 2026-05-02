@@ -16,7 +16,7 @@ struct NowPlayingView: View {
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.down")
-                            .foregroundColor(AppColors.textPrimary)
+                            .foregroundColor(themeManager.textPrimary)
                             .frame(width: 44, height: 44)
                     }
                 )
@@ -44,29 +44,28 @@ struct NowPlayingView: View {
                 ZStack(alignment: .leading) {
                     Capsule()
                         .fill(themeManager.background)
-                        .frame(height: 6)
+                        .frame(height: 8) // 🚀 Figma matched height
                         .skeuoSunken(radius: 4, offset: 2)
                     
                     Capsule()
-                        .fill(Color(hex: "#404040"))
-                        .frame(width: max(0, (UIScreen.main.bounds.width - 144) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 6)
+                        .fill(Color.orange) // 🚀 Consistent with design accent
+                        .frame(width: max(0, (UIScreen.main.bounds.width - 96) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 8)
                 }
                 .padding(.horizontal, 48)
                 .overlay(
                     HStack {
                         Text(formatDuration(player.currentTime))
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
                             .foregroundColor(themeManager.textSecondary)
-                            .frame(width: 48, alignment: .leading)
                         
                         Spacer()
                         
                         Text(formatDuration(player.duration))
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
                             .foregroundColor(themeManager.textSecondary)
-                            .frame(width: 48, alignment: .trailing)
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 48)
+                    .offset(y: -24) // 🚀 Position times above the bar per Figma 10411:1899
                 )
             }
             .padding(.bottom, 48)
@@ -86,7 +85,7 @@ struct NowPlayingView: View {
                 Button(action: { player.skipPrevious() }) {
                     Image(systemName: "backward.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(themeManager.textPrimary)
                         .frame(width: 56, height: 56)
                         .skeuoRaised(cornerRadius: 28)
                 }
@@ -94,7 +93,7 @@ struct NowPlayingView: View {
                 Button(action: { player.togglePlayPause() }) {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 32))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(themeManager.textPrimary)
                         .frame(width: 80, height: 80) // 🚀 Figma 80x80
                         .skeuoRaised(cornerRadius: 40)
                 }
@@ -102,7 +101,7 @@ struct NowPlayingView: View {
                 Button(action: { player.skipNext() }) {
                     Image(systemName: "forward.fill")
                         .font(.system(size: 18))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(themeManager.textPrimary)
                         .frame(width: 56, height: 56)
                         .skeuoRaised(cornerRadius: 28)
                 }
@@ -110,7 +109,7 @@ struct NowPlayingView: View {
                 Button(action: { player.togglePlaybackMode() }) {
                     Image(systemName: player.playbackMode.iconName)
                         .font(.system(size: 16))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(themeManager.textPrimary)
                         .frame(width: 44, height: 44)
                         .skeuoRaised(cornerRadius: 22)
                 }
@@ -118,7 +117,7 @@ struct NowPlayingView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 60)
         }
-        .background(AppColors.background.ignoresSafeArea())
+        .background(themeManager.background.ignoresSafeArea())
         .fullScreenCover(isPresented: $showLyrics) {
             LyricsView()
         }

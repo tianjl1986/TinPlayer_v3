@@ -35,43 +35,54 @@ struct LyricsView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
                 
-                // 🚀 2. Typewriter Platen Roller
+                // 🚀 2. Typewriter Platen Roller (Printer Mechanical Assembly)
                 ZStack {
+                    // Main Roller Body (Figma 10411:3203)
                     Capsule()
                         .fill(
                             LinearGradient(colors: [
                                 Color(hex: "#0d0d0d"), 
-                                Color(hex: "#333333"), 
+                                Color(hex: "#404040"), 
                                 Color(hex: "#1a1a1a"), 
-                                Color(hex: "#333333"), 
+                                Color(hex: "#404040"), 
                                 Color(hex: "#0d0d0d")
                             ], startPoint: .top, endPoint: .bottom)
                         )
-                        .frame(height: 36)
-                        .skeuoRaised(radius: 8, offset: 4)
+                        .frame(height: 32)
+                        .overlay(
+                            Capsule().stroke(Color.black.opacity(0.8), lineWidth: 1)
+                        )
                     
-                    // Roller Knobs (Restored with proper alignment)
+                    // Roller Knobs (Restored with proper alignment - Fix White Outline)
                     HStack {
                         metalKnob
                         Spacer()
                         metalKnob
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, -12) // Overlap slightly per mechanical design
                 }
                 .padding(.horizontal, 24)
                 .zIndex(10)
-                .offset(y: 20)
+                .offset(y: 16)
                 
                 // 🚀 3. Paper Sheet (Figma 9893:14779)
                 ZStack {
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(themeManager.currentTheme == .light ? Color(hex: "#FAF9F6") : Color(hex: "#121212"))
+                        .fill(themeManager.currentTheme == .light ? Color(hex: "#F4F4F0") : Color(hex: "#121212")) // 🚀 Figma 10411:3210
                         .skeuoRaised(radius: 8, offset: 4)
                         .overlay(
-                            VStack(spacing: 4) {
-                                ForEach(0..<60) { _ in
-                                    Divider().background(Color.black.opacity(0.03))
+                            // 🚀 Paper Grid Pattern (High Fidelity restoration)
+                            GeometryReader { geo in
+                                Path { path in
+                                    let spacing: CGFloat = 16
+                                    let lines = Int(geo.size.height / spacing)
+                                    for i in 0...lines {
+                                        let y = CGFloat(i) * spacing
+                                        path.move(to: CGPoint(x: 0, y: y))
+                                        path.addLine(to: CGPoint(x: geo.size.width, y: y))
+                                    }
                                 }
+                                .stroke(themeManager.currentTheme == .light ? Color.black.opacity(0.04) : Color.white.opacity(0.04), lineWidth: 0.5)
                             }
                         )
                     
@@ -121,17 +132,30 @@ struct LyricsView: View {
                 // 🚀 4. Bottom Controls (Standardized)
                 VStack(spacing: 24) {
                     // Mini Progress Bar on Bottom
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(themeManager.background)
-                            .frame(height: 4)
-                            .skeuoSunken(radius: 2, offset: 1)
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text(formatDuration(player.currentTime))
+                                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                .foregroundColor(themeManager.textSecondary)
+                            Spacer()
+                            Text(formatDuration(player.duration))
+                                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                .foregroundColor(themeManager.textSecondary)
+                        }
+                        .padding(.horizontal, 24)
                         
-                        Capsule()
-                            .fill(Color.orange)
-                            .frame(width: max(0, (UIScreen.main.bounds.width - 48) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 4)
+                        ZStack(alignment: .leading) {
+                            Capsule()
+                                .fill(themeManager.background)
+                                .frame(height: 6)
+                                .skeuoSunken(radius: 2, offset: 1)
+                            
+                            Capsule()
+                                .fill(Color.orange)
+                                .frame(width: max(0, (UIScreen.main.bounds.width - 48) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 6)
+                        }
+                        .padding(.horizontal, 24)
                     }
-                    .padding(.horizontal, 24)
                     
                     // Control Row
                     HStack(spacing: 0) {
@@ -186,8 +210,14 @@ struct LyricsView: View {
                     Color(hex: "#999999")
                 ], startPoint: .top, endPoint: .bottom)
             )
-            .frame(width: 48, height: 48)
-            .skeuoRaised(radius: 6, offset: 3)
-            .overlay(Circle().stroke(Color.black.opacity(0.1), lineWidth: 1))
+            .frame(width: 44, height: 44)
+            .overlay(
+                Circle()
+                    .stroke(
+                        AngularGradient(colors: [.white, .black.opacity(0.1), .white], center: .center),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
     }
 }
