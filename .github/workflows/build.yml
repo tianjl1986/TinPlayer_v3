@@ -23,9 +23,11 @@ jobs:
           set -e
           
           echo "🚀 Preparing project structure..."
-          # 核心修复：临时将项目重命名为 .swiftpm 以触发 Xcode 正确的可执行文件构建逻辑
+          # 【自动兼容修复】动态获取当前文件夹名并重命名为 .swiftpm，以触发 Xcode 正确的构建逻辑
+          CURRENT_FOLDER=$(basename $(pwd))
+          echo "Current folder is $CURRENT_FOLDER, renaming to TinPlayer.swiftpm"
           cd ..
-          mv Tin_Player-iOS-main TinPlayer.swiftpm
+          mv "$CURRENT_FOLDER" TinPlayer.swiftpm
           cd TinPlayer.swiftpm
           
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive DerivedData
@@ -87,7 +89,7 @@ jobs:
               <key>CFBundleName</key><string>TinPlayer</string>
               <key>CFBundlePackageType</key><string>APPL</string>
               <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>18</string>
+              <key>CFBundleVersion</key><string>20</string>
               <key>LSRequiresIPhoneOS</key><true/>
               <key>UILaunchScreen</key><dict/>
               <key>MinimumOSVersion</key><string>16.0</string>
