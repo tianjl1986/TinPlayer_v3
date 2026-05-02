@@ -11,7 +11,7 @@ struct AppColors {
     static var background: Color { ThemeManager.shared.background }
     static var textPrimary: Color { ThemeManager.shared.textPrimary }
     static var textSecondary: Color { ThemeManager.shared.textSecondary }
-    static var textActive: Color { Color.orange } // 选中的激活色
+    static var textActive: Color { Color.orange }
     static var shadowLight: Color { ThemeManager.shared.shadowLight }
     static var shadowDark: Color { ThemeManager.shared.shadowDark }
 }
@@ -43,7 +43,43 @@ class ThemeManager: ObservableObject {
     }
 }
 
-// MARK: - 拟物化阴影修饰器
+// MARK: - 全局公用工具函数
+public func formatDuration(_ time: TimeInterval) -> String {
+    guard time.isFinite && !time.isNaN && time >= 0 else { return "00:00" }
+    let mins = Int(time) / 60
+    let secs = Int(time) % 60
+    return String(format: "%02d:%02d", mins, secs)
+}
+
+// MARK: - 拟物化组件样式
+struct SkeuoToggleStyle: ToggleStyle {
+    @ObservedObject var themeManager = ThemeManager.shared
+    
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            configuration.label
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(themeManager.textPrimary)
+            Spacer()
+            Button(action: { configuration.isOn.toggle() }) {
+                ZStack {
+                    Capsule()
+                        .fill(themeManager.background)
+                        .skeuoSunken(cornerRadius: 15)
+                        .frame(width: 54, height: 28)
+                    
+                    Circle()
+                        .fill(configuration.isOn ? Color.orange : themeManager.textSecondary.opacity(0.3))
+                        .skeuoRaised(cornerRadius: 12)
+                        .frame(width: 24, height: 24)
+                        .offset(x: configuration.isOn ? 13 : -13)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+    }
+}
+
 struct SkeuoRaised: ViewModifier {
     var cornerRadius: CGFloat
     var radius: CGFloat

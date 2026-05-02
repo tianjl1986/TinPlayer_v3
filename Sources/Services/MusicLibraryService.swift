@@ -11,6 +11,11 @@ class MusicLibraryService: ObservableObject {
     @Published var isScanning = false
     @Published var mediaFolders: [String] = []
     
+    // 🚀 核心补全：计算属性 playlist，供 View 层快捷获取所有曲目
+    var playlist: [Track] {
+        return albums.flatMap { $0.tracks }
+    }
+    
     @AppStorage("parse_cue") var parseCue = true
     @AppStorage("search_lrc") var searchLrc = true
     @AppStorage("auto_scan") var autoScan = false
@@ -20,8 +25,6 @@ class MusicLibraryService: ObservableObject {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path ?? ""
         self.mediaFolders = saved.isEmpty ? [docs] : saved
         
-        // 🚀 核心修改：无论 autoScan 状态，启动即尝试获取权限并扫描
-        // 这样可以确保系统弹出权限申请框
         scanLibrary()
     }
     
@@ -36,7 +39,6 @@ class MusicLibraryService: ObservableObject {
         clearLibrary()
         
         Task {
-            // 🚀 核心优化：并行执行本地和系统库扫描，互不阻塞
             async let localScan: Void = scanLocalFolders()
             async let systemScan: Void = scanSystemLibrary()
             _ = await [localScan, systemScan]
@@ -99,7 +101,6 @@ class MusicLibraryService: ObservableObject {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fm = FileManager.default
         
-        // 🚀 核心修复：使用 while 循环替代 for-in 以兼容异步上下文
         guard let enumerator = fm.enumerator(at: docs, includingPropertiesForKeys: [.isRegularFileKey], options: [.skipsHiddenFiles]) else { return }
         
         var tempAlbums: [Album] = []
@@ -110,7 +111,6 @@ class MusicLibraryService: ObservableObject {
                 await parseMetadata(for: url, into: &tempAlbums)
             }
         }
-        
         
         let finalAlbums = tempAlbums
         await MainActor.run {
@@ -142,7 +142,6 @@ class MusicLibraryService: ObservableObject {
         
         if let idx = albumsList.firstIndex(where: { $0.title == albumName }) {
             albumsList[idx].tracks.append(track)
-            // 🚀 现在可以修改 coverImage 了
             if albumsList[idx].coverImage == nil { albumsList[idx].coverImage = artwork }
         } else {
             albumsList.append(Album(title: albumName, artist: artist, coverImage: artwork, trackCount: 1, releaseYear: "2024", tracks: [track]))
