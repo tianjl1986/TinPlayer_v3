@@ -3,35 +3,39 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
+    @ObservedObject var themeManager = ThemeManager.shared
     @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
         ZStack {
-            AppColors.background.ignoresSafeArea()
+            themeManager.background.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // 🚀 1. Top Bar
+                // 🚀 1. Top Bar (Figma 9893:14778)
                 HStack {
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.down")
                             .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(themeManager.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     Spacer()
-                    Text("LYRICS".localized)
+                    Text(localizationManager.t("LYRICS"))
                         .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(themeManager.textPrimary)
                     Spacer()
                     Button(action: { /* Options */ }) {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 20))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(themeManager.textPrimary)
+                            .frame(width: 44, height: 44)
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
-                .padding(.bottom, 12)
                 
-                // 🚀 2. Typewriter Platen Roller (Figma 9935:15203)
+                // 🚀 2. Typewriter Platen Roller
                 ZStack {
                     Capsule()
                         .fill(
@@ -44,213 +48,131 @@ struct LyricsView: View {
                             ], startPoint: .top, endPoint: .bottom)
                         )
                         .frame(height: 36)
-                        .skeuoRaised(cornerRadius: 18)
+                        .skeuoRaised(radius: 8, offset: 4)
                     
-                    // Roller Knobs
+                    // Roller Knobs (Restored with proper alignment)
                     HStack {
                         metalKnob
                         Spacer()
                         metalKnob
                     }
-                    .padding(.horizontal, -12)
+                    .padding(.horizontal, 8)
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 24)
                 .zIndex(10)
+                .offset(y: 20)
                 
-                // 🚀 2. Typewriter Roller (滚筒) - Figma 9935:15194
-                ZStack {
-                    Capsule()
-                        .fill(LinearGradient(colors: [Color(hex: "#1a1a1a"), Color(hex: "#333333"), Color(hex: "#000000")], startPoint: .top, endPoint: .bottom))
-                        .frame(height: 44)
-                        .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5)
-                    
-                    // 滚筒上的金属旋钮 (Knobs)
-                    HStack {
-                        Circle()
-                            .fill(LinearGradient(colors: [Color(hex: "#888888"), Color(hex: "#444444")], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 40, height: 40)
-                            .skeuoRaised(cornerRadius: 20)
-                            .offset(x: -20)
-                        Spacer()
-                        Circle()
-                            .fill(LinearGradient(colors: [Color(hex: "#888888"), Color(hex: "#444444")], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 40, height: 40)
-                            .skeuoRaised(cornerRadius: 20)
-                            .offset(x: 20)
-                    }
-                }
-                .zIndex(2)
-                .offset(y: -40)
-                
-                // 🚀 3. Paper Sheet (Figma 9935:15197)
+                // 🚀 3. Paper Sheet (Figma 9893:14779)
                 ZStack {
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(hex: "#fafafa")) // Ivory White
-                        .skeuoRaised(cornerRadius: 2)
+                        .fill(themeManager.currentTheme == .light ? Color(hex: "#FAF9F6") : Color(hex: "#121212"))
+                        .skeuoRaised(radius: 8, offset: 4)
                         .overlay(
-                            // 🚀 增加纸张纹理感
-                            VStack(spacing: 2) {
-                                ForEach(0..<100) { _ in
-                                    Divider().background(Color.black.opacity(0.02))
+                            VStack(spacing: 4) {
+                                ForEach(0..<60) { _ in
+                                    Divider().background(Color.black.opacity(0.03))
                                 }
                             }
                         )
                     
                     VStack(spacing: 0) {
-                        // Current Track Info
+                        // Current Track Info on Paper
                         VStack(spacing: 8) {
                             Text(player.currentTrack?.title ?? "---")
-                                .font(.system(size: 20, weight: .bold, design: .monospaced))
-                                .foregroundColor(Color(hex: "#1a1a1a"))
+                                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                                .foregroundColor(themeManager.textPrimary)
                             Text(player.currentTrack?.artist ?? "---")
-                                .font(.system(size: 16, weight: .medium, design: .monospaced))
-                                .foregroundColor(Color(hex: "#666666"))
+                                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                                .foregroundColor(themeManager.textSecondary)
                         }
-                        .padding(.top, 50)
+                        .padding(.top, 60)
                         
                         // Lyrics Content
                         ScrollViewReader { proxy in
                             ScrollView(showsIndicators: false) {
-                                VStack(spacing: 28) {
-                                    Spacer(minLength: 60)
+                                VStack(spacing: 24) {
+                                    Spacer(minLength: 40)
                                     if !player.currentTrackLyrics.isEmpty {
                                         ForEach(player.currentTrackLyrics.indices, id: \.self) { index in
                                             Text(player.currentTrackLyrics[index].text)
                                                 .font(.custom("Courier-Bold", size: 20))
-                                                .foregroundColor(index == player.currentLyricIndex ? Color(hex: "#000000") : Color(hex: "#bbbbbb"))
+                                                .foregroundColor(index == player.currentLyricIndex ? themeManager.textPrimary : themeManager.textSecondary.opacity(0.4))
                                                 .multilineTextAlignment(.center)
-                                                .padding(.horizontal, 44)
+                                                .padding(.horizontal, 32)
                                                 .scaleEffect(index == player.currentLyricIndex ? 1.05 : 1.0)
                                                 .id(index)
                                         }
                                     } else {
-                                        VStack(spacing: 24) {
-                                            if player.isSearchingLyrics {
-                                                ProgressView()
-                                                Text("SEARCHING...".localized)
-                                                    .font(.custom("Courier", size: 16))
-                                                    .foregroundColor(.gray)
-                                            } else {
-                                                Image(systemName: "text.magnifyingglass")
-                                                    .font(.system(size: 40))
-                                                    .foregroundColor(.gray.opacity(0.3))
-                                                
-                                                Text("NO LYRICS FOUND".localized)
-                                                    .font(.custom("Courier", size: 16))
-                                                    .foregroundColor(.gray)
-                                                
-                                                Button(action: {
-                                                    Task {
-                                                        await player.manualSearchLyrics()
-                                                    }
-                                                }) {
-                                                    Text("RETRY SEARCH".localized)
-                                                        .font(.system(size: 14, weight: .bold))
-                                                        .foregroundColor(.white)
-                                                        .padding(.horizontal, 24)
-                                                        .padding(.vertical, 12)
-                                                        .background(Color.orange)
-                                                        .cornerRadius(20)
-                                                        .skeuoRaised(cornerRadius: 20)
-                                                }
-                                            }
-                                        }
-                                        .padding(.top, 100)
+                                        noLyricsView
                                     }
-                                    Spacer(minLength: 250)
+                                    Spacer(minLength: 200)
                                 }
                             }
                             .onChange(of: player.currentLyricIndex) { newIndex in
-                                withAnimation(.easeInOut(duration: 1.0)) {
+                                withAnimation(.easeInOut(duration: 0.8)) {
                                     proxy.scrollTo(newIndex, anchor: .center)
                                 }
                             }
                         }
                     }
                 }
-                .padding(.horizontal, 28)
-                .offset(y: -15)
+                .padding(.horizontal, 24)
                 
-                // 🚀 4. Bottom Controls (Figma 9956:15408)
-                VStack(spacing: 32) {
-                    // Progress Bar
-                    HStack(spacing: 16) {
-                        Text(formatDuration(player.currentTime))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(AppColors.textSecondary)
-                            .frame(width: 45)
+                // 🚀 4. Bottom Controls (Standardized)
+                VStack(spacing: 24) {
+                    // Mini Progress Bar on Bottom
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(themeManager.background)
+                            .frame(height: 4)
+                            .skeuoSunken(radius: 2, offset: 1)
                         
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(AppColors.background)
-                                .skeuoSunken(cornerRadius: 4)
-                                .frame(height: 8)
-                            
-                            Capsule()
-                                .fill(Color(hex: "#404040"))
-                                .frame(width: max(0, CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * 200), height: 8)
-                        }
-                        
-                        Text(formatDuration(player.duration))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(AppColors.textSecondary)
-                            .frame(width: 45)
+                        Capsule()
+                            .fill(Color.orange)
+                            .frame(width: max(0, (UIScreen.main.bounds.width - 48) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 4)
                     }
                     .padding(.horizontal, 24)
                     
-                    // Playback Controls
-                    HStack(spacing: 20) {
-                        Button(action: { /* Toggle LRC */ }) {
-                            Text("LRC")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(AppColors.textSecondary)
-                                .frame(width: 54, height: 54)
-                                .skeuoRaised(cornerRadius: 27)
-                        }
-                        
+                    // Control Row
+                    HStack(spacing: 0) {
+                        playbackButton(icon: "backward.fill", size: 54, action: { player.skipPrevious() })
                         Spacer()
-                        
-                        Button(action: { player.skipPrevious() }) {
-                            Image(systemName: "backward.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(hex: "#1a1a1a"))
-                                .frame(width: 64, height: 64)
-                                .skeuoRaised(cornerRadius: 32)
-                        }
-                        
-                        Button(action: { player.togglePlayPause() }) {
-                            Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(Color(hex: "#1a1a1a"))
-                                .frame(width: 80, height: 80)
-                                .skeuoRaised(cornerRadius: 40)
-                        }
-                        
-                        Button(action: { player.skipNext() }) {
-                            Image(systemName: "forward.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color(hex: "#1a1a1a"))
-                                .frame(width: 64, height: 64)
-                                .skeuoRaised(cornerRadius: 32)
-                        }
-                        
+                        playbackButton(icon: player.isPlaying ? "pause.fill" : "play.fill", size: 72, action: { player.togglePlayPause() })
                         Spacer()
-                        
-                        Button(action: { /* Queue */ }) {
-                            Image(systemName: "list.bullet")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(AppColors.textSecondary)
-                                .frame(width: 54, height: 54)
-                                .skeuoRaised(cornerRadius: 27)
-                        }
+                        playbackButton(icon: "forward.fill", size: 54, action: { player.skipNext() })
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+                    .padding(.horizontal, 48)
                 }
-                .background(AppColors.background)
+                .padding(.vertical, 32)
+                .background(themeManager.background)
             }
         }
-        .navigationBarHidden(true)
+    }
+    
+    private func playbackButton(icon: String, size: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(themeManager.background)
+                    .skeuoRaised(radius: 8, offset: 4)
+                Image(systemName: icon)
+                    .font(.system(size: size * 0.4, weight: .bold))
+                    .foregroundColor(themeManager.textPrimary)
+            }
+            .frame(width: size, height: size)
+        }
+    }
+    
+    private var noLyricsView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "text.magnifyingglass")
+                .font(.system(size: 40))
+                .foregroundColor(themeManager.textSecondary.opacity(0.3))
+            Text(localizationManager.t("NO LYRICS FOUND"))
+                .font(.custom("Courier", size: 16))
+                .foregroundColor(themeManager.textSecondary)
+        }
+        .padding(.top, 100)
     }
     
     private var metalKnob: some View {
@@ -264,8 +186,8 @@ struct LyricsView: View {
                     Color(hex: "#999999")
                 ], startPoint: .top, endPoint: .bottom)
             )
-            .frame(width: 54, height: 54)
-            .skeuoRaised(cornerRadius: 27)
-            .shadow(color: .black.opacity(0.2), radius: 4, x: 2, y: 4)
+            .frame(width: 48, height: 48)
+            .skeuoRaised(radius: 6, offset: 3)
+            .overlay(Circle().stroke(Color.black.opacity(0.1), lineWidth: 1))
     }
 }

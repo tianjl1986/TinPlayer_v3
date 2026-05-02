@@ -23,11 +23,11 @@ struct MiniPlayerView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(track.title)
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(AppColors.textPrimary)
+                            .foregroundColor(themeManager.textPrimary)
                             .lineLimit(1)
                         Text(track.artist)
                             .font(.system(size: 13))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(themeManager.textSecondary)
                             .lineLimit(1)
                     }
                     
@@ -37,9 +37,9 @@ struct MiniPlayerView: View {
                         Button(action: { player.togglePlayPause() }) {
                             Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
-                                .skeuoRaised(cornerRadius: 22)
+                                .skeuoRaised(radius: 4, offset: 2)
                         }
                         
                         Button(action: { player.skipNext() }) {
@@ -53,9 +53,9 @@ struct MiniPlayerView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
-                .background(AppColors.background)
-                .skeuoSunken(cornerRadius: 24)
-                .padding(.horizontal, 16)
+                .background(themeManager.background)
+                .skeuoSunken(radius: 8, offset: 4)
+                .padding(.horizontal, 24)
                 .padding(.bottom, 24)
                 .onTapGesture { showPlayer = true }
             }

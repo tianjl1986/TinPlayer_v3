@@ -9,7 +9,7 @@ struct HomeView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                AppColors.background.ignoresSafeArea()
+                themeManager.background.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
                     AppHeader(title: "TIN PLAYER")

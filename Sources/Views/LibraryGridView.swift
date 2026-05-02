@@ -11,9 +11,12 @@ struct LibraryGridView: View {
     @State private var isGridView = false // 🚀 默认书架视图，用户要求优先还原
     
     var filteredAlbums: [Album] {
-        // Simple logic for now: libraryService.albums
-        // In a real app, you'd sort/group differently
-        libraryService.albums
+        if filter == .artist {
+            // Group by artist and return one representative album per artist
+            let grouped = Dictionary(grouping: libraryService.albums, by: { $0.artist })
+            return grouped.values.compactMap { $0.first }.sorted(by: { $0.artist < $1.artist })
+        }
+        return libraryService.albums
     }
     
     var body: some View {
@@ -77,60 +80,63 @@ struct AlbumBookshelfSpine: View {
     let album: Album
     @State private var isExpanded = false
     @EnvironmentObject var musicPlayer: MusicPlayer
+    @ObservedObject var themeManager = ThemeManager.shared
     
     var body: some View {
         VStack(spacing: 0) {
-            // 🚀 Spine Header
-            Button(action: { withAnimation(.spring()) { isExpanded.toggle() } }) {
-                ZStack(alignment: .leading) {
-                    if let image = album.coverImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(height: 54)
-                            .clipped()
-                            .blur(radius: 20)
-                            .overlay(Color.black.opacity(0.4))
-                    } else {
-                        Color(hex: "#1a1a1a")
-                            .frame(height: 54)
+            // 🚀 Spine Header (Figma 10411:1930)
+            ZStack(alignment: .leading) {
+                if let image = album.coverImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 54)
+                        .clipped()
+                        .blur(radius: 20)
+                        .overlay(Color.black.opacity(0.4))
+                } else {
+                    Color(hex: "#1a1a1a")
+                        .frame(height: 54)
+                }
+                
+                HStack(spacing: 16) {
+                    Rectangle()
+                        .fill(Color.orange.opacity(0.8))
+                        .frame(width: 4, height: 54)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(album.title)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                        
+                        Text(album.artist)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            .lineLimit(1)
                     }
                     
-                    HStack(spacing: 16) {
-                        Rectangle()
-                            .fill(Color.orange.opacity(0.8))
-                            .frame(width: 4, height: 54)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(album.title)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            
-                            Text(album.artist)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white.opacity(0.7))
-                                .lineLimit(1)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                            .padding(.trailing, 16)
-                    }
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white.opacity(0.5))
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        .padding(.trailing, 16)
                 }
             }
-            .buttonStyle(PlainButtonStyle())
             .cornerRadius(8)
-            .skeuoRaised(cornerRadius: 8)
+            .skeuoRaised(radius: 4, offset: 2)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    isExpanded.toggle()
+                }
+            }
             
             // 🚀 Expanded Tracklist
             if isExpanded {
                 VStack(spacing: 0) {
-                    // 🚀 Add Detail View Entry
                     NavigationLink(destination: AlbumDetailView(album: album)) {
                         HStack {
                             Image(systemName: "info.circle")
@@ -153,18 +159,18 @@ struct AlbumBookshelfSpine: View {
                             HStack(spacing: 12) {
                                 Text(String(format: "%02d", index + 1))
                                     .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                                     .frame(width: 24)
                                 
                                 Text(track.title)
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(musicPlayer.currentTrack?.id == track.id ? .orange : AppColors.textPrimary)
+                                    .foregroundColor(musicPlayer.currentTrack?.id == track.id ? .orange : themeManager.textPrimary)
                                 
                                 Spacer()
                                 
                                 Text(track.duration)
                                     .font(.system(size: 12))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
@@ -175,7 +181,7 @@ struct AlbumBookshelfSpine: View {
                         }
                     }
                 }
-                .background(AppColors.background.opacity(0.3))
+                .background(themeManager.background.opacity(0.5))
                 .cornerRadius(8)
                 .padding(.top, 4)
                 .transition(.move(edge: .top).combined(with: .opacity))

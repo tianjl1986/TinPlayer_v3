@@ -32,35 +32,44 @@ struct NowPlayingView: View {
             VStack(spacing: 8) {
                 Text(player.currentTrack?.title ?? localizationManager.t("UNKNOWN_TITLE"))
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(themeManager.textPrimary)
                 Text(player.currentTrack?.artist ?? localizationManager.t("UNKNOWN_ARTIST"))
                     .font(.system(size: 16))
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(themeManager.textSecondary)
             }
-            .padding(.bottom, 40) // 🚀 到进度条的间距: 40pt
+            .padding(.horizontal, 24)
+            .padding(.top, 48)
             
-            // 3. 下沉式进度条
             VStack(spacing: 12) {
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(AppColors.background)
-                        .skeuoSunken(cornerRadius: 3)
+                        .fill(themeManager.background)
                         .frame(height: 6)
+                        .skeuoSunken(radius: 4, offset: 2)
                     
                     Capsule()
-                        .fill(Color.orange)
-                        .frame(width: max(0, CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * (UIScreen.main.bounds.width - 80)), height: 6)
+                        .fill(Color(hex: "#404040"))
+                        .frame(width: max(0, (UIScreen.main.bounds.width - 144) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 6)
                 }
-                
-                HStack {
-                    Text(formatDuration(player.currentTime))
-                    Spacer()
-                    Text(formatDuration(player.duration))
-                }
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(AppColors.textSecondary)
+                .padding(.horizontal, 48)
+                .overlay(
+                    HStack {
+                        Text(formatDuration(player.currentTime))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(themeManager.textSecondary)
+                            .frame(width: 48, alignment: .leading)
+                        
+                        Spacer()
+                        
+                        Text(formatDuration(player.duration))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(themeManager.textSecondary)
+                            .frame(width: 48, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 24)
+                )
             }
-            .padding(.top, 48)
+            .padding(.bottom, 48)
 
             Spacer()
 

@@ -18,7 +18,7 @@ struct AlbumDetailView: View {
                         Button(action: { presentationMode.wrappedValue.dismiss() }) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 20))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 40, height: 40)
                         }
                     )
@@ -48,7 +48,7 @@ struct AlbumDetailView: View {
                                 
                                 Text("\(album.artist) • \(album.releaseYear)")
                                     .font(.system(size: 14, weight: .regular))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                             }
                             
                             HStack(spacing: 16) {
@@ -59,9 +59,9 @@ struct AlbumDetailView: View {
                                 }) {
                                     Text("Play All")
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(AppColors.textPrimary)
+                                        .foregroundColor(themeManager.textPrimary)
                                         .frame(width: 99, height: 41)
-                                        .skeuoRaised(cornerRadius: 24)
+                                        .skeuoRaised(radius: 4, offset: 2)
                                 }
                                 
                                 Button(action: {
