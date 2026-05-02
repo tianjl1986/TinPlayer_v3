@@ -1,4 +1,4 @@
-name: TinPlayer Final Success
+name: TinPlayer Bruteforce Build
 
 on:
   push:
@@ -21,7 +21,6 @@ jobs:
       - name: Build
         run: |
           set -e
-          echo "🚀 Building with Xcode 16..."
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -35,66 +34,29 @@ jobs:
           rm -rf Payload TinPlayer.ipa
           mkdir -p Payload/TinPlayer.app
 
-          echo "🔍 正在全盘搜索真正的 iOS 二进制文件..."
-          # 寻找最大的 Mach-O 二进制文件
-          REAL_BINARY=$(find ./DerivedData -type f -size +1M -perm +111 ! -path "*.xcassets*" ! -path "*.appframework*" | xargs file | grep "Mach-O 64-bit executable" | cut -d: -f1 | head -n 1)
-
-          if [ -z "$REAL_BINARY" ]; then
-            echo "⚠️ 未找到大于 1MB 的二进制，尝试寻找最大的可执行文件..."
-            REAL_BINARY=$(find ./DerivedData -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | xargs du -s | sort -rn | head -n 1 | awk '{print $2}')
-          fi
-
-          if [ -n "$REAL_BINARY" ]; then
-            echo "✅ 锁定目标文件: $REAL_BINARY"
-            cp "$REAL_BINARY" Payload/TinPlayer.app/TinPlayer
-            chmod +x Payload/TinPlayer.app/TinPlayer
-          else
-            echo "❌ 错误: 找不到二进制文件！"
-            exit 1
-          fi
-
-          # 2. 补全资源
-          find ./DerivedData -name "Assets.car" -exec cp {} Payload/TinPlayer.app/ \; 2>/dev/null || true
+          echo "📦 正在执行全量打包策略..."
           
-          # 3. 注入 Info.plist
+          # 1. 定位编译产物目录
+          PRODUCT_DIR=$(find ./DerivedData -name "Release-iphoneos" -type d | head -n 1)
+          echo "✅ 产物目录: $PRODUCT_DIR"
+          
+          # 2. 将该目录下所有文件拷贝进 .app (包括可能的动态库和资源)
+          cp -R "$PRODUCT_DIR/" Payload/TinPlayer.app/
+          
+          # 3. 寻找并确保主执行文件名为 TinPlayer
+          # 如果目录下没有叫 TinPlayer 的文件，找体积最大的那个重命名
+          if [ ! -f "Payload/TinPlayer.app/TinPlayer" ]; then
+             echo "⚠️ 未发现 TinPlayer 二进制，寻找替代品..."
+             # 找体积最大的可执行文件
+             BIGGEST=$(find Payload/TinPlayer.app -type f -perm +111 | xargs du -s | sort -rn | head -n 1 | awk '{print $2}')
+             if [ -n "$BIGGEST" ]; then
+                mv "$BIGGEST" Payload/TinPlayer.app/TinPlayer
+             fi
+          fi
+          
+          chmod +x Payload/TinPlayer.app/TinPlayer
+          
+          # 4. 强制覆盖/注入正确的 Info.plist
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>22</string>
-              <key>LSRequiresIPhoneOS</key><true/>
-              <key>UILaunchScreen</key><dict/>
-              <key>MinimumOSVersion</key><string>16.0</string>
-              <key>UIDeviceFamily</key><array><integer>1</integer></array>
-              <key>UIFileSharingEnabled</key><true/>
-              <key>LSSupportsOpeningDocumentsInPlace</key><true/>
-              <key>NSAppleMusicUsageDescription</key>
-              <string>我们需要访问您的媒体库以扫描和播放本地音乐。</string>
-              <key>UIBackgroundModes</key><array><string>audio</string></array>
-          </dict>
-          </plist>
-          EOF
-
-          # 4. 封装
-          zip -q -r TinPlayer.ipa Payload
-          echo "✅ 最终 IPA 体积: $(du -sh TinPlayer.ipa | cut -f1)"
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TinPlayer-v1.3.0-Final
-          path: TinPlayer.ipa
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v1.3.0-final-correct"
-          files: TinPlayer.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.
