@@ -114,6 +114,4 @@ struct NowPlayingView: View {
             LyricsView()
         }
     }
-
-    }
 }
