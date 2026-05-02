@@ -1,4 +1,4 @@
-name: TinPlayer SwiftPM App Fix
+name: TinPlayer Manual Bundle Fix
 
 on:
   push:
@@ -23,8 +23,7 @@ jobs:
           set -e
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive
           
-          echo "🚀 Building SwiftPM App..."
-          # 执行编译
+          echo "🚀 Compiling Source Code..."
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -32,50 +31,48 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SKIP_INSTALL=NO
 
-          echo "📦 Locating App Bundle..."
-          # 关键：在整个 Archive 产物中寻找 .app 文件夹
-          APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
+          echo "📦 Manually Constructing App Bundle..."
+          # 1. 创建标准的 iOS App 目录结构
+          mkdir -p Payload/TinPlayer.app
           
-          if [ -z "$APP_PATH" ]; then
-            echo "⚠️ Not found in Archive, searching DerivedData..."
-            # 如果 Archive 里没有，去编译缓存里暴力搜索
-            APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -name "TinPlayer.app" -type d -path "*/Release-iphoneos/*" | head -n 1)
-          fi
-
-          if [ -n "$APP_PATH" ]; then
-            echo "✅ Found App Bundle at: $APP_PATH"
-            # 检查一下包的大小，确保不是空壳
-            du -sh "$APP_PATH"
-            
-            mkdir -p Payload
-            cp -R "$APP_PATH" Payload/
-            
-            # 补丁：确保二进制文件有执行权限（针对部分签名剥离的情况）
-            BINARY_NAME=$(defaults read "$(pwd)/$APP_PATH/Info.plist" CFBundleExecutable 2>/dev/null || echo "TinPlayer")
-            chmod +x "Payload/$(basename "$APP_PATH")/$BINARY_NAME"
+          # 2. 提取被 Xcode 藏起来的二进制文件
+          # 根据日志，它在 Products/usr/local/bin/ 里
+          BINARY_SOURCE="./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer"
+          if [ -f "$BINARY_SOURCE" ]; then
+            echo "✅ Found Binary at $BINARY_SOURCE"
+            cp "$BINARY_SOURCE" Payload/TinPlayer.app/TinPlayer
+            chmod +x Payload/TinPlayer.app/TinPlayer
           else
-            echo "❌ ERROR: App Bundle (.app) not found! Listing all products:"
-            find . -name "*" -maxdepth 3
-            exit 1
+            echo "❌ ERROR: Binary not found at $BINARY_SOURCE. Searching..."
+            # 备选方案：全目录搜索
+            FOUND_BIN=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 | head -n 1)
+            cp "$FOUND_BIN" Payload/TinPlayer.app/TinPlayer
+            chmod +x Payload/TinPlayer.app/TinPlayer
           fi
-          
-          # 压缩成 IPA
-          echo "🗜️ Zipping IPA..."
-          zip -q -r TinPlayer.ipa Payload
-          echo "✅ Done! Final IPA is ready."
 
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: TinPlayer-v1.3.0-IPA
-          path: TinPlayer.ipa
+          # 3. 手动编译 Assets (核心步骤：解决图标和资源缺失)
+          echo "🎨 Compiling Assets.xcassets..."
+          xcrun actool Assets.xcassets \
+            --compile Payload/TinPlayer.app \
+            --platform iphoneos \
+            --minimum-deployment-target 17.0 \
+            --app-icon AppIcon \
+            --output-partial-info-plist partial.plist
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "v1.3.0-final-${{ github.run_number }}"
-          name: "Tin Player Release #${{ github.run_number }}"
-          body: "🚀 完美修复版：直接抓取完整 .app 包，包含所有资源和正确的二进制文件。支持 iPhone 14 Pro 分辨率。"
-          files: TinPlayer.ipa
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 4. 生成 Info.plist
+          cat << 'EOF' > Payload/TinPlayer.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key><string>TinPlayer</string>
+              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
+              <key>CFBundleName</key><string>TinPlayer</string>
+              <key>CFBundlePackageType</key><string>APPL</string>
+              <key>CFBundleShortVersionString</key><string>1.3.0</string>
+              <key>CFBundleVersion</key><string>15</string>
+              <key>LSRequiresIPhoneOS</key><true/>
+              <key>UILaunchScreen</key><dict/>
+              <key>MinimumOSVersion</key><string>17.0</string>
+              <key>UIDeviceFamily</key><array><integer>1</integer></array>
+              <key>UIRequiredDeviceCapabilities</key><array><string>arm6
