@@ -1,4 +1,4 @@
-name: TinPlayer .swiftpm Recognition Build
+name: TinPlayer Final Victory Build
 
 on:
   push:
@@ -18,16 +18,24 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Rename and Build
+      - name: Prepare .swiftpm Environment
         run: |
           set -e
-          # 🚀 核心修复：将项目移动到 .swiftpm 结尾的文件夹
-          # 只有这样，xcodebuild 才会承认它是一个 iOS App
+          # 1. 创建 .swiftpm 目录并拷贝
           mkdir -p TinPlayer.swiftpm
           cp -R ./* TinPlayer.swiftpm/ || true
           cd TinPlayer.swiftpm
 
-          echo "🏗️ 正在以 .swiftpm App 模式启动构建..."
+          # 2. 🚀 临时移除图标配置，防止 actool 报错中断构建
+          sed -i '' '/appIcon: .asset("AppIcon"),/d' Package.swift
+          
+          # 3. 打印一下现在的 Package.swift 确认修改
+          cat Package.swift
+
+      - name: Archive Project
+        run: |
+          set -e
+          cd TinPlayer.swiftpm
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -37,35 +45,31 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Extract Real iOS App
+      - name: Extract and Verify IPA
         run: |
           set -e
-          echo "📂 检查 Archive 产物..."
-          # 理论上，现在产物应该出现在 Products/Applications 下了
-          find ./TinPlayer.xcarchive -name "*.app" -type d
-          
+          echo "📂 正在提取 .app 包..."
           APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
           
           if [ -n "$APP_PATH" ]; then
-             echo "🎯 终于抓到了真正的 iOS App: $APP_PATH"
+             echo "🎯 目标锁定: $APP_PATH"
              mkdir -p Payload
              cp -R "$APP_PATH" Payload/
              
-             # 自动修正 Info.plist 权限（如果缺失）
-             PLIST="Payload/$(basename "$APP_PATH")/Info.plist"
-             /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '扫描本地音乐库'" "$PLIST" 2>/dev/null || true
-             /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" "$PLIST" 2>/dev/null || true
+             # 确保主程序有执行权限
+             BIN_NAME=$(defaults read "$APP_PATH/Info.plist" CFBundleExecutable)
+             chmod +x "Payload/$(basename "$APP_PATH")/$BIN_NAME"
              
              zip -q -r TinPlayer.ipa Payload
              echo "✅ 最终胜利！IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
           else
-             echo "❌ 依然不是 .app 包，检查 bin 目录..."
-             ls -R ./TinPlayer.xcarchive/Products/
+             echo "❌ 依然没找到 .app 包，检查目录结构..."
+             find ./TinPlayer.xcarchive -maxdepth 5
              exit 1
           fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-Corrected
+          name: TinPlayer-v1.3.0-THE-REAL-ONE
           path: TinPlayer.ipa
