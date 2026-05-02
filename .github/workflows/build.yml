@@ -1,4 +1,4 @@
-name: TinPlayer Deep Diagnostic Build
+name: TinPlayer Final Victory Build
 
 on:
   push:
@@ -18,14 +18,7 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Diagnostic - Print Project Structure
-        run: |
-          echo "📂 项目结构库:"
-          ls -R
-          echo "📄 Package.swift 内容:"
-          cat Package.swift || echo "未找到 Package.swift"
-
-      - name: Build with No Stripping
+      - name: Build
         run: |
           set -e
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
@@ -33,33 +26,24 @@ jobs:
             -destination "generic/platform=iOS" \
             -derivedDataPath ./DerivedData \
             -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            STRIP_INSTALLED_PRODUCT=NO \
-            COPY_PHASE_STRIP=NO
+            CODE_SIGNING_ALLOWED=NO
 
-      - name: Assembly & Deep Scan
+      - name: Assembly IPA
         run: |
           set -e
           rm -rf Payload TinPlayer.ipa
-          mkdir -p Payload/TinPlayer.app/Frameworks
+          mkdir -p Payload/TinPlayer.app
 
-          echo "🔍 寻找所有大于 500KB 的产物..."
-          find ./DerivedData -type f -size +500k ! -path "*/.git/*" || true
+          # 1. 强制拷贝二进制（使用 -L 确保跟随符号链接）
+          echo "🚀 正在搬运主程序..."
+          cp -L ./DerivedData/Build/Products/Release-iphoneos/TinPlayer Payload/TinPlayer.app/TinPlayer
+          chmod +x Payload/TinPlayer.app/TinPlayer
           
-          echo "🔍 寻找所有的 .swiftmodule (确定代码在哪)..."
-          find ./DerivedData -name "*.swiftmodule" || true
+          # 2. 搬运资源文件
+          echo "🎨 正在搬运资源..."
+          cp -L ./DerivedData/Build/Products/Release-iphoneos/Assets.car Payload/TinPlayer.app/ 2>/dev/null || true
 
-          # 抓取主程序
-          REAL_BINARY=$(find ./DerivedData/Build/Products -name "TinPlayer" -type f ! -name "*.*" -perm +111 | head -n 1)
-          if [ -n "$REAL_BINARY" ]; then
-             cp "$REAL_BINARY" Payload/TinPlayer.app/TinPlayer
-             chmod +x Payload/TinPlayer.app/TinPlayer
-          fi
-
-          # 抓取所有动态库
-          find ./DerivedData/Build/Products -name "*.framework" -exec cp -R {} Payload/TinPlayer.app/Frameworks/ \; 2>/dev/null || true
-          
-          # 注入基础 Info.plist
+          # 3. 构造 Info.plist (完全匹配你的 Package.swift)
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -70,23 +54,42 @@ jobs:
               <key>CFBundleName</key><string>TinPlayer</string>
               <key>CFBundlePackageType</key><string>APPL</string>
               <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>29</string>
+              <key>CFBundleVersion</key><string>30</string>
               <key>LSRequiresIPhoneOS</key><true/>
               <key>UILaunchScreen</key><dict/>
               <key>MinimumOSVersion</key><string>16.0</string>
               <key>UIDeviceFamily</key><array><integer>1</integer></array>
               <key>UIFileSharingEnabled</key><true/>
-              <key>NSAppleMusicUsageDescription</key><string>扫描本地音乐</string>
+              <key>NSAppleMusicUsageDescription</key>
+              <string>我们需要访问您的本地音乐库以进行扫描和播放。</string>
               <key>UIBackgroundModes</key><array><string>audio</string></array>
           </dict>
           </plist>
           EOF
 
+          # 4. 校验 Payload 内容
+          echo "📋 检查打包清单:"
+          ls -lh Payload/TinPlayer.app/
+          
+          if [ ! -s "Payload/TinPlayer.app/TinPlayer" ]; then
+             echo "❌ 错误：主程序文件大小为 0，拷贝失败！"
+             exit 1
+          fi
+
+          # 5. 封装
           zip -q -r TinPlayer.ipa Payload
           echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-Diagnostic
+          name: TinPlayer-v1.3.0-Success
           path: TinPlayer.ipa
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.3.0-success-final"
+          files: TinPlayer.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
