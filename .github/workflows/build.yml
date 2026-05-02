@@ -23,13 +23,16 @@ jobs:
           set -e
           
           echo "🚀 Preparing project structure..."
-          # 【自动兼容修复】动态获取当前文件夹名并重命名为 .swiftpm，以触发 Xcode 正确的构建逻辑
-          CURRENT_FOLDER=$(basename $(pwd))
-          echo "Current folder is $CURRENT_FOLDER, renaming to TinPlayer.swiftpm"
+          # 获取原始文件夹名以便后续还原
+          ORIGINAL_FOLDER=$(basename $(pwd))
+          echo "Current folder is $ORIGINAL_FOLDER, renaming to TinPlayer.swiftpm"
+          
+          # 重命名目录
           cd ..
-          mv "$CURRENT_FOLDER" TinPlayer.swiftpm
+          mv "$ORIGINAL_FOLDER" TinPlayer.swiftpm
           cd TinPlayer.swiftpm
           
+          # 清理旧产物
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive DerivedData
           
           echo "🚀 Building TinPlayer.swiftpm..."
@@ -45,7 +48,7 @@ jobs:
           echo "📦 Assembling Bundle..."
           mkdir -p Payload/TinPlayer.app
           
-          # 🔍 寻找真正的二进制文件 (锁定 DerivedData 目录，寻找大于 1MB 且带执行权限的文件)
+          # 🔍 寻找真正的二进制文件
           echo "🔍 Searching for the real executable binary..."
           REAL_BINARY=$(find ./DerivedData -type f -perm +111 ! -name "*.*" -size +1M | head -n 1)
           
@@ -54,31 +57,22 @@ jobs:
              REAL_BINARY=$(find ./TinPlayer.xcarchive -type f -perm +111 ! -name "*.*" -size +1M | head -n 1)
           fi
           
-          if [ -z "$REAL_BINARY" ]; then
-             echo "⚠️ Still not found, falling back to any large file > 1MB..."
-             REAL_BINARY=$(find ./DerivedData -type f -size +1M ! -name "*.car" ! -name "*.plist" | head -n 1)
-          fi
-          
           if [ -n "$REAL_BINARY" ]; then
             echo "✅ Found Real Binary: $REAL_BINARY"
             cp "$REAL_BINARY" Payload/TinPlayer.app/TinPlayer
             chmod +x Payload/TinPlayer.app/TinPlayer
           else
-            echo "❌ ERROR: No executable binary found (> 1MB)! Check your DerivedData."
-            find . -maxdepth 5 -not -path '*/.*'
+            echo "❌ ERROR: No executable binary found (> 1MB)!"
             exit 1
           fi
           
-          # 🔍 寻找资源文件 Assets.car
-          echo "🔍 Looking for Assets.car..."
+          # 🔍 寻找资源文件
           ASSETS_CAR=$(find ./DerivedData ./TinPlayer.xcarchive -name "Assets.car" | head -n 1)
           if [ -n "$ASSETS_CAR" ]; then
-            echo "✅ Found Assets.car: $ASSETS_CAR"
             cp "$ASSETS_CAR" Payload/TinPlayer.app/
           fi
           
-          # 📝 生成补全 Info.plist
-          echo "📝 Generating Info.plist..."
+          # 📝 生成 Info.plist
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -89,7 +83,7 @@ jobs:
               <key>CFBundleName</key><string>TinPlayer</string>
               <key>CFBundlePackageType</key><string>APPL</string>
               <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>20</string>
+              <key>CFBundleVersion</key><string>22</string>
               <key>LSRequiresIPhoneOS</key><true/>
               <key>UILaunchScreen</key><dict/>
               <key>MinimumOSVersion</key><string>16.0</string>
@@ -98,25 +92,19 @@ jobs:
               <string>我们需要访问您的本地音乐库以进行扫描和播放。</string>
               <key>NSLocalNetworkUsageDescription</key>
               <string>我们需要访问网络以获取歌词信息。</string>
-              <key>UIBackgroundModes</key>
-              <array>
-                  <string>audio</string>
-              </array>
-              <key>UISupportedInterfaceOrientations</key>
-              <array>
-                  <string>UIInterfaceOrientationPortrait</string>
-              </array>
+              <key>UIBackgroundModes</key><array><string>audio</string></array>
+              <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
           </dict>
           </plist>
           EOF
           
-          echo "📊 Final Payload structure:"
-          ls -R Payload/
-          
-          IPA_SIZE=$(du -sh Payload | cut -f1)
-          echo "📊 Final Payload size: $IPA_SIZE"
-          
+          echo "📊 Final Payload size: $(du -sh Payload | cut -f1)"
           zip -q -r TinPlayer.ipa Payload
+          
+          # 【重要：还原目录名】防止 GitHub Actions 清理失败
+          echo "🔄 Restoring folder name..."
+          cd ..
+          mv TinPlayer.swiftpm "$ORIGINAL_FOLDER"
           echo "✅ Done! IPA Created."
 
       - name: Upload IPA Artifact
