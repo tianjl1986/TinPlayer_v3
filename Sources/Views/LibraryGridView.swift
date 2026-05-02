@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 音乐库页 (结构拆解版，解决编译超时)
+// MARK: - 音乐库页 (结构拆解版 - 最终修正)
 struct LibraryGridView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
@@ -32,7 +32,6 @@ struct LibraryGridView: View {
         }
     }
 
-    // ── 顶部栏 ──
     private var headerView: some View {
         AppHeader(
             title: "MY COLLECTION".localized,
@@ -55,7 +54,6 @@ struct LibraryGridView: View {
         )
     }
 
-    // ── 内容分发区 ──
     private var contentView: some View {
         ZStack {
             if libraryService.isScanning {
@@ -72,7 +70,6 @@ struct LibraryGridView: View {
         }
     }
 
-    // ── 扫描中状态 ──
     private var scanningView: some View {
         VStack(spacing: 16) {
             ProgressView().scaleEffect(1.2)
@@ -84,7 +81,6 @@ struct LibraryGridView: View {
         .frame(maxHeight: .infinity)
     }
 
-    // ── 书架模式列表 ──
     private var shelfScrollView: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
@@ -107,16 +103,24 @@ struct LibraryGridView: View {
         }
     }
 
-    // ── 网格模式列表 ──
     private var gridScrollView: some View {
         ScrollView(showsIndicators: false) {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(groupedAlbums, id: \.key) { group in
-                    NavigationLink(destination: AlbumDetailView(album: Album(title: group.key, artist: group.tracks.first?.artist ?? "Unknown"))) {
+                    let firstTrack = group.tracks.first
+                    let album = Album(
+                        title: group.key,
+                        artist: firstTrack?.artist ?? "Unknown",
+                        coverImage: firstTrack?.artwork,
+                        trackCount: group.tracks.count,
+                        releaseYear: ""
+                    )
+                    
+                    NavigationLink(destination: AlbumDetailView(album: album)) {
                         AlbumGridCard(
                             title: group.key,
-                            artist: group.tracks.first?.artist ?? "",
-                            artwork: group.tracks.first?.artwork
+                            artist: album.artist,
+                            artwork: album.coverImage
                         )
                     }
                 }
@@ -125,7 +129,6 @@ struct LibraryGridView: View {
         }
     }
 
-    // 按专辑分组逻辑
     private var groupedAlbums: [AlbumGroup] {
         let dict = Dictionary(grouping: libraryService.tracks, by: { $0.album })
         let groups = dict.map { (key, value) -> AlbumGroup in
