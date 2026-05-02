@@ -94,6 +94,7 @@ struct VinylTurntableView: View {
             if isPlaying { startRotation() }
         }
     }
+}
     
     private func startRotation() {
         withAnimation(.linear(duration: 3.0).repeatForever(autoreverses: false)) {

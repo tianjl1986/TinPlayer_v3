@@ -127,4 +127,32 @@ struct AlbumCard: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 155, height: 155)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .skeuoRaised(cornerRadius: 8)
+                } else {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AppColors.surfaceMain)
+                        .frame(width: 155, height: 155)
+                        .skeuoRaised(cornerRadius: 8)
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .foregroundColor(AppColors.textSecondary)
+                        )
+                }
+            }
+            .frame(width: 163, height: 155)
+            
+            // Text Info - 10411:2235
+            VStack(alignment: .leading, spacing: 4) {
+                Text(album.title.uppercased())
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineLimit(1)
+                
+                Text(album.artist.uppercased())
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(AppColors.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+    }
 }

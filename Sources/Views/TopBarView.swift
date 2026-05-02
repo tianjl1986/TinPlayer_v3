@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct TopBarView: View {
-    @ObservedObject var themeManager = ThemeManager.shared
     
     var body: some View {
         HStack {

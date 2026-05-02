@@ -2,12 +2,12 @@ import Foundation
 import UIKit
 
 struct Track: Identifiable, Equatable {
-    // 🚀 核心修复：使用 fileName 作为 ID 确保稳定性，防止视图刷新导致 ID 变更引起的闪退
     var id: String { fileName }
     let title: String
     let artist: String
     let fileName: String
     let duration: String
+    var coverUrl: String = "" // Added for 1:1 compatibility
     
     static func == (lhs: Track, rhs: Track) -> Bool {
         lhs.id == rhs.id
@@ -15,11 +15,11 @@ struct Track: Identifiable, Equatable {
 }
 
 struct Album: Identifiable {
-    // 🚀 核心修复：使用 title+artist 作为 ID
     var id: String { title + artist }
     let title: String
     let artist: String
     var coverImage: UIImage?
+    var coverUrl: String = "" // Added for 1:1 compatibility
     let trackCount: Int
     let releaseYear: String
     var tracks: [Track]
