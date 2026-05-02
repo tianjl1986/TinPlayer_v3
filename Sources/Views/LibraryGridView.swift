@@ -6,57 +6,48 @@ struct LibraryGridView: View {
     @State private var expandedAlbumId: UUID? = nil
     
     var body: some View {
-        ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    headerView
-                    
-                    ForEach(libraryService.albums) { album in
-                        VStack(spacing: 0) {
-                            AlbumRowHeader(album: album, isExpanded: expandedAlbumId == album.id)
-                                .onTapGesture {
-                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                        expandedAlbumId = (expandedAlbumId == album.id) ? nil : album.id
+        NavigationView {
+            ZStack {
+                Color.black.edgesIgnoringSafeArea(.all)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        headerView
+                        ForEach(libraryService.albums) { album in
+                            VStack(spacing: 0) {
+                                AlbumRowHeader(album: album, isExpanded: expandedAlbumId == album.id)
+                                    .onTapGesture {
+                                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                            expandedAlbumId = (expandedAlbumId == album.id) ? nil : album.id
+                                        }
                                     }
+                                if expandedAlbumId == album.id {
+                                    TrackExpansionView(album: album)
+                                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
                                 }
-                            
-                            if expandedAlbumId == album.id {
-                                TrackExpansionView(album: album)
-                                    .transition(.asymmetric(
-                                        insertion: .opacity.combined(with: .move(edge: .top)),
-                                        removal: .opacity
-                                    ))
                             }
                         }
                     }
                 }
             }
+            .navigationBarHidden(true)
         }
     }
     
     private var headerView: some View {
         HStack {
-            Text("MY COLLECTION")
-                .font(.system(size: 24, weight: .black))
-                .foregroundColor(.white)
-                .tracking(2)
+            Text("MY COLLECTION").font(.system(size: 24, weight: .black)).foregroundColor(.white).tracking(2)
             Spacer()
-            // 🚀 这里点击去设置
             NavigationLink(destination: SettingsView()) {
-                Image(systemName: "gearshape.fill").foregroundColor(.white)
+                Image(systemName: "gearshape.fill").foregroundColor(.white).font(.title2)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 30)
+        .padding(.horizontal, 20).padding(.vertical, 24)
     }
 }
 
 struct AlbumRowHeader: View {
     let album: Album
     let isExpanded: Bool
-    
     var body: some View {
         HStack(spacing: 16) {
             if let image = album.coverImage {
@@ -64,13 +55,33 @@ struct AlbumRowHeader: View {
             } else {
                 Color.gray.opacity(0.3).frame(width: 54, height: 54).cornerRadius(6)
             }
-            Text("\(album.artist) - \(album.title)")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
+            Text("\(album.artist) - \(album.title)").font(.system(size: 16, weight: .semibold)).foregroundColor(.white).lineLimit(1)
             Spacer()
-            Image(systemName: "chevron.right")
-                .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                .foregroundColor(.white.opacity(0.4))
+            Image(systemName: "chevron.right").rotationEffect(.degrees(isExpanded ? 90 : 0)).foregroundColor(.white.opacity(0.4))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14
+        .padding(.horizontal, 20).padding(.vertical, 14)
+        .background(isExpanded ? Color.white.opacity(0.1) : Color.clear)
+    }
+}
+
+struct TrackExpansionView: View {
+    let album: Album
+    @EnvironmentObject var musicPlayer: MusicPlayer
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(Array(album.tracks.enumerated()), id: \.element.id) { index, track in
+                HStack {
+                    Text("\(index + 1)").foregroundColor(.gray).frame(width: 30, alignment: .leading)
+                    Text(track.title).foregroundColor(.white).font(.system(size: 15))
+                    Spacer()
+                    Text(track.duration).foregroundColor(.gray).font(.system(size: 12))
+                }
+                .padding(.leading, 65).padding(.trailing, 20).padding(.vertical, 12)
+                .contentShape(Rectangle())
+                .onTapGesture { musicPlayer.playTrack(track) }
+                Divider().background(Color.white.opacity(0.1)).padding(.leading, 65)
+            }
+        }
+        .background(Color.white.opacity(0.05))
+    }
+}
