@@ -27,9 +27,9 @@ struct HomeView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 120)
-                                    .background(AppColors.background)
-                                    .skeuoRaised(cornerRadius: 20)
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .background(themeManager.background)
+                                    .skeuoRaised(cornerRadius: 15)
+                                    .foregroundColor(themeManager.textPrimary)
                                 }
                                 
                                 NavigationLink(destination: LibraryGridView(filter: .artist)) {
@@ -41,9 +41,9 @@ struct HomeView: View {
                                     }
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 120)
-                                    .background(AppColors.background)
-                                    .skeuoRaised(cornerRadius: 20)
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .background(themeManager.background)
+                                    .skeuoRaised(cornerRadius: 15)
+                                    .foregroundColor(themeManager.textPrimary)
                                 }
                             }
                             .padding(.horizontal, 24)
@@ -53,7 +53,7 @@ struct HomeView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("MEDIA FOLDERS".localized)
                                     .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                                     .padding(.horizontal, 24)
                                 
                                 VStack(spacing: 12) {
@@ -77,10 +77,10 @@ struct HomeView: View {
                                             Text("Add Folder".localized)
                                         }
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(AppColors.textPrimary)
+                                        .foregroundColor(themeManager.textPrimary)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(AppColors.background)
+                                        .background(themeManager.background)
                                         .skeuoRaised(cornerRadius: 12)
                                     }
                                 }
@@ -91,7 +91,7 @@ struct HomeView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("SCAN OPTIONS".localized)
                                     .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                                     .padding(.horizontal, 24)
                                 
                                 VStack(spacing: 0) {
@@ -103,7 +103,7 @@ struct HomeView: View {
                                         .toggleStyle(SkeuoToggleStyle())
                                         .padding()
                                 }
-                                .background(AppColors.background)
+                                .background(themeManager.background)
                                 .skeuoSunken(cornerRadius: 16)
                                 .padding(.horizontal, 24)
                             }
@@ -118,9 +118,9 @@ struct HomeView: View {
                                         else { Image(systemName: "arrow.clockwise") }
                                     }
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(themeManager.textPrimary)
                                     .padding()
-                                    .background(AppColors.background)
+                                    .background(themeManager.background)
                                     .skeuoRaised(cornerRadius: 12)
                                 }
                                 
@@ -130,7 +130,7 @@ struct HomeView: View {
                                         .foregroundColor(.red)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(AppColors.background)
+                                        .background(themeManager.background)
                                         .skeuoRaised(cornerRadius: 12)
                                 }
                             }
@@ -140,7 +140,7 @@ struct HomeView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("GENERAL".localized)
                                     .font(.system(size: 12, weight: .bold))
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundColor(themeManager.textSecondary)
                                     .padding(.horizontal, 24)
                                 
                                 HStack {

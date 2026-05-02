@@ -103,20 +103,24 @@ extension Color {
 
 struct SkeuoRaised: ViewModifier {
     var cornerRadius: CGFloat
+    var radius: CGFloat
+    var offset: CGFloat
     @ObservedObject var themeManager = ThemeManager.shared
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(themeManager.background)
-                    .shadow(color: themeManager.shadowLight, radius: 8, x: -4, y: -4)
-                    .shadow(color: themeManager.shadowDark, radius: 8, x: 4, y: 4)
+                    .shadow(color: themeManager.shadowLight, radius: radius, x: -offset, y: -offset)
+                    .shadow(color: themeManager.shadowDark, radius: radius, x: offset, y: offset)
             )
     }
 }
 
 struct SkeuoSunken: ViewModifier {
     var cornerRadius: CGFloat
+    var radius: CGFloat
+    var offset: CGFloat
     @ObservedObject var themeManager = ThemeManager.shared
     func body(content: Content) -> some View {
         content
@@ -127,14 +131,14 @@ struct SkeuoSunken: ViewModifier {
                     
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(themeManager.shadowDark, lineWidth: 2)
-                        .blur(radius: 4)
-                        .offset(x: 2, y: 2)
+                        .blur(radius: radius)
+                        .offset(x: offset, y: offset)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
                     
                     RoundedRectangle(cornerRadius: cornerRadius)
                         .stroke(themeManager.shadowLight, lineWidth: 2)
-                        .blur(radius: 4)
-                        .offset(x: -2, y: -2)
+                        .blur(radius: radius)
+                        .offset(x: -offset, y: -offset)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black]), startPoint: .topLeading, endPoint: .bottomTrailing)))
                 }
             )
@@ -143,11 +147,11 @@ struct SkeuoSunken: ViewModifier {
 }
 
 extension View {
-    func skeuoRaised(cornerRadius: CGFloat = 12) -> some View {
-        modifier(SkeuoRaised(cornerRadius: cornerRadius))
+    func skeuoRaised(cornerRadius: CGFloat = 12, radius: CGFloat = 8, offset: CGFloat = 4) -> some View {
+        modifier(SkeuoRaised(cornerRadius: cornerRadius, radius: radius, offset: offset))
     }
-    func skeuoSunken(cornerRadius: CGFloat = 12) -> some View {
-        modifier(SkeuoSunken(cornerRadius: cornerRadius))
+    func skeuoSunken(cornerRadius: CGFloat = 12, radius: CGFloat = 4, offset: CGFloat = 2) -> some View {
+        modifier(SkeuoSunken(cornerRadius: cornerRadius, radius: radius, offset: offset))
     }
 }
 

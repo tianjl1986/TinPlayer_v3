@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MiniPlayerView: View {
     @ObservedObject var player = MusicPlayer.shared
+    @ObservedObject var themeManager = ThemeManager.shared
     @State private var showPlayer = false
     
     var body: some View {
@@ -45,7 +46,7 @@ struct MiniPlayerView: View {
                         Button(action: { player.skipNext() }) {
                             Image(systemName: "forward.fill")
                                 .font(.system(size: 14))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
                                 .skeuoRaised(cornerRadius: 22)
                         }
