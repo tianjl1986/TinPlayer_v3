@@ -52,24 +52,31 @@ struct AppColors {
 }
 
 struct SkeuoToggleStyle: ToggleStyle {
+    @ObservedObject var themeManager = ThemeManager.shared
+    
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(themeManager.textPrimary)
             Spacer()
-            ZStack {
-                Capsule()
-                    .fill(AppColors.background)
-                    .skeuoSunken(cornerRadius: 15)
-                    .frame(width: 50, height: 30)
-                
-                Circle()
-                    .fill(configuration.isOn ? Color.orange : AppColors.background)
-                    .skeuoRaised(cornerRadius: 13)
-                    .frame(width: 26, height: 26)
-                    .offset(x: configuration.isOn ? 10 : -10)
-                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isOn)
+            Button(action: { configuration.isOn.toggle() }) {
+                ZStack {
+                    Capsule()
+                        .fill(themeManager.background)
+                        .skeuoSunken(cornerRadius: 15)
+                        .frame(width: 54, height: 28)
+                    
+                    Circle()
+                        .fill(configuration.isOn ? Color.orange : themeManager.textSecondary.opacity(0.3))
+                        .skeuoRaised(cornerRadius: 12)
+                        .frame(width: 24, height: 24)
+                        .offset(x: configuration.isOn ? 13 : -13)
+                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                }
             }
-            .onTapGesture { configuration.isOn.toggle() }
+            .buttonStyle(PlainButtonStyle())
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isOn)
         }
     }
 }
@@ -142,4 +149,12 @@ extension View {
     func skeuoSunken(cornerRadius: CGFloat = 12) -> some View {
         modifier(SkeuoSunken(cornerRadius: cornerRadius))
     }
+}
+
+// MARK: - 时间格式化
+public func formatDuration(_ time: TimeInterval) -> String {
+    guard time.isFinite && !time.isNaN && time >= 0 else { return "00:00" }
+    let mins = Int(time) / 60
+    let secs = Int(time) % 60
+    return String(format: "%02d:%02d", mins, secs)
 }

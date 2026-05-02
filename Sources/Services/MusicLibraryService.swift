@@ -58,35 +58,39 @@ class MusicLibraryService: ObservableObject {
             let query = MPMediaQuery.albums()
             guard let collections = query.collections else { return }
             
-            await MainActor.run {
-                for collection in collections {
-                    guard let representativeItem = collection.representativeItem else { continue }
-                    
-                    let albumTitle = representativeItem.albumTitle ?? "Unknown Album"
-                    let artist = representativeItem.artist ?? "Unknown Artist"
-                    let artwork = representativeItem.artwork?.image(at: CGSize(width: 300, height: 300))
-                    
-                    var tracks: [Track] = []
-                    for item in collection.items {
-                        let track = Track(
-                            title: item.title ?? "Unknown Track",
-                            artist: item.artist ?? artist,
-                            fileName: item.assetURL?.absoluteString ?? "",
-                            duration: formatDuration(item.playbackDuration)
-                        )
-                        tracks.append(track)
-                    }
-                    
-                    let newAlbum = Album(
-                        title: albumTitle,
-                        artist: artist,
-                        coverImage: artwork,
-                        trackCount: collection.count,
-                        releaseYear: "System Library",
-                        tracks: tracks
+            var tempSystemAlbums: [Album] = []
+            for collection in collections {
+                guard let representativeItem = collection.representativeItem else { continue }
+                
+                let albumTitle = representativeItem.albumTitle ?? "Unknown Album"
+                let artist = representativeItem.artist ?? "Unknown Artist"
+                let artwork = representativeItem.artwork?.image(at: CGSize(width: 300, height: 300))
+                
+                var tracks: [Track] = []
+                for item in collection.items {
+                    let track = Track(
+                        title: item.title ?? "Unknown Track",
+                        artist: item.artist ?? artist,
+                        fileName: item.assetURL?.absoluteString ?? "",
+                        duration: formatDuration(item.playbackDuration)
                     )
-                    self.albums.append(newAlbum)
+                    tracks.append(track)
                 }
+                
+                let newAlbum = Album(
+                    title: albumTitle,
+                    artist: artist,
+                    coverImage: artwork,
+                    trackCount: collection.count,
+                    releaseYear: "System Library",
+                    tracks: tracks
+                )
+                tempSystemAlbums.append(newAlbum)
+            }
+            
+            let finalSystemAlbums = tempSystemAlbums
+            await MainActor.run {
+                self.albums.append(contentsOf: finalSystemAlbums)
             }
         }
     }
@@ -107,8 +111,10 @@ class MusicLibraryService: ObservableObject {
             }
         }
         
+        
+        let finalAlbums = tempAlbums
         await MainActor.run {
-            self.albums.append(contentsOf: tempAlbums)
+            self.albums.append(contentsOf: finalAlbums)
         }
     }
     

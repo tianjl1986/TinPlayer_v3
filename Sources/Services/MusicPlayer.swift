@@ -3,11 +3,11 @@ import AVFoundation
 import MediaPlayer
 
 enum PlaybackMode {
-    case list, loop, shuffle
+    case list, loopOne, shuffle
     var iconName: String {
         switch self {
         case .list: return "repeat"
-        case .loop: return "repeat.1"
+        case .loopOne: return "repeat.1"
         case .shuffle: return "shuffle"
         }
     }
@@ -29,6 +29,7 @@ class MusicPlayer: ObservableObject {
     @Published var playlist: [Track] = []
     @Published var currentTrackLyrics: [LyricLine] = []
     @Published var currentLyricIndex: Int = 0
+    @Published var isSearchingLyrics: Bool = false
     
     init() {
         setupAudioSession()
@@ -65,9 +66,11 @@ class MusicPlayer: ObservableObject {
         
         // 🚀 触发在线歌词搜索
         Task {
+            isSearchingLyrics = true
             let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
             await MainActor.run {
                 self.currentTrackLyrics = lyrics
+                self.isSearchingLyrics = false
             }
         }
         
@@ -116,10 +119,21 @@ class MusicPlayer: ObservableObject {
         playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
-                if self.playbackMode == .loop {
+                switch self.playbackMode {
+                case .loopOne:
                     self.seek(to: 0)
                     self.resume()
-                } else {
+                case .list:
+                    // 如果是最后首则停止，否则下一首
+                    if let current = self.currentTrack,
+                       let idx = self.playlist.firstIndex(where: { $0.id == current.id }),
+                       idx < self.playlist.count - 1 {
+                        self.skipNext()
+                    } else {
+                        self.pause()
+                        self.seek(to: 0)
+                    }
+                case .shuffle:
                     self.skipNext()
                 }
             }
@@ -128,6 +142,16 @@ class MusicPlayer: ObservableObject {
     
     func togglePlayPause() {
         if isPlaying { pause() } else { resume() }
+    }
+    
+    func manualSearchLyrics() async {
+        guard let track = currentTrack else { return }
+        await MainActor.run { isSearchingLyrics = true }
+        let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
+        await MainActor.run {
+            self.currentTrackLyrics = lyrics
+            self.isSearchingLyrics = false
+        }
     }
     
     func pause() { player?.pause(); isPlaying = false }
@@ -166,8 +190,8 @@ class MusicPlayer: ObservableObject {
     
     func togglePlaybackMode() {
         switch playbackMode {
-        case .list: playbackMode = .loop
-        case .loop: playbackMode = .shuffle
+        case .list: playbackMode = .loopOne
+        case .loopOne: playbackMode = .shuffle
         case .shuffle: playbackMode = .list
         }
     }

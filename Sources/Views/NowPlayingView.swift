@@ -53,9 +53,9 @@ struct NowPlayingView: View {
                 }
                 
                 HStack {
-                    Text(formatTime(player.currentTime))
+                    Text(formatDuration(player.currentTime))
                     Spacer()
-                    Text(formatTime(player.duration))
+                    Text(formatDuration(player.duration))
                 }
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(AppColors.textSecondary)
@@ -115,9 +115,5 @@ struct NowPlayingView: View {
         }
     }
 
-    private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
     }
 }

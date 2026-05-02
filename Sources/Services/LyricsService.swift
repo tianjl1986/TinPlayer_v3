@@ -12,16 +12,30 @@ class LyricsService {
     func searchLyrics(for title: String, artist: String) async -> [LyricLine] {
         let titleEscaped = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let artistEscaped = artist.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let urlString = "https://lrclib.net/api/get?artist=\(artistEscaped)&track_name=\(titleEscaped)"
         
-        guard let url = URL(string: urlString) else {
-            return [LyricLine(text: "Invalid URL", startTime: 0)]
+        // 🚀 Step 1: Try exact match
+        let getUrl = "https://lrclib.net/api/get?artist=\(artistEscaped)&track_name=\(titleEscaped)"
+        if let lyrics = await fetchLyrics(from: getUrl) {
+            return lyrics
         }
         
+        // 🚀 Step 2: Fallback to search if exact match fails
+        let searchUrl = "https://lrclib.net/api/search?q=\(artistEscaped)%20\(titleEscaped)"
+        if let lyrics = await fetchLyricsFromSearch(from: searchUrl) {
+            return lyrics
+        }
+        
+        return [
+            LyricLine(text: "Lyrics not found online", startTime: 0),
+            LyricLine(text: "Please check your network connection", startTime: 5)
+        ]
+    }
+    
+    private func fetchLyrics(from urlString: String) async -> [LyricLine]? {
+        guard let url = URL(string: urlString) else { return nil }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let response = try JSONDecoder().decode(LRCLibResponse.self, from: data)
-            
             if let synced = response.syncedLyrics {
                 return parseLRC(synced)
             } else if let plain = response.plainLyrics {
@@ -30,36 +44,61 @@ class LyricsService {
                 }
             }
         } catch {
-            print("Lyrics fetch error: \(error)")
+            print("Lyrics exact fetch failed: \(error)")
         }
-        
-        // Fallback mock lyrics if fetch fails
-        return [
-            LyricLine(text: "Lyrics not found online", startTime: 0),
-            LyricLine(text: "Please check your network connection", startTime: 5),
-            LyricLine(text: "---", startTime: 10)
-        ]
+        return nil
+    }
+    
+    private func fetchLyricsFromSearch(from urlString: String) async -> [LyricLine]? {
+        guard let url = URL(string: urlString) else { return nil }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let responses = try JSONDecoder().decode([LRCLibResponse].self, from: data)
+            if let first = responses.first {
+                if let synced = first.syncedLyrics {
+                    return parseLRC(synced)
+                } else if let plain = first.plainLyrics {
+                    return plain.components(separatedBy: "\n").enumerated().map { (index, line) in
+                        LyricLine(text: line, startTime: Double(index * 5))
+                    }
+                }
+            }
+        } catch {
+            print("Lyrics search failed: \(error)")
+        }
+        return nil
     }
     
     private func parseLRC(_ lrc: String) -> [LyricLine] {
         var lines: [LyricLine] = []
         let pattern = "\\[(\\d+):(\\d+\\.\\d+)\\](.*)"
-        let regex = try? NSRegularExpression(pattern: pattern, options: [])
+        
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return [LyricLine(text: "Regex Error", startTime: 0)]
+        }
         
         let nsString = lrc as NSString
-        let matches = regex?.matches(in: lrc, options: [], range: NSRange(location: 0, length: nsString.length)) ?? []
+        let matches = regex.matches(in: lrc, options: [], range: NSRange(location: 0, length: nsString.length))
         
         for match in matches {
-            let minStr = nsString.substring(with: match.range(at: 1))
-            let secStr = nsString.substring(with: match.range(at: 2))
-            let text = nsString.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespaces)
+            guard match.numberOfRanges >= 4 else { continue }
             
-            if let min = Double(minStr), let sec = Double(secStr) {
-                let time = min * 60 + sec
-                lines.append(LyricLine(text: text, startTime: time))
+            let minRange = match.range(at: 1)
+            let secRange = match.range(at: 2)
+            let textRange = match.range(at: 3)
+            
+            if minRange.location != NSNotFound && secRange.location != NSNotFound && textRange.location != NSNotFound {
+                let minStr = nsString.substring(with: minRange)
+                let secStr = nsString.substring(with: secRange)
+                let text = nsString.substring(with: textRange).trimmingCharacters(in: .whitespaces)
+                
+                if let min = Double(minStr), let sec = Double(secStr) {
+                    let time = min * 60 + sec
+                    lines.append(LyricLine(text: text, startTime: time))
+                }
             }
         }
         
-        return lines.isEmpty ? [LyricLine(text: "Error parsing lyrics", startTime: 0)] : lines
+        return lines.isEmpty ? [LyricLine(text: "Lyrics format not supported", startTime: 0)] : lines
     }
 }

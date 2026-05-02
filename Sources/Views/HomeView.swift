@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var libraryService: MusicLibraryService
     @EnvironmentObject var musicPlayer: MusicPlayer
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
@@ -180,8 +181,3 @@ enum LibraryFilter {
     case artist
 }
 
-extension String {
-    var localized: String {
-        LocalizationManager.shared.t(self)
-    }
-}
