@@ -31,12 +31,12 @@ struct HomeView: View {
                             HStack {
                                 Text("Recently Played")
                                     .font(.system(size: 20, weight: .black))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(DesignTokens.textPrimary)
                                 Spacer()
                                 NavigationLink(destination: LibraryGridView()) {
                                     Text("See All")
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(AppColors.textActive)
+                                        .foregroundColor(DesignTokens.textActive)
                                 }
                             }
                             .padding(.horizontal, 24)
@@ -54,11 +54,11 @@ struct HomeView: View {
                                                 VStack(alignment: .leading, spacing: 4) {
                                                     Text(track.title)
                                                         .font(.system(size: 15, weight: .bold))
-                                                        .foregroundColor(AppColors.textPrimary)
+                                                        .foregroundColor(DesignTokens.textPrimary)
                                                         .lineLimit(1)
                                                     Text(track.artist)
                                                         .font(.system(size: 13, weight: .medium))
-                                                        .foregroundColor(AppColors.textSecondary)
+                                                        .foregroundColor(DesignTokens.textSecondary)
                                                         .lineLimit(1)
                                                 }
                                             }
@@ -82,7 +82,7 @@ struct HomeView: View {
                         .padding(.bottom, 20)
                 }
             }
-            .background(AppColors.background.ignoresSafeArea())
+            .background(DesignTokens.background.ignoresSafeArea())
             .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -98,10 +98,10 @@ struct HomeCategoryCard: View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(DesignTokens.textPrimary)
             Text(title)
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(DesignTokens.textPrimary)
         }
         .frame(width: 100, height: 100)
         .skeuoRaised(cornerRadius: 20)

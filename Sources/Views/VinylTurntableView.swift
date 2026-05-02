@@ -4,7 +4,7 @@ struct VinylTurntableView: View {
     @StateObject private var player = MusicPlayer.shared
     @State private var rotation: Double = 0
     
-    // 🚀 Figma 1:1 物理尺寸与坐标 (基于 390x844 标准稿)
+    // 🚀 Figma 1:1 物理尺寸与坐�?(基于 390x844 标准�?
     private let screenWidth = UIScreen.main.bounds.width
     private let baseSize: CGFloat = 342
     private let platterSize: CGFloat = 310
@@ -28,13 +28,13 @@ struct VinylTurntableView: View {
             ZStack {
                 // Base
                 RoundedRectangle(cornerRadius: 32)
-                    .fill(AppColors.surfaceMain)
+                    .fill(DesignTokens.surfaceMain)
                     .skeuoRaised(cornerRadius: 32)
                     .frame(width: 350, height: 350)
                 
                 // Platter (Sunken) - 9880:14763
                 Circle()
-                    .fill(AppColors.surfaceMain)
+                    .fill(DesignTokens.surfaceMain)
                     .skeuoSunken(cornerRadius: 155)
                     .frame(width: 310, height: 310)
                 

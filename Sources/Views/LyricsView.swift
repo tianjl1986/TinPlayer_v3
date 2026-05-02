@@ -7,7 +7,7 @@ struct LyricsView: View {
     var body: some View {
         ZStack(alignment: .top) {
             // Background Surface - 9893:14777
-            AppColors.surfaceMain.ignoresSafeArea()
+            DesignTokens.surfaceMain.ignoresSafeArea()
             
             // 2. Paper Sheet (Scrolling Content) - 9893:14779
             ScrollViewReader { proxy in
@@ -22,12 +22,12 @@ struct LyricsView: View {
                                     if index == player.currentLyricIndex {
                                         TypewriterText(text: line.text)
                                             .font(.custom("AmericanTypewriter-Bold", size: 24))
-                                            .foregroundColor(AppColors.textPrimary)
+                                            .foregroundColor(DesignTokens.textPrimary)
                                             .id(index)
                                     } else {
                                         Text(line.text)
                                             .font(.custom("AmericanTypewriter", size: 18))
-                                            .foregroundColor(AppColors.textSecondary.opacity(0.4))
+                                            .foregroundColor(DesignTokens.textSecondary.opacity(0.4))
                                             .id(index)
                                     }
                                 }
@@ -62,20 +62,20 @@ struct LyricsView: View {
                     HStack {
                         // Left Knob
                         Circle()
-                            .fill(AppColors.surfaceMain)
+                            .fill(DesignTokens.surfaceMain)
                             .skeuoRaised(cornerRadius: 30)
                             .frame(width: 60, height: 60)
-                            .overlay(Image(systemName: "gear").foregroundColor(AppColors.textSecondary))
+                            .overlay(Image(systemName: "gear").foregroundColor(DesignTokens.textSecondary))
                             .offset(x: -30)
                         
                         Spacer()
                         
                         // Right Knob
                         Circle()
-                            .fill(AppColors.surfaceMain)
+                            .fill(DesignTokens.surfaceMain)
                             .skeuoRaised(cornerRadius: 30)
                             .frame(width: 60, height: 60)
-                            .overlay(Image(systemName: "gear").foregroundColor(AppColors.textSecondary))
+                            .overlay(Image(systemName: "gear").foregroundColor(DesignTokens.textSecondary))
                             .offset(x: 30)
                     }
                 )
@@ -93,7 +93,7 @@ struct LyricsView: View {
                 Image(systemName: "printer.fill")
                     .font(.system(size: 18))
             }
-            .foregroundColor(AppColors.textPrimary)
+            .foregroundColor(DesignTokens.textPrimary)
             .padding(.horizontal, 24)
             .padding(.top, 16)
             .zIndex(20)

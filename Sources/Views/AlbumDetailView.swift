@@ -19,7 +19,7 @@ struct AlbumDetailView: View {
                 Text(" ") // Spacer
                     .frame(width: 20)
             }
-            .foregroundColor(AppColors.textPrimary)
+            .foregroundColor(DesignTokens.textPrimary)
             .padding(.horizontal, 24)
             .padding(.top, 16)
             .padding(.bottom, 16)
@@ -41,12 +41,12 @@ struct AlbumDetailView: View {
                         VStack(spacing: 8) {
                             Text(album.title)
                                 .font(.system(size: 24, weight: .black))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(DesignTokens.textPrimary)
                                 .multilineTextAlignment(.center)
                             
                             Text(album.artist)
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(AppColors.textSecondary)
+                                .foregroundColor(DesignTokens.textSecondary)
                         }
                         
                         // Action Buttons - 9931:15078
@@ -54,7 +54,7 @@ struct AlbumDetailView: View {
                             Button(action: { player.playTrack(album.tracks.first!, in: album.tracks) }) {
                                 Text("Play All")
                                     .font(.system(size: 14, weight: .black))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(DesignTokens.textPrimary)
                                     .padding(.horizontal, 24)
                                     .padding(.vertical, 14)
                                     .skeuoRaised(cornerRadius: 24)
@@ -63,7 +63,7 @@ struct AlbumDetailView: View {
                             Button(action: { /* Shuffle Action */ }) {
                                 Text("Shuffle")
                                     .font(.system(size: 14, weight: .black))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(DesignTokens.textPrimary)
                                     .padding(.horizontal, 24)
                                     .padding(.vertical, 14)
                                     .skeuoRaised(cornerRadius: 24)
@@ -79,17 +79,17 @@ struct AlbumDetailView: View {
                                 HStack(spacing: 16) {
                                     Text(String(format: "%02d", index + 1))
                                         .font(.system(size: 12, weight: .black, design: .monospaced))
-                                        .foregroundColor(AppColors.textSecondary)
+                                        .foregroundColor(DesignTokens.textSecondary)
                                     
                                     Text(track.title)
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(player.currentTrack?.id == track.id ? AppColors.textActive : AppColors.textPrimary)
+                                        .foregroundColor(player.currentTrack?.id == track.id ? DesignTokens.textActive : DesignTokens.textPrimary)
                                     
                                     Spacer()
                                     
                                     Text(track.duration)
                                         .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                        .foregroundColor(AppColors.textSecondary)
+                                        .foregroundColor(DesignTokens.textSecondary)
                                 }
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 12)
@@ -100,7 +100,7 @@ struct AlbumDetailView: View {
                 }
             }
         }
-        .background(AppColors.surfaceLight.ignoresSafeArea())
+        .background(DesignTokens.surfaceLight.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }

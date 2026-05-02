@@ -18,10 +18,10 @@ struct SettingsView: View {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Text("DONE")
                         .font(.system(size: 14, weight: .black))
-                        .foregroundColor(AppColors.textActive)
+                        .foregroundColor(DesignTokens.textActive)
                 }
             }
-            .foregroundColor(AppColors.textPrimary)
+            .foregroundColor(DesignTokens.textPrimary)
             .padding(.horizontal, 24)
             .padding(.top, 16)
             .padding(.bottom, 16)
@@ -33,7 +33,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("MEDIA LIBRARY")
                             .font(.system(size: 12, weight: .black))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(DesignTokens.textSecondary)
                         
                         VStack(spacing: 12) {
                             SkeuoSettingsRow(title: "Media Folders", value: "\(libraryService.mediaFolders.count) Folders")
@@ -45,7 +45,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("AUDIO ENGINE")
                             .font(.system(size: 12, weight: .black))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(DesignTokens.textSecondary)
                         
                         VStack(spacing: 12) {
                             SkeuoSettingsRow(title: "Graphic Equalizer", value: "Flat >", isLink: true)
@@ -70,7 +70,7 @@ struct SettingsView: View {
                 .padding(.top, 24)
             }
         }
-        .background(AppColors.surfaceLight.ignoresSafeArea())
+        .background(DesignTokens.surfaceLight.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }
@@ -85,13 +85,13 @@ struct SkeuoSettingsRow: View {
         HStack {
             Text(title)
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(DesignTokens.textPrimary)
             
             Spacer()
             
             if isToggle {
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(AppColors.textActive)
+                    .fill(DesignTokens.textActive)
                     .frame(width: 44, height: 24)
                     .overlay(
                         Circle()
@@ -103,14 +103,14 @@ struct SkeuoSettingsRow: View {
             } else {
                 Text(value)
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(DesignTokens.textSecondary)
             }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(AppColors.surfaceMain)
+                .fill(DesignTokens.surfaceMain)
                 .skeuoRaised(cornerRadius: 16)
         )
     }

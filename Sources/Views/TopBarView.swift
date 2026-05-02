@@ -7,10 +7,10 @@ struct TopBarView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Hi, Tin Player")
                     .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(DesignTokens.textSecondary)
                 Text("Enjoy your vinyl")
                     .font(.system(size: 24, weight: .black))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(DesignTokens.textPrimary)
             }
             
             Spacer()
@@ -19,7 +19,7 @@ struct TopBarView: View {
                 Button(action: { /* Search Action */ }) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(DesignTokens.textPrimary)
                         .padding(12)
                         .skeuoRaised(cornerRadius: 12)
                 }
@@ -27,7 +27,7 @@ struct TopBarView: View {
                 Button(action: { /* Profile Action */ }) {
                     Image(systemName: "person.fill")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(DesignTokens.textPrimary)
                         .padding(12)
                         .skeuoRaised(cornerRadius: 12)
                 }

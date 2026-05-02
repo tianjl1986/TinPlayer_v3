@@ -1,19 +1,19 @@
 import SwiftUI
 
-struct AppColors {
+struct DesignTokens {
     // Surface Colors from Section 10249:2
-    static let surfaceMain = Color(hex: "#e5e5e5")      // Skeuo Main Surface
-    static let surfaceSecondary = Color(hex: "#fafafa") // Secondary Surface
-    static let surfaceLight = Color(hex: "#f2f2f2")     // WF Fill Light (Library/Settings)
+    static let surfaceMain = Color(hexString: "#e5e5e5")      // Skeuo Main Surface
+    static let surfaceSecondary = Color(hexString: "#fafafa") // Secondary Surface
+    static let surfaceLight = Color(hexString: "#f2f2f2")     // WF Fill Light (Library/Settings)
     static let background = surfaceMain
     
     // Text Colors
-    static let textPrimary = Color(hex: "#1a1a1a")      // Text-Primary
-    static let textSecondary = Color(hex: "#808080")    // Text-Secondary
-    static let textActive = Color(hex: "#3b82f6")       // Active/Accent (Blue)
+    static let textPrimary = Color(hexString: "#1a1a1a")      // Text-Primary
+    static let textSecondary = Color(hexString: "#808080")    // Text-Secondary
+    static let textActive = Color(hexString: "#3b82f6")       // Active/Accent (Blue)
     
     // Skeuomorphic Shadows
-    static let shadowDark = Color(hex: "#b3b3b3")       // For Raised/Sunken effect
+    static let shadowDark = Color(hexString: "#b3b3b3")       // For Raised/Sunken effect
     static let shadowLight = Color.white                // For Highlights
 }
 
@@ -21,26 +21,26 @@ extension View {
     func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
         self.background(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(AppColors.surfaceMain)
-                .shadow(color: AppColors.shadowLight, radius: 8, x: -4, y: -4)
-                .shadow(color: AppColors.shadowDark, radius: 8, x: 4, y: 4)
+                .fill(DesignTokens.surfaceMain)
+                .shadow(color: DesignTokens.shadowLight, radius: 8, x: -4, y: -4)
+                .shadow(color: DesignTokens.shadowDark, radius: 8, x: 4, y: 4)
         )
     }
     
     func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {
         self.background(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(AppColors.surfaceMain)
+                .fill(DesignTokens.surfaceMain)
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(AppColors.shadowDark, lineWidth: 2)
+                        .stroke(DesignTokens.shadowDark, lineWidth: 2)
                         .blur(radius: 2)
                         .offset(x: 2, y: 2)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(AppColors.shadowLight, lineWidth: 2)
+                        .stroke(DesignTokens.shadowLight, lineWidth: 2)
                         .blur(radius: 2)
                         .offset(x: -2, y: -2)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
@@ -50,7 +50,7 @@ extension View {
 }
 
 extension Color {
-    init(hex: String) {
+    init(hexString hexString: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)

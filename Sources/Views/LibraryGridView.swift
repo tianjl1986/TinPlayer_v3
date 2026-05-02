@@ -17,21 +17,21 @@ struct LibraryGridView: View {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Image(systemName: "line.3.horizontal")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(DesignTokens.textPrimary)
                 }
                 
                 Spacer()
                 
                 Text("SKEUOPLAYER")
                     .font(.system(size: 18, weight: .black))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(DesignTokens.textPrimary)
                 
                 Spacer()
                 
                 Button(action: { /* Menu */ }) {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
+                        .foregroundColor(DesignTokens.textPrimary)
                 }
             }
             .padding(.horizontal, 24)
@@ -45,7 +45,7 @@ struct LibraryGridView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("My Collection")
                             .font(.system(size: 40, weight: .black))
-                            .foregroundColor(AppColors.textPrimary)
+                            .foregroundColor(DesignTokens.textPrimary)
                             .lineSpacing(-4)
                         
                         HStack(spacing: 6) {
@@ -54,7 +54,7 @@ struct LibraryGridView: View {
                             Text("\(libraryService.albums.count) RECORDS IN VAULT")
                                 .font(.system(size: 12, weight: .bold))
                         }
-                        .foregroundColor(AppColors.textSecondary)
+                        .foregroundColor(DesignTokens.textSecondary)
                     }
                     .padding(.horizontal, 24)
                     
@@ -80,7 +80,7 @@ struct LibraryGridView: View {
                 .padding(.top, 24)
             }
         }
-        .background(AppColors.surfaceSecondary.ignoresSafeArea())
+        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }
@@ -92,12 +92,12 @@ struct FilterButton: View {
     var body: some View {
         Text(title)
             .font(.system(size: 11, weight: .black))
-            .foregroundColor(isActive ? AppColors.textPrimary : AppColors.textSecondary)
+            .foregroundColor(isActive ? DesignTokens.textPrimary : DesignTokens.textSecondary)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(AppColors.surfaceMain)
+                    .fill(DesignTokens.surfaceMain)
                     .skeuoRaised(cornerRadius: 12)
             )
     }
@@ -112,7 +112,7 @@ struct AlbumCard: View {
             ZStack(alignment: .trailing) {
                 // The Record (Peeking Out) - 10411:2223
                 Circle()
-                    .fill(Color(hex: "#121212"))
+                    .fill(Color(hexString: "#121212"))
                     .frame(width: 145, height: 145)
                     .overlay(
                         Circle()
@@ -130,12 +130,12 @@ struct AlbumCard: View {
                         .skeuoRaised(cornerRadius: 8)
                 } else {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(AppColors.surfaceMain)
+                        .fill(DesignTokens.surfaceMain)
                         .frame(width: 155, height: 155)
                         .skeuoRaised(cornerRadius: 8)
                         .overlay(
                             Image(systemName: "music.note")
-                                .foregroundColor(AppColors.textSecondary)
+                                .foregroundColor(DesignTokens.textSecondary)
                         )
                 }
             }
@@ -145,12 +145,12 @@ struct AlbumCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title.uppercased())
                     .font(.system(size: 13, weight: .black))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(DesignTokens.textPrimary)
                     .lineLimit(1)
                 
                 Text(album.artist.uppercased())
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(DesignTokens.textSecondary)
                     .lineLimit(1)
             }
         }

@@ -38,12 +38,11 @@ struct ControlIcon: View {
     var body: some View {
         Image(systemName: name)
             .font(.system(size: size, weight: .black))
-            .foregroundColor(AppColors.textPrimary)
+            .foregroundColor(DesignTokens.textPrimary)
     }
 }
 
-// MARK: - 1:1 拟物化按钮样式
-struct SkeuoButtonStyle: ButtonStyle {
+// MARK: - 1:1 拟物化按钮样�?struct SkeuoButtonStyle: ButtonStyle {
     let size: CGFloat
     
     func makeBody(configuration: Configuration) -> some View {
@@ -53,11 +52,11 @@ struct SkeuoButtonStyle: ButtonStyle {
                 ZStack {
                     if configuration.isPressed {
                         Circle()
-                            .fill(AppColors.background)
+                            .fill(DesignTokens.background)
                             .skeuoSunken(cornerRadius: size / 2)
                     } else {
                         Circle()
-                            .fill(AppColors.background)
+                            .fill(DesignTokens.background)
                             .skeuoRaised(cornerRadius: size / 2)
                     }
                 }

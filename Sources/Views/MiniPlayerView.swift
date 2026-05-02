@@ -23,11 +23,11 @@ struct MiniPlayerView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(track.title)
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(AppColors.textPrimary)
+                            .foregroundColor(DesignTokens.textPrimary)
                             .lineLimit(1)
                         Text(track.artist)
                             .font(.system(size: 13))
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundColor(DesignTokens.textSecondary)
                             .lineLimit(1)
                     }
                     
@@ -37,9 +37,9 @@ struct MiniPlayerView: View {
                         Button(action: { player.togglePlayPause() }) {
                             Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                                 .font(.system(size: 16))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(DesignTokens.textPrimary)
                                 .frame(width: 44, height: 44)
-                                .background(AppColors.background)
+                                .background(DesignTokens.background)
                                 .skeuoRaised(cornerRadius: 22)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -47,9 +47,9 @@ struct MiniPlayerView: View {
                         Button(action: { player.skipNext() }) {
                             Image(systemName: "forward.fill")
                                 .font(.system(size: 14))
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(DesignTokens.textPrimary)
                                 .frame(width: 44, height: 44)
-                                .background(AppColors.background)
+                                .background(DesignTokens.background)
                                 .skeuoRaised(cornerRadius: 22)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -57,7 +57,7 @@ struct MiniPlayerView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
-                .background(AppColors.background)
+                .background(DesignTokens.background)
                 .skeuoSunken(cornerRadius: 16)
             }
             .buttonStyle(PlainButtonStyle())
