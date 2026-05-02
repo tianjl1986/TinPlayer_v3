@@ -2,8 +2,9 @@ import SwiftUI
 
 @main
 struct SkeuoPlayerApp: App {
-    @StateObject private var musicPlayer = MusicPlayer()
-    @StateObject private var libraryService = MusicLibraryService()
+    // 🚀 使用 @StateObject 维持单例生命周期
+    @StateObject private var musicPlayer = MusicPlayer.shared
+    @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var localizationManager = LocalizationManager.shared
     
     var body: some Scene {
@@ -12,7 +13,7 @@ struct SkeuoPlayerApp: App {
                 .environmentObject(musicPlayer)
                 .environmentObject(libraryService)
                 .environmentObject(localizationManager)
-                .preferredColorScheme(.dark) // 🚀 确保系统状态栏变白
+                .preferredColorScheme(.dark) // 🚀 修复：强制深色模式，使状态栏图标变白
         }
     }
 }

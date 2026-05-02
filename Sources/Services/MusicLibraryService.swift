@@ -2,6 +2,8 @@ import Foundation
 import AVFoundation
 
 class MusicLibraryService: ObservableObject {
+    static let shared = MusicLibraryService()
+    
     @Published var albums: [Album] = Album.sampleData
     @Published var isScanning = false
     @Published var mediaFolders: [String] = []
@@ -37,7 +39,8 @@ class MusicLibraryService: ObservableObject {
         var artist = "Unknown Artist"
         var albumName = "Local Music"
         
-        for item in asset.metadata {
+        let metadata = asset.metadata
+        for item in metadata {
             guard let key = item.commonKey?.rawValue, let value = item.value as? String else { continue }
             if key == "title" { title = value }
             if key == "artist" { artist = value }

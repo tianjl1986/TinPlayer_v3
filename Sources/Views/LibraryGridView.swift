@@ -8,7 +8,7 @@ struct LibraryGridView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.edgesIgnoringSafeArea(.all)
+                AppColors.background.edgesIgnoringSafeArea(.all)
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         headerView
@@ -35,10 +35,15 @@ struct LibraryGridView: View {
     
     private var headerView: some View {
         HStack {
-            Text("MY COLLECTION").font(.system(size: 24, weight: .black)).foregroundColor(.white).tracking(2)
+            Text(LocalizationManager.shared.t("MY COLLECTION"))
+                .font(.system(size: 24, weight: .black))
+                .foregroundColor(AppColors.textPrimary)
+                .tracking(2)
             Spacer()
             NavigationLink(destination: SettingsView()) {
-                Image(systemName: "gearshape.fill").foregroundColor(.white).font(.title2)
+                Image(systemName: "gearshape.fill")
+                    .foregroundColor(AppColors.textPrimary)
+                    .font(.title2)
             }
         }
         .padding(.horizontal, 20).padding(.vertical, 24)
@@ -55,12 +60,17 @@ struct AlbumRowHeader: View {
             } else {
                 Color.gray.opacity(0.3).frame(width: 54, height: 54).cornerRadius(6)
             }
-            Text("\(album.artist) - \(album.title)").font(.system(size: 16, weight: .semibold)).foregroundColor(.white).lineLimit(1)
+            Text("\(album.artist) - \(album.title)")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(AppColors.textPrimary)
+                .lineLimit(1)
             Spacer()
-            Image(systemName: "chevron.right").rotationEffect(.degrees(isExpanded ? 90 : 0)).foregroundColor(.white.opacity(0.4))
+            Image(systemName: "chevron.right")
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                .foregroundColor(AppColors.textSecondary)
         }
         .padding(.horizontal, 20).padding(.vertical, 14)
-        .background(isExpanded ? Color.white.opacity(0.1) : Color.clear)
+        .background(isExpanded ? AppColors.textPrimary.opacity(0.05) : Color.clear)
     }
 }
 
@@ -71,17 +81,17 @@ struct TrackExpansionView: View {
         VStack(spacing: 0) {
             ForEach(Array(album.tracks.enumerated()), id: \.element.id) { index, track in
                 HStack {
-                    Text("\(index + 1)").foregroundColor(.gray).frame(width: 30, alignment: .leading)
-                    Text(track.title).foregroundColor(.white).font(.system(size: 15))
+                    Text("\(index + 1)").foregroundColor(AppColors.textSecondary).frame(width: 30, alignment: .leading)
+                    Text(track.title).foregroundColor(AppColors.textPrimary).font(.system(size: 15))
                     Spacer()
-                    Text(track.duration).foregroundColor(.gray).font(.system(size: 12))
+                    Text(track.duration).foregroundColor(AppColors.textSecondary).font(.system(size: 12))
                 }
                 .padding(.leading, 65).padding(.trailing, 20).padding(.vertical, 12)
                 .contentShape(Rectangle())
-                .onTapGesture { musicPlayer.playTrack(track) }
-                Divider().background(Color.white.opacity(0.1)).padding(.leading, 65)
+                .onTapGesture { musicPlayer.playTrack(track, in: album.tracks) }
+                Divider().background(AppColors.separator).padding(.leading, 65)
             }
         }
-        .background(Color.white.opacity(0.05))
+        .background(AppColors.textPrimary.opacity(0.02))
     }
 }
