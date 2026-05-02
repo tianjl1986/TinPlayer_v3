@@ -1,37 +1,23 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 import PackageDescription
-import AppleProductTypes
 
 let package = Package(
     name: "TinPlayer",
+    defaultLocalization: "en",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v17)
     ],
     products: [
-        .iOSApplication(
-            name: "TinPlayer",
-            targets: ["AppModule"],
-            bundleIdentifier: "com.skeuo.tinplayer",
-            displayVersion: "1.3.0",
-            bundleVersion: "12",
-            appIcon: .asset("AppIcon"),
-            accentColor: .presetColor(.indigo),
-            supportedDeviceFamilies: [
-                .phone
-            ],
-            supportedInterfaceOrientations: [
-                .portrait
-            ],
-            capabilities: [
-                .mediaLibrary(purposeString: "我们需要访问您的本地音乐库以进行扫描和播放。"),
-                .outgoingNetworkConnections()
-            ]
-        )
+        .executable(name: "TinPlayer", targets: ["TinPlayer"])
     ],
     targets: [
         .executableTarget(
-            name: "AppModule",
-            path: "Sources"
+            name: "TinPlayer",
+            dependencies: [],
+            path: "Sources",
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
         )
     ]
 )
