@@ -75,7 +75,7 @@ class MusicPlayer: ObservableObject {
         }
         
         let url: URL?
-        // ... (保持原有�?URL 解析逻辑)
+        // ... (保持原有的 URL 解析逻辑)
         if track.fileName.hasPrefix("ipod-library://") {
             url = URL(string: track.fileName)
         } else if track.fileName.isEmpty {
@@ -85,11 +85,12 @@ class MusicPlayer: ObservableObject {
         }
         
         guard let validURL = url else {
-            print("�?Invalid URL for track: \(track.title)")
+            print("❌ Invalid URL for track: \(track.title)")
             return
         }
         
-        // 清理旧的通知和观察�?        stopObserver()
+        // 清理旧的通知和观察者
+        stopObserver()
         if let observer = playerObserver {
             NotificationCenter.default.removeObserver(observer)
             playerObserver = nil
@@ -106,7 +107,7 @@ class MusicPlayer: ObservableObject {
                     self.duration = duration.seconds
                 }
             } catch {
-                print("�?Failed to load duration: \(error)")
+                print("❌ Failed to load duration: \(error)")
             }
         }
         
@@ -114,7 +115,8 @@ class MusicPlayer: ObservableObject {
         self.isPlaying = true
         startObserver()
         
-        // 监听播放结束，严格遵守播放模�?        playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
+        // 监听播放结束，严格遵守播放模式
+        playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
                 switch self.playbackMode {
@@ -122,7 +124,8 @@ class MusicPlayer: ObservableObject {
                     self.seek(to: 0)
                     self.resume()
                 case .list:
-                    // 如果是最后首则停止，否则下一�?                    if let current = self.currentTrack,
+                    // 如果是最后首则停止，否则下一首
+                    if let current = self.currentTrack,
                        let idx = self.playlist.firstIndex(where: { $0.id == current.id }),
                        idx < self.playlist.count - 1 {
                         self.skipNext()

@@ -12,7 +12,7 @@ struct LibraryGridView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header - 9897:14822
+            // 1. 顶部栏 (Raised)
             HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Image(systemName: "line.3.horizontal")
@@ -41,7 +41,7 @@ struct LibraryGridView: View {
             
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
-                    // Page Title - 10411:2198
+                    // 页面标题 (Page Title)
                     VStack(alignment: .leading, spacing: 8) {
                         Text("My Collection")
                             .font(.system(size: 40, weight: .black))
@@ -58,7 +58,7 @@ struct LibraryGridView: View {
                     }
                     .padding(.horizontal, 24)
                     
-                    // Filter Strip - 10411:2210
+                    // 筛选栏 (Filter Strip)
                     HStack(spacing: 12) {
                         FilterButton(title: "RECENTLY ADDED", isActive: true)
                         FilterButton(title: "ARTISTS", isActive: false)
@@ -66,7 +66,7 @@ struct LibraryGridView: View {
                     }
                     .padding(.horizontal, 24)
                     
-                    // Grid - 10411:2220
+                    // 专辑网格 (Album Grid)
                     LazyVGrid(columns: columns, spacing: 32) {
                         ForEach(libraryService.albums) { album in
                             NavigationLink(destination: AlbumDetailView(album: album)) {
@@ -108,9 +108,9 @@ struct AlbumCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // 1:1 Record Sleeve + Peeking Record - 10411:2222
+            // 专辑封面与黑胶唱片 (1:1 Album Art)
             ZStack(alignment: .trailing) {
-                // The Record (Peeking Out) - 10411:2223
+                // 唱片 (露出一部分)
                 Circle()
                     .fill(Color(hexString: "#121212"))
                     .frame(width: 145, height: 145)
@@ -120,7 +120,7 @@ struct AlbumCard: View {
                     )
                     .offset(x: 20)
                 
-                // The Sleeve - 10411:2228
+                // 唱片封套
                 if let cover = album.coverImage {
                     Image(uiImage: cover)
                         .resizable()
@@ -141,7 +141,7 @@ struct AlbumCard: View {
             }
             .frame(width: 163, height: 155)
             
-            // Text Info - 10411:2235
+            // 专辑信息 (Text Info)
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title.uppercased())
                     .font(.system(size: 13, weight: .black))

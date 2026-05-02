@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
     @Published var language: String = UserDefaults.standard.string(forKey: "app_lang") ?? "en" {
@@ -37,10 +38,10 @@ class LocalizationManager: ObservableObject {
             "Light": "浅色",
             "Parse .cue sheets": "解析 .cue 分轨",
             "Search for .lrc lyrics": "搜索 .lrc 歌词",
-            "Auto-scan on startup": "启动时自动扫�?,
+            "Auto-scan on startup": "启动时自动扫描",
             "Rescan Now": "立即重新扫描",
-            "Clear Library": "清空媒体�?,
-            "MEDIA FOLDERS": "媒体文件�?,
+            "Clear Library": "清空媒体库",
+            "MEDIA FOLDERS": "媒体文件夹",
             "SCANNING OPTIONS": "扫描选项",
             "MAINTENANCE": "维护",
             "GENERAL SETTINGS": "常规设置"
@@ -52,7 +53,7 @@ class LocalizationManager: ObservableObject {
     }
 }
 
-// 🚀 修复：增�?String 扩展，支持原有代码中�?.localized 写法
+// 🚀 修复：增加 String 扩展，支持原有代码中的 .localized 写法
 extension String {
     var localized: String {
         return LocalizationManager.shared.t(self)

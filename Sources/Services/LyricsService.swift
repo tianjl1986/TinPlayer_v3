@@ -77,6 +77,7 @@ class LyricsService {
             return [LyricLine(text: "Regex Error", startTime: 0)]
         }
         
+        // 修复：增加 String 扩展，支持原有代码中的 .localized 写法
         let nsString = lrc as NSString
         let matches = regex.matches(in: lrc, options: [], range: NSRange(location: 0, length: nsString.length))
         

@@ -10,33 +10,30 @@ struct AlbumDetailView: View {
             // 1. Top Bar - 9930:15071
             HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Text("<").font(.system(size: 20, weight: .bold))
-                }
-                Spacer()
-                Text("ALBUM")
-                    .font(.system(size: 16, weight: .black))
-                Spacer()
-                Text(" ") // Spacer
-                    .frame(width: 20)
-            }
-            .foregroundColor(DesignTokens.textPrimary)
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .padding(.bottom, 16)
+            // 1. 顶部栏 (Raised)
+            AppHeader(
+                title: album.title,
+                leftItem: AnyView(
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DesignTokens.textPrimary)
+                    }
+                )
+            ).padding(.horizontal, 24)
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 40) {
-                    // 2. Album Header - 9931:15076
+                    // 2. 专辑封面卡片 (拟物悬浮)
                     VStack(spacing: 24) {
                         AsyncImage(url: URL(string: album.coverUrl)) { image in
                             image.resizable()
                         } placeholder: {
-                            Rectangle().fill(Color.gray.opacity(0.1))
+                            Color.gray.opacity(0.1)
                         }
-                        .aspectRatio(1, contentMode: .fit)
                         .frame(width: 240, height: 240)
-                        .cornerRadius(8)
-                        .skeuoRaised(cornerRadius: 8)
+                        .cornerRadius(24)
+                        .skeuoRaised(cornerRadius: 24)
                         
                         VStack(spacing: 8) {
                             Text(album.title)
@@ -49,7 +46,7 @@ struct AlbumDetailView: View {
                                 .foregroundColor(DesignTokens.textSecondary)
                         }
                         
-                        // Action Buttons - 9931:15078
+                        // 播放控制按钮
                         HStack(spacing: 16) {
                             Button(action: { player.playTrack(album.tracks.first!, in: album.tracks) }) {
                                 Text("Play All")

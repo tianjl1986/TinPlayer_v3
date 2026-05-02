@@ -4,6 +4,7 @@ import UIKit
 import SwiftUI
 import MediaPlayer
 
+@MainActor
 class MusicLibraryService: ObservableObject {
     static let shared = MusicLibraryService()
     
@@ -11,7 +12,8 @@ class MusicLibraryService: ObservableObject {
     @Published var isScanning = false
     @Published var mediaFolders: [String] = []
     
-    // 🚀 核心补全：计算属�?playlist，供 View 层快捷获取所有曲�?    var playlist: [Track] {
+    // 🚀 核心补全：计算属性 playlist，供 View 层快捷获取所有曲目
+    var playlist: [Track] {
         return albums.flatMap { $0.tracks }
     }
     

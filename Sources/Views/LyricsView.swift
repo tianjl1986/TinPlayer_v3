@@ -16,6 +16,9 @@ struct LyricsView: View {
                         Spacer(minLength: 120) // Buffer for roller
                         
                         // Paper Container
+                        Spacer(minLength: 120) // 滚轴缓冲间距
+                        
+                        // 纸张容器
                         VStack(spacing: 32) {
                             ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
                                 VStack(alignment: .leading, spacing: 8) {
@@ -52,7 +55,7 @@ struct LyricsView: View {
                 }
             }
             
-            // 1. Platen Roller (Top Fixed) - 9893:14780
+            // 1. 打印机滚轴 (顶部固定)
             Image("roller_light")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
@@ -60,7 +63,7 @@ struct LyricsView: View {
                 .skeuoRaised(cornerRadius: 0)
                 .overlay(
                     HStack {
-                        // Left Knob
+                        // 左旋钮
                         Circle()
                             .fill(DesignTokens.surfaceMain)
                             .skeuoRaised(cornerRadius: 30)
@@ -70,7 +73,7 @@ struct LyricsView: View {
                         
                         Spacer()
                         
-                        // Right Knob
+                        // 右旋钮
                         Circle()
                             .fill(DesignTokens.surfaceMain)
                             .skeuoRaised(cornerRadius: 30)
@@ -81,7 +84,7 @@ struct LyricsView: View {
                 )
                 .zIndex(10)
             
-            // 3. Top Bar - 9893:14778
+            // 3. 顶部栏
             HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
                     Text("<").font(.system(size: 20, weight: .bold))

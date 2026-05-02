@@ -33,16 +33,16 @@ extension View {
                 .fill(DesignTokens.surfaceMain)
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowDark, lineWidth: 2)
-                        .blur(radius: 2)
-                        .offset(x: 2, y: 2)
+                        .stroke(DesignTokens.shadowDark, lineWidth: 4)
+                        .blur(radius: 4)
+                        .offset(x: 4, y: 4)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowLight, lineWidth: 2)
-                        .blur(radius: 2)
-                        .offset(x: -2, y: -2)
+                        .stroke(DesignTokens.shadowLight, lineWidth: 4)
+                        .blur(radius: 4)
+                        .offset(x: -4, y: -4)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
                 )
         )
@@ -50,8 +50,8 @@ extension View {
 }
 
 extension Color {
-    init(hexString hexString: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+    init(hexString: String) {
+        let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64

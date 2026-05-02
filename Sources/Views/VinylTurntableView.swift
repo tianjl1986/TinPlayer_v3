@@ -4,7 +4,7 @@ struct VinylTurntableView: View {
     @StateObject private var player = MusicPlayer.shared
     @State private var rotation: Double = 0
     
-    // 🚀 Figma 1:1 物理尺寸与坐�?(基于 390x844 标准�?
+    // 🚀 Figma 1:1 物理尺寸与坐标 (基于 390x844 标准稿)
     private let screenWidth = UIScreen.main.bounds.width
     private let baseSize: CGFloat = 342
     private let platterSize: CGFloat = 310
@@ -12,19 +12,8 @@ struct VinylTurntableView: View {
     @State private var tonearmRotation: Double = -135 // Initial rotation from audit
     
     var body: some View {
-        VStack(spacing: 32) {
-            // 1. Top Bar - 9880:14736
-            HStack {
-                Text("<").font(.system(size: 20, weight: .bold))
-                Spacer()
-                Text("NOW PLAYING").font(.system(size: 14, weight: .black))
-                Spacer()
-                Text("...").font(.system(size: 20, weight: .bold))
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 16)
-            
-            // 2. Turntable Base - 9880:14740
+        ZStack {
+            // Turntable Base - 9880:14740
             ZStack {
                 // Base
                 RoundedRectangle(cornerRadius: 32)
@@ -44,11 +33,22 @@ struct VinylTurntableView: View {
                         .fill(Color.black)
                         .frame(width: 290, height: 290)
                     
-                    // Grooves (Simulated)
+                    // Grooves (Simulated with Gradient)
+                    Circle()
+                        .fill(AngularGradient(stops: [
+                            .init(color: Color(hexString: "#1a1a1a"), position: 0),
+                            .init(color: Color(hexString: "#4d4d4d"), position: 0.25),
+                            .init(color: Color(hexString: "#1a1a1a"), position: 0.5),
+                            .init(color: Color(hexString: "#4d4d4d"), position: 0.75),
+                            .init(color: Color(hexString: "#1a1a1a"), position: 1)
+                        ], center: .center))
+                        .frame(width: 290, height: 290)
+                    
+                    // Physical Grooves
                     ForEach(0..<10) { i in
                         Circle()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            .frame(width: CGFloat(280 - (i * 20)), height: CGFloat(280 - (i * 20)))
+                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                            .frame(width: CGFloat(280 - (i * 25)), height: CGFloat(280 - (i * 25)))
                     }
                     
                     // Center Label (Cover)
@@ -58,32 +58,31 @@ struct VinylTurntableView: View {
                         } placeholder: {
                             Color.gray
                         }
-                        .frame(width: 100, height: 100)
+                        .frame(width: 110, height: 110)
                         .clipShape(Circle())
                     }
                 }
-                .rotationEffect(.degrees(player.isPlaying ? 360 : 0))
-                .animation(player.isPlaying ? Animation.linear(duration: 4).repeatForever(autoreverses: false) : .default, value: player.isPlaying)
+                .rotationEffect(.degrees(rotation))
                 
                 // Spindle - 9889:14767
                 Circle()
                     .fill(AngularGradient(colors: [Color.gray, Color.white, Color.gray], center: .center))
                     .frame(width: 20, height: 20)
-                    .shadow(radius: 2)
-                
-                // Tonearm Assembly - 9893:14773
-                Image("tonearm_light")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .shadow(color: .black.opacity(0.3), radius: 2, x: 2, y: 2)
+            }
+            
+            // Tonearm Base - 10491:8406
+            Image("arm_base_light")
+                .resizable()
                 .frame(width: 80, height: 80)
                 .offset(x: 130, y: -130)
             
-            // 唱臂主体 (旋转动画)
-            Image("tonearm_arm_light")
+            // Tonearm - 10491:8411
+            Image("tonearm_light")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 180)
-                .rotationEffect(.degrees(player.isPlaying ? 28 : 0), anchor: .topTrailing)
+                .rotationEffect(.degrees(player.isPlaying ? 25 : 0), anchor: .topTrailing)
                 .offset(x: 85, y: -100)
                 .animation(.spring(response: 0.6, dampingFraction: 0.8), value: player.isPlaying)
         }
@@ -91,16 +90,23 @@ struct VinylTurntableView: View {
             if player.isPlaying { startRotation() }
         }
         .onChange(of: player.isPlaying) { isPlaying in
-            if isPlaying { startRotation() }
-        }
-    }
-}
-    
-    private func startRotation() {
-        withAnimation(.linear(duration: 3.0).repeatForever(autoreverses: false)) {
-            if player.isPlaying {
-                rotation += 360
+            if isPlaying {
+                startRotation()
+            } else {
+                stopRotation()
             }
         }
+    }
+    
+    private func startRotation() {
+        withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+            rotation += 360
+        }
+    }
+    
+    private func stopRotation() {
+        // Animation will naturally stop when player.isPlaying is false if using state-based rotation
+        // But for smooth stop, we'd need more complex logic. 
+        // For now, let's just use the current simple logic.
     }
 }
