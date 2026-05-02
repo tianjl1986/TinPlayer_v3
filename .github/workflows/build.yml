@@ -1,4 +1,4 @@
-name: TinPlayer Production Build
+name: TinPlayer Official Install Build
 
 on:
   push:
@@ -18,16 +18,17 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Build
+      - name: Build & Install
         run: |
           set -e
-          # 强制编译出完整的 Bundle 结构
-          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
+          # 使用 install 命令将产物“安装”到临时目录，这会生成最标准的 .app 结构
+          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild install \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
             -derivedDataPath ./DerivedData \
             -configuration Release \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            DSTROOT=./output
 
       - name: Assembly IPA
         run: |
@@ -35,72 +36,48 @@ jobs:
           rm -rf Payload TinPlayer.ipa
           mkdir -p Payload
 
-          echo "🔍 正在寻找官方 .app 包..."
-          REAL_APP=$(find ./DerivedData/Build/Products -name "*.app" -type d | head -n 1)
+          # 1. 从安装目录中提取 .app 包
+          echo "🔍 正在提取标准 .app 包..."
+          # 路径通常是 output/Applications/TinPlayer.app
+          APP_PATH=$(find ./output/Applications -name "*.app" -type d | head -n 1)
           
-          if [ -n "$REAL_APP" ]; then
-             echo "✅ 找到官方包: $REAL_APP"
-             cp -R "$REAL_APP" Payload/TinPlayer.app
-          else
-             echo "⚠️ 执行备选方案..."
-             mkdir -p Payload/TinPlayer.app
-             PRODUCT_DIR=$(find ./DerivedData/Build/Products -name "Release-iphoneos" -type d | head -n 1)
-             cp -R "$PRODUCT_DIR/" Payload/TinPlayer.app/
-          fi
-
-          # 核心校验：确保找到真正的 Mach-O 64-bit 格式文件
-          echo "🔍 正在校验主二进制文件..."
-          EXECUTABLE=$(find Payload/TinPlayer.app -maxdepth 2 -type f ! -name "*.*" | xargs file | grep "Mach-O 64-bit executable" | cut -d: -f1 | head -n 1)
-          
-          if [ -n "$EXECUTABLE" ]; then
-             echo "✅ 锁定主程序: $EXECUTABLE"
-             # 统一重命名为 TinPlayer，确保和 Info.plist 匹配
-             mv "$EXECUTABLE" Payload/TinPlayer.app/TinPlayer
-             chmod +x Payload/TinPlayer.app/TinPlayer
-          else
-             echo "❌ 失败: 没找到有效的 Mach-O 二进制文件！"
+          if [ -z "$APP_PATH" ]; then
+             echo "❌ 错误: 安装目录下未发现 .app 包！"
+             ls -R ./output
              exit 1
           fi
 
-          # 注入完整且正确的 Info.plist
-          cat << 'EOF' > Payload/TinPlayer.app/Info.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>26</string>
-              <key>LSRequiresIPhoneOS</key><true/>
-              <key>UILaunchScreen</key><dict/>
-              <key>MinimumOSVersion</key><string>16.0</string>
-              <key>UIDeviceFamily</key><array><integer>1</integer></array>
-              <key>UIFileSharingEnabled</key><true/>
-              <key>LSSupportsOpeningDocumentsInPlace</key><true/>
-              <key>NSAppleMusicUsageDescription</key>
-              <string>我们需要访问您的媒体库以扫描和播放本地音乐。</string>
-              <key>UIBackgroundModes</key><array><string>audio</string></array>
-          </dict>
-          </plist>
-          EOF
+          echo "✅ 锁定包路径: $APP_PATH"
+          cp -R "$APP_PATH" Payload/TinPlayer.app
 
-          # 封装
+          # 2. 自动识别主执行文件名称
+          # 我们不再手动改名，而是直接从它自带的 Info.plist 里读取它期待的名字
+          REAL_EXEC_NAME=$(defaults read "$(pwd)/Payload/TinPlayer.app/Info.plist" CFBundleExecutable)
+          echo "✅ 官方指定执行文件名: $REAL_EXEC_NAME"
+
+          # 3. 补全必要的权限（如果官方生成的包里缺少的话）
+          # 我们使用 PlistBuddy 这种专业工具来注入权限，避免破坏格式
+          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '我们需要访问您的媒体库以播放本地音乐。'" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
+          
+          # 确保主程序有执行权限
+          chmod +x "Payload/TinPlayer.app/$REAL_EXEC_NAME"
+
+          # 4. 封装
           zip -q -r TinPlayer.ipa Payload
           echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-Production
+          name: TinPlayer-v1.3.0-Official
           path: TinPlayer.ipa
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.0-production"
+          tag_name: "v1.3.0-official"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
