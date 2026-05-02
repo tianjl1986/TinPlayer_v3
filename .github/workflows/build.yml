@@ -1,4 +1,4 @@
-name: TinPlayer Final Integrity Fix
+name: TinPlayer Deep Scan Fix
 
 on:
   push:
@@ -21,44 +21,57 @@ jobs:
       - name: Build and Package
         run: |
           set -e
-          rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive
+          rm -rf Payload TinPlayer.ipa
           
-          echo "🚀 Compiling..."
-          xcodebuild archive \
+          echo "🚀 Building with standard 'build' command (to generate real .app)..."
+          # 使用 build 而不是 archive，并指定导出路径
+          xcodebuild build \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -archivePath ./TinPlayer.xcarchive \
+            -derivedDataPath ./DerivedData \
             CODE_SIGNING_ALLOWED=NO \
-            SKIP_INSTALL=NO
+            CODE_SIGNING_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
 
-          echo "📦 Constructing Bundle..."
-          mkdir -p Payload/TinPlayer.app
-          
-          # 1. 抓取二进制
-          BINARY_SOURCE=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 | head -n 1)
-          cp "$BINARY_SOURCE" Payload/TinPlayer.app/TinPlayer
-          chmod +x Payload/TinPlayer.app/TinPlayer
+          echo "🔍 Hunting for the real .app bundle..."
+          # 在 DerivedData 里面深度搜寻真正的 .app 文件夹
+          REAL_APP=$(find ./DerivedData -name "TinPlayer.app" -type d -path "*/Release-iphoneos/*" | head -n 1)
 
-          # 2. 【核心修复】强制编译并验证资源文件
-          echo "🎨 Compiling Assets.xcassets..."
-          # 我们先寻找图标，确保编译能找到它
-          xcrun actool Assets.xcassets \
-            --compile Payload/TinPlayer.app \
-            --platform iphoneos \
-            --minimum-deployment-target 17.0 \
-            --app-icon AppIcon \
-            --output-partial-info-plist partial.plist
-
-          # 验证 Assets.car 是否真的生成了
-          if [ ! -f "Payload/TinPlayer.app/Assets.car" ]; then
-            echo "⚠️ Assets.car missing! Trying fallback search..."
-            # 有时 actool 会把产物放在临时文件夹
-            FALLBACK_CAR=$(find . -name "Assets.car" | head -n 1)
-            [ -n "$FALLBACK_CAR" ] && cp "$FALLBACK_CAR" Payload/TinPlayer.app/
+          if [ -n "$REAL_APP" ]; then
+            echo "✅ Found Real App Bundle: $REAL_APP"
+            # 检查体积
+            du -sh "$REAL_APP"
+            
+            mkdir -p Payload
+            cp -R "$REAL_APP" Payload/
+            
+            # 补丁：获取真实的二进制文件名并赋予权限
+            # 很多时候在 SwiftPM 项目里，它叫 "AppModule" 而不是 "TinPlayer"
+            INFOPLIST="Payload/$(basename "$REAL_APP")/Info.plist"
+            EXE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$INFOPLIST")
+            echo "🚀 Executable name is: $EXE_NAME"
+            chmod +x "Payload/$(basename "$REAL_APP")/$EXE_NAME"
+          else
+            echo "❌ ERROR: Real .app bundle not found in DerivedData!"
+            find ./DerivedData -maxdepth 6 -type d
+            exit 1
           fi
+          
+          # 打包
+          zip -q -r TinPlayer.ipa Payload
+          echo "✅ Done! Final IPA created."
 
-          # 3. 生成 Info.plist
-          cat << 'EOF' > Payload/TinPlayer.app/Info.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TinPlayer-v1.3.0-IPA
+          path: TinPlayer.ipa
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.3.0-final-${{ github.run_number }}"
+          name: "Tin Player Release #${{ github.run_number }}"
+          files: TinPlayer.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
