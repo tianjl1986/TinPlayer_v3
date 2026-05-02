@@ -1,4 +1,4 @@
-name: TinPlayer Official Archive Build
+name: TinPlayer Full-Harvest Build
 
 on:
   push:
@@ -18,14 +18,13 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Archive
+      - name: Build
         run: |
           set -e
-          # 使用 archive 命令，这是最正规的打包方式
-          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
+          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -archivePath "./TinPlayer.xcarchive" \
+            -derivedDataPath ./DerivedData \
             -configuration Release \
             CODE_SIGNING_ALLOWED=NO
 
@@ -33,46 +32,71 @@ jobs:
         run: |
           set -e
           rm -rf Payload TinPlayer.ipa
-          mkdir -p Payload
+          mkdir -p Payload/TinPlayer.app/Frameworks
 
-          echo "🔍 从归档中提取 .app 包..."
-          # 官方归档后的路径非常固定：Products/Applications/xxx.app
-          SRC_APP=$(find ./TinPlayer.xcarchive/Products/Applications -name "*.app" -type d | head -n 1)
+          echo "🔍 正在进行全量搜刮（主程序 + 动态库 + 资源）..."
           
-          if [ -z "$SRC_APP" ]; then
-             echo "❌ 错误: 归档文件中没找到 .app 包！"
-             ls -R ./TinPlayer.xcarchive
-             exit 1
+          # 1. 抓取主可执行文件
+          REAL_BINARY=$(find ./DerivedData/Build/Products -name "TinPlayer" -type f ! -name "*.*" -perm +111 | head -n 1)
+          if [ -n "$REAL_BINARY" ]; then
+             echo "✅ 找到主程序: $REAL_BINARY"
+             cp "$REAL_BINARY" Payload/TinPlayer.app/TinPlayer
+             chmod +x Payload/TinPlayer.app/TinPlayer
           fi
 
-          echo "✅ 找到包: $SRC_APP"
-          cp -R "$SRC_APP" Payload/TinPlayer.app
-
-          # 获取二进制文件名
-          REAL_EXEC_NAME=$(defaults read "$(pwd)/Payload/TinPlayer.app/Info.plist" CFBundleExecutable)
-          echo "✅ 执行文件名: $REAL_EXEC_NAME"
-
-          # 注入权限
-          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '我们需要访问您的媒体库以播放本地音乐。'" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
+          # 2. 核心：搜刮所有的动态库 (Frameworks / dylib)
+          # 你的代码逻辑很可能就藏在这些文件里
+          echo "🔍 正在搜刮代码库..."
+          find ./DerivedData/Build/Products -name "*.framework" -exec cp -R {} Payload/TinPlayer.app/Frameworks/ \; 2>/dev/null || true
+          find ./DerivedData/Build/Products -name "*.dylib" -exec cp {} Payload/TinPlayer.app/Frameworks/ \; 2>/dev/null || true
           
-          chmod +x "Payload/TinPlayer.app/$REAL_EXEC_NAME"
+          # 3. 搜刮资源文件
+          find ./DerivedData/Build/Products -name "Assets.car" -exec cp {} Payload/TinPlayer.app/ \; 2>/dev/null || true
 
-          # 封装
+          # 4. 构造 Info.plist
+          cat << 'EOF' > Payload/TinPlayer.app/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key><string>TinPlayer</string>
+              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
+              <key>CFBundleName</key><string>TinPlayer</string>
+              <key>CFBundlePackageType</key><string>APPL</string>
+              <key>CFBundleShortVersionString</key><string>1.3.0</string>
+              <key>CFBundleVersion</key><string>28</string>
+              <key>LSRequiresIPhoneOS</key><true/>
+              <key>UILaunchScreen</key><dict/>
+              <key>MinimumOSVersion</key><string>16.0</string>
+              <key>UIDeviceFamily</key><array><integer>1</integer></array>
+              <key>UIFileSharingEnabled</key><true/>
+              <key>LSSupportsOpeningDocumentsInPlace</key><true/>
+              <key>NSAppleMusicUsageDescription</key>
+              <string>我们需要访问您的媒体库以播放本地音乐。</string>
+              <key>UIBackgroundModes</key><array><string>audio</string></array>
+          </dict>
+          </plist>
+          EOF
+
+          # 5. 封装
           zip -q -r TinPlayer.ipa Payload
           echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
+          
+          if [ $(du -m TinPlayer.ipa | cut -f1) -lt 1 ]; then
+             echo "⚠️ 警告：IPA 依然小于 1MB，列出所有编译产物供分析："
+             find ./DerivedData/Build/Products -maxdepth 4
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-Archive
+          name: TinPlayer-v1.3.0-FullHarvest
           path: TinPlayer.ipa
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.0-archive"
+          tag_name: "v1.3.0-fullharvest"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
