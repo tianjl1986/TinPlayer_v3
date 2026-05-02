@@ -1,4 +1,4 @@
-name: TinPlayer Official Install Build
+name: TinPlayer Official Archive Build
 
 on:
   push:
@@ -18,17 +18,16 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Build & Install
+      - name: Archive
         run: |
           set -e
-          # 使用 install 命令将产物“安装”到临时目录，这会生成最标准的 .app 结构
-          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild install \
+          # 使用 archive 命令，这是最正规的打包方式
+          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -derivedDataPath ./DerivedData \
+            -archivePath "./TinPlayer.xcarchive" \
             -configuration Release \
-            CODE_SIGNING_ALLOWED=NO \
-            DSTROOT=./output
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Assembly IPA
         run: |
@@ -36,48 +35,44 @@ jobs:
           rm -rf Payload TinPlayer.ipa
           mkdir -p Payload
 
-          # 1. 从安装目录中提取 .app 包
-          echo "🔍 正在提取标准 .app 包..."
-          # 路径通常是 output/Applications/TinPlayer.app
-          APP_PATH=$(find ./output/Applications -name "*.app" -type d | head -n 1)
+          echo "🔍 从归档中提取 .app 包..."
+          # 官方归档后的路径非常固定：Products/Applications/xxx.app
+          SRC_APP=$(find ./TinPlayer.xcarchive/Products/Applications -name "*.app" -type d | head -n 1)
           
-          if [ -z "$APP_PATH" ]; then
-             echo "❌ 错误: 安装目录下未发现 .app 包！"
-             ls -R ./output
+          if [ -z "$SRC_APP" ]; then
+             echo "❌ 错误: 归档文件中没找到 .app 包！"
+             ls -R ./TinPlayer.xcarchive
              exit 1
           fi
 
-          echo "✅ 锁定包路径: $APP_PATH"
-          cp -R "$APP_PATH" Payload/TinPlayer.app
+          echo "✅ 找到包: $SRC_APP"
+          cp -R "$SRC_APP" Payload/TinPlayer.app
 
-          # 2. 自动识别主执行文件名称
-          # 我们不再手动改名，而是直接从它自带的 Info.plist 里读取它期待的名字
+          # 获取二进制文件名
           REAL_EXEC_NAME=$(defaults read "$(pwd)/Payload/TinPlayer.app/Info.plist" CFBundleExecutable)
-          echo "✅ 官方指定执行文件名: $REAL_EXEC_NAME"
+          echo "✅ 执行文件名: $REAL_EXEC_NAME"
 
-          # 3. 补全必要的权限（如果官方生成的包里缺少的话）
-          # 我们使用 PlistBuddy 这种专业工具来注入权限，避免破坏格式
+          # 注入权限
           /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '我们需要访问您的媒体库以播放本地音乐。'" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :LSSupportsOpeningDocumentsInPlace bool true" Payload/TinPlayer.app/Info.plist 2>/dev/null || true
           
-          # 确保主程序有执行权限
           chmod +x "Payload/TinPlayer.app/$REAL_EXEC_NAME"
 
-          # 4. 封装
+          # 封装
           zip -q -r TinPlayer.ipa Payload
           echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-Official
+          name: TinPlayer-v1.3.0-Archive
           path: TinPlayer.ipa
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.0-official"
+          tag_name: "v1.3.0-archive"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
