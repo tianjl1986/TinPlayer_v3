@@ -54,7 +54,7 @@ struct NowPlayingView: View {
             
             // 4. 进度条 (拟物化槽位) - 9880:14744
             HStack(spacing: 16) {
-                Text(Utils.formatDuration(player.currentTime))
+                Text(formatDuration(player.currentTime))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundColor(DesignTokens.textSecondary)
                 
@@ -71,7 +71,7 @@ struct NowPlayingView: View {
                         .frame(width: max(0, CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * 200), height: 8)
                 }
                 
-                Text(Utils.formatDuration(player.duration))
+                Text(formatDuration(player.duration))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundColor(DesignTokens.textSecondary)
             }
