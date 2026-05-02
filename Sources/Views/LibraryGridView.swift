@@ -4,42 +4,35 @@ struct LibraryGridView: View {
     @EnvironmentObject var libraryService: MusicLibraryService
     @EnvironmentObject var musicPlayer: MusicPlayer
     @ObservedObject var themeManager = ThemeManager.shared
-    
-    let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
+    @ObservedObject var localizationManager = LocalizationManager.shared
+    @State private var isGridView = true
     
     var body: some View {
         NavigationView {
-            ZStack(alignment: .bottom) {
             ZStack {
                 AppColors.background.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // 自定义 Header (包含书架切换)
-                    AppHeader(title: localizationManager.t("MY COLLECTION")) {
+                    AppHeader(title: localizationManager.t("MY COLLECTION"), rightItem: AnyView(
                         Button(action: { isGridView.toggle() }) {
                             Image(systemName: isGridView ? "text.justify" : "square.grid.2x2")
                                 .foregroundColor(AppColors.textPrimary)
                                 .frame(width: 44, height: 44)
                                 .skeuoRaised(cornerRadius: 12)
                         }
-                    }
+                    ))
                     
                     ScrollView {
                         if isGridView {
-                            // 网格视图
-                            LazyVGrid(columns: [GridItem(.fixed(163), spacing: 24), GridItem(.fixed(163), spacing: 24)], spacing: 24) {
+                            LazyVGrid(columns: [GridItem(.flexible(), spacing: 24), GridItem(.flexible(), spacing: 24)], spacing: 24) {
                                 ForEach(libraryService.albums) { album in
                                     NavigationLink(destination: AlbumDetailView(album: album)) {
                                         AlbumGridItem(album: album)
                                     }
                                 }
                             }
-                            .padding(.top, 24)
+                            .padding(20)
                         } else {
-                            // 🚀 书架视图 (Bookshelf)
                             VStack(spacing: 16) {
                                 ForEach(libraryService.albums) { album in
                                     NavigationLink(destination: AlbumDetailView(album: album)) {
@@ -49,10 +42,14 @@ struct LibraryGridView: View {
                             }
                             .padding(20)
                         }
-                        Spacer(minLength: 120) // 🚀 为 MiniPlayer 留出空间
+                        Spacer(minLength: 120)
                     }
-                    
-                    MiniPlayerView()
+                    .overlay(
+                        VStack {
+                            Spacer()
+                            MiniPlayerView()
+                        }
+                    )
                 }
             }
             .navigationBarHidden(true)
@@ -77,6 +74,7 @@ struct AlbumGridItem: View {
                         .frame(width: 163, height: 163)
                 }
             }
+            .skeuoRaised(cornerRadius: 4)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
@@ -91,5 +89,38 @@ struct AlbumGridItem: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+struct AlbumBookshelfItem: View {
+    let album: Album
+    var body: some View {
+        HStack(spacing: 16) {
+            if let image = album.coverImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(4)
+            } else {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(AppColors.textPrimary.opacity(0.1))
+                    .frame(width: 60, height: 60)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(album.title)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+                Text(album.artist)
+                    .font(.system(size: 14))
+                    .foregroundColor(AppColors.textSecondary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundColor(AppColors.textSecondary)
+        }
+        .padding()
+        .background(AppColors.background)
+        .skeuoRaised(cornerRadius: 12)
     }
 }

@@ -4,6 +4,7 @@ struct NowPlayingView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject private var player = MusicPlayer.shared
     @ObservedObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var localizationManager = LocalizationManager.shared
     @State private var showLyrics = false
     @State private var isDragging = false
     @State private var dragTime: TimeInterval = 0
@@ -11,15 +12,15 @@ struct NowPlayingView: View {
     var body: some View {
         VStack(spacing: 0) {
             AppHeader(
-                title: "NOW PLAYING".localized,
+                title: localizationManager.t("NOW PLAYING"),
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
-            AppHeader(title: localizationManager.t("NOW PLAYING")) {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "chevron.down")
-                        .foregroundColor(AppColors.textPrimary)
-                }
-            }
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(AppColors.textPrimary)
+                            .frame(width: 44, height: 44)
+                    }
+                )
+            )
             
             Spacer()
             
@@ -112,5 +113,11 @@ struct NowPlayingView: View {
         .fullScreenCover(isPresented: $showLyrics) {
             LyricsView()
         }
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
