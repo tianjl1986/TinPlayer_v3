@@ -1,4 +1,4 @@
-name: TinPlayer Manual Bundle Fix
+name: TinPlayer Final Integrity Fix
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
           set -e
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive
           
-          echo "🚀 Compiling Source Code..."
+          echo "🚀 Compiling..."
           xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -31,27 +31,17 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SKIP_INSTALL=NO
 
-          echo "📦 Manually Constructing App Bundle..."
-          # 1. 创建标准的 iOS App 目录结构
+          echo "📦 Constructing Bundle..."
           mkdir -p Payload/TinPlayer.app
           
-          # 2. 提取被 Xcode 藏起来的二进制文件
-          # 根据日志，它在 Products/usr/local/bin/ 里
-          BINARY_SOURCE="./TinPlayer.xcarchive/Products/usr/local/bin/TinPlayer"
-          if [ -f "$BINARY_SOURCE" ]; then
-            echo "✅ Found Binary at $BINARY_SOURCE"
-            cp "$BINARY_SOURCE" Payload/TinPlayer.app/TinPlayer
-            chmod +x Payload/TinPlayer.app/TinPlayer
-          else
-            echo "❌ ERROR: Binary not found at $BINARY_SOURCE. Searching..."
-            # 备选方案：全目录搜索
-            FOUND_BIN=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 | head -n 1)
-            cp "$FOUND_BIN" Payload/TinPlayer.app/TinPlayer
-            chmod +x Payload/TinPlayer.app/TinPlayer
-          fi
+          # 1. 抓取二进制
+          BINARY_SOURCE=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 | head -n 1)
+          cp "$BINARY_SOURCE" Payload/TinPlayer.app/TinPlayer
+          chmod +x Payload/TinPlayer.app/TinPlayer
 
-          # 3. 手动编译 Assets (核心步骤：解决图标和资源缺失)
+          # 2. 【核心修复】强制编译并验证资源文件
           echo "🎨 Compiling Assets.xcassets..."
+          # 我们先寻找图标，确保编译能找到它
           xcrun actool Assets.xcassets \
             --compile Payload/TinPlayer.app \
             --platform iphoneos \
@@ -59,20 +49,16 @@ jobs:
             --app-icon AppIcon \
             --output-partial-info-plist partial.plist
 
-          # 4. 生成 Info.plist
+          # 验证 Assets.car 是否真的生成了
+          if [ ! -f "Payload/TinPlayer.app/Assets.car" ]; then
+            echo "⚠️ Assets.car missing! Trying fallback search..."
+            # 有时 actool 会把产物放在临时文件夹
+            FALLBACK_CAR=$(find . -name "Assets.car" | head -n 1)
+            [ -n "$FALLBACK_CAR" ] && cp "$FALLBACK_CAR" Payload/TinPlayer.app/
+          fi
+
+          # 3. 生成 Info.plist
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleExecutable</key><string>TinPlayer</string>
-              <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string>TinPlayer</string>
-              <key>CFBundlePackageType</key><string>APPL</string>
-              <key>CFBundleShortVersionString</key><string>1.3.0</string>
-              <key>CFBundleVersion</key><string>15</string>
-              <key>LSRequiresIPhoneOS</key><true/>
-              <key>UILaunchScreen</key><dict/>
-              <key>MinimumOSVersion</key><string>17.0</string>
-              <key>UIDeviceFamily</key><array><integer>1</integer></array>
-              <key>UIRequiredDeviceCapabilities</key><array><string>arm6
+          <plist
