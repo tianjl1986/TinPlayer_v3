@@ -13,36 +13,47 @@ struct LibraryGridView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .bottom) {
+            ZStack {
                 AppColors.background.ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    AppHeader(
-                        title: "MY COLLECTION".localized,
-                        rightItem: AnyView(
-                            NavigationLink(destination: SettingsView()) {
-                                Image(systemName: "line.3.horizontal") // 🚀 Figma 的 "=" 图标
-                                    .font(.system(size: 20))
-                                    .foregroundColor(AppColors.textPrimary)
-                                    .frame(width: 40, height: 40)
-                            }
-                        )
-                    )
+                    // 自定义 Header (包含书架切换)
+                    AppHeader(title: localizationManager.t("MY COLLECTION")) {
+                        Button(action: { isGridView.toggle() }) {
+                            Image(systemName: isGridView ? "text.justify" : "square.grid.2x2")
+                                .foregroundColor(AppColors.textPrimary)
+                                .frame(width: 44, height: 44)
+                                .skeuoRaised(cornerRadius: 12)
+                        }
+                    }
                     
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 24) {
-                            ForEach(libraryService.albums) { album in
-                                NavigationLink(destination: AlbumDetailView(album: album)) {
-                                    AlbumGridItem(album: album)
+                        if isGridView {
+                            // 网格视图
+                            LazyVGrid(columns: [GridItem(.fixed(163), spacing: 24), GridItem(.fixed(163), spacing: 24)], spacing: 24) {
+                                ForEach(libraryService.albums) { album in
+                                    NavigationLink(destination: AlbumDetailView(album: album)) {
+                                        AlbumGridItem(album: album)
+                                    }
                                 }
                             }
+                            .padding(.top, 24)
+                        } else {
+                            // 🚀 书架视图 (Bookshelf)
+                            VStack(spacing: 16) {
+                                ForEach(libraryService.albums) { album in
+                                    NavigationLink(destination: AlbumDetailView(album: album)) {
+                                        AlbumBookshelfItem(album: album)
+                                    }
+                                }
+                            }
+                            .padding(20)
                         }
-                        .padding(24)
                         Spacer(minLength: 120) // 🚀 为 MiniPlayer 留出空间
                     }
+                    
+                    MiniPlayerView()
                 }
-                
-                MiniPlayerView()
-                    .padding(.bottom, 10)
             }
             .navigationBarHidden(true)
         }

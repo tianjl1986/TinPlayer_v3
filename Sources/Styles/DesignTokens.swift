@@ -43,13 +43,59 @@ class ThemeManager: ObservableObject {
 
 // 为了向下兼容，保留 AppColors 引用
 struct AppColors {
-    static var background: Color { ThemeManager.shared.background }
-    static var textPrimary: Color { ThemeManager.shared.textPrimary }
-    static var textSecondary: Color { ThemeManager.shared.textSecondary }
+    static var background: Color {
+        Color(UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(hex: "#121212") : UIColor(hex: "#f4f4f5")
+        })
+    }
+    
+    static var textPrimary: Color {
+        Color(UIColor { trait in
+            trait.userInterfaceStyle == .dark ? .white : UIColor(hex: "#18181b")
+        })
+    }
+    
+    static var textSecondary: Color {
+        Color(UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(hex: "#a1a1aa") : UIColor(hex: "#71717a")
+        })
+    }
+    
+    static var separator: Color {
+        Color(UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(hex: "#27272a") : UIColor(hex: "#e4e4e7")
+        })
+    }
+    
     static var shadowLight: Color { ThemeManager.shared.shadowLight }
     static var shadowDark: Color { ThemeManager.shared.shadowDark }
     static var vinylBlack: Color { ThemeManager.shared.vinylBlack }
-    static var separator: Color { ThemeManager.shared.separator }
+}
+
+// 🚀 自定义拟物化开关样式
+struct SkeuoToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            configuration.label
+            Spacer()
+            ZStack {
+                // 背景槽
+                Capsule()
+                    .fill(AppColors.background)
+                    .skeuoSunken(cornerRadius: 15)
+                    .frame(width: 50, height: 30)
+                
+                // 拨杆按钮
+                Circle()
+                    .fill(configuration.isOn ? Color.orange : AppColors.background)
+                    .skeuoRaised(cornerRadius: 13)
+                    .frame(width: 26, height: 26)
+                    .offset(x: configuration.isOn ? 10 : -10)
+                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isOn)
+            }
+            .onTapGesture { configuration.isOn.toggle() }
+        }
+    }
 }
 
 // MARK: - 颜色扩展

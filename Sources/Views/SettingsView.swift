@@ -21,46 +21,76 @@ struct SettingsView: View {
                     )
                 )
                 
-                Form {
-                    Section(header: Text("MEDIA FOLDERS".localized).foregroundColor(AppColors.textSecondary)) {
-                        ForEach(libraryService.mediaFolders, id: \.self) { folder in
-                            Text(folder).font(.caption).foregroundColor(AppColors.textSecondary)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // 🚀 扫描选项组
+                        VStack(spacing: 0) {
+                            toggleRow("Parse .cue sheets".localized, isOn: $libraryService.parseCue)
+                            Divider().padding(.leading, 20).background(AppColors.separator)
+                            toggleRow("Search for .lrc lyrics".localized, isOn: $libraryService.searchLrc)
+                            Divider().padding(.leading, 20).background(AppColors.separator)
+                            toggleRow("Auto-scan on startup".localized, isOn: $libraryService.autoScan)
                         }
-                        Button("+ Add Folder") { /* Logic */ }.foregroundColor(.blue)
-                    }
-                    
-                    Section(header: Text("SCANNING OPTIONS".localized).foregroundColor(AppColors.textSecondary)) {
-                        Toggle("Parse .cue sheets".localized, isOn: $libraryService.parseCue)
-                        Toggle("Search for .lrc lyrics".localized, isOn: $libraryService.searchLrc)
-                        Toggle("Auto-scan on startup".localized, isOn: $libraryService.autoScan)
-                    }
-                    
-                    Section(header: Text("MAINTENANCE".localized).foregroundColor(AppColors.textSecondary)) {
-                        Button(action: { libraryService.scanLibrary() }) {
-                            HStack {
-                                Text("Rescan Now".localized).foregroundColor(AppColors.textPrimary)
-                                Spacer()
-                                if libraryService.isScanning { ProgressView() }
+                        .background(AppColors.background)
+                        .skeuoSunken(cornerRadius: 16)
+                        .padding(.horizontal, 20)
+                        
+                        // 🚀 操作按钮组
+                        VStack(spacing: 12) {
+                            Button(action: { libraryService.scanLibrary() }) {
+                                HStack {
+                                    Text("Rescan Now".localized)
+                                    Spacer()
+                                    if libraryService.isScanning { ProgressView() }
+                                    else { Image(systemName: "arrow.clockwise") }
+                                }
+                                .foregroundColor(AppColors.textPrimary)
+                                .padding()
+                                .background(AppColors.background)
+                                .skeuoRaised(cornerRadius: 12)
+                            }
+                            
+                            Button(action: { libraryService.clearLibrary() }) {
+                                Text("Clear Library".localized)
+                                    .foregroundColor(.red)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(AppColors.background)
+                                    .skeuoRaised(cornerRadius: 12)
                             }
                         }
-                        Button(action: { libraryService.clearLibrary() }) {
-                            Text("Clear Library".localized).foregroundColor(.red)
-                        }
-                    }
-                    
-                    Section(header: Text("GENERAL SETTINGS".localized).foregroundColor(AppColors.textSecondary)) {
-                        Picker("Interface Language".localized, selection: $localizationManager.language) {
-                            Text("English").tag("en")
-                            Text("简体中文").tag("zh")
-                        }
+                        .padding(.horizontal, 20)
                         
-                        Picker("Theme".localized, selection: ThemeManager.shared.$currentTheme) {
-                            Text("Light".localized).tag(AppTheme.light)
-                            Text("Dark".localized).tag(AppTheme.dark)
+                        // 🚀 主题与语言
+                        VStack(spacing: 20) {
+                            HStack {
+                                Text("Theme".localized)
+                                Spacer()
+                                Picker("", selection: ThemeManager.shared.$currentTheme) {
+                                    Text("Light".localized).tag(AppTheme.light)
+                                    Text("Dark".localized).tag(AppTheme.dark)
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 150)
+                            }
                         }
+                        .padding(20)
+                        .background(AppColors.background)
+                        .skeuoSunken(cornerRadius: 16)
+                        .padding(.horizontal, 20)
                     }
+                    .padding(.vertical, 24)
                 }
-                .scrollContentBackground(.hidden)
+            }
+        }
+    }
+    
+    private func toggleRow(_ title: String, isOn: Binding<Bool>) -> some View {
+        Toggle(title, isOn: isOn)
+            .toggleStyle(SkeuoToggleStyle())
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+    }
             }
         }
         .navigationBarHidden(true)

@@ -91,11 +91,16 @@ struct AlbumDetailView: View {
                                         Text(String(format: "%02d", index + 1))
                                             .font(.system(size: 14, design: .monospaced))
                                             .foregroundColor(AppColors.textSecondary)
-                                            .frame(width: 30, alignment: .leading)
+                                            .frame(width: 30)
                                         
-                                        Text(track.title)
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(musicPlayer.currentTrack?.id == track.id ? .blue : AppColors.textPrimary)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(track.title)
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(musicPlayer.currentTrack?.id == track.id ? .orange : AppColors.textPrimary)
+                                            Text(track.artist)
+                                                .font(.system(size: 13))
+                                                .foregroundColor(AppColors.textSecondary)
+                                        }
                                         
                                         Spacer()
                                         
@@ -103,15 +108,19 @@ struct AlbumDetailView: View {
                                             .font(.system(size: 14))
                                             .foregroundColor(AppColors.textSecondary)
                                     }
-                                    .padding(.vertical, 16)
-                                    .contentShape(Rectangle())
+                                    .padding(.vertical, 14)
+                                    .padding(.horizontal, 20)
+                                    .background(musicPlayer.currentTrack?.id == track.id ? AppColors.background.opacity(0.5) : Color.clear)
                                 }
+                                
                                 if index < album.tracks.count - 1 {
-                                    Divider().background(AppColors.separator)
+                                    Divider().padding(.leading, 66).background(AppColors.separator)
                                 }
                             }
                         }
-                        .padding(.horizontal, 24)
+                        .background(AppColors.background)
+                        .skeuoSunken(cornerRadius: 16)
+                        .padding(20)
                         
                         Spacer(minLength: 120) // 🚀 修复“掉下去”的关键：用动态 Spacer 代替硬编码 Padding
                     }

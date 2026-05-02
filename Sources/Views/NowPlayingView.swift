@@ -14,74 +14,50 @@ struct NowPlayingView: View {
                 title: "NOW PLAYING".localized,
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20))
-                            .foregroundColor(AppColors.textPrimary)
-                            .frame(width: 40, height: 40)
-                    }
-                )
-            )
-
-            // 🚀 黑胶盘面 (Figma 9880:14735)
+            AppHeader(title: localizationManager.t("NOW PLAYING")) {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(AppColors.textPrimary)
+                }
+            }
+            
+            Spacer()
+            
+            // 1. 黑胶唱机 (320pt)
             VinylTurntableView()
-                .frame(width: 390, height: 380)
-                .padding(.top, 20)
-
-            // 🚀 曲目信息
+                .padding(.bottom, 60)
+            
+            // 2. 歌曲信息 (间距对齐 Figma)
             VStack(spacing: 8) {
-                Text(player.currentTrack?.title ?? "No Track")
+                Text(player.currentTrack?.title ?? localizationManager.t("UNKNOWN_TITLE"))
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(AppColors.textPrimary)
-                
-                Text(player.currentTrack?.artist ?? "Unknown Artist")
-                    .font(.system(size: 16, weight: .regular))
+                Text(player.currentTrack?.artist ?? localizationManager.t("UNKNOWN_ARTIST"))
+                    .font(.system(size: 16))
                     .foregroundColor(AppColors.textSecondary)
             }
-            .padding(.top, 40)
-
-            // 🚀 拟物化进度条 (Sunken Track)
+            .padding(.bottom, 40) // 🚀 到进度条的间距: 40pt
+            
+            // 3. 下沉式进度条
             VStack(spacing: 12) {
                 ZStack(alignment: .leading) {
-                    // 凹陷轨道
-                    RoundedRectangle(cornerRadius: 4)
+                    Capsule()
                         .fill(AppColors.background)
-                        .skeuoSunken(cornerRadius: 4)
-                        .frame(height: 8)
+                        .skeuoSunken(cornerRadius: 3)
+                        .frame(height: 6)
                     
-                    // 进度填充 (可选，设计稿若有则加)
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(AppColors.textPrimary.opacity(0.3))
-                        .frame(width: CGFloat((isDragging ? dragTime : player.currentTime) / (player.duration > 0 ? player.duration : 1)) * 342, height: 8)
-                    
-                    // 凸起滑块
-                    Circle()
-                        .fill(AppColors.background)
-                        .frame(width: 24, height: 24)
-                        .skeuoRaised(cornerRadius: 12)
-                        .offset(x: CGFloat((isDragging ? dragTime : player.currentTime) / (player.duration > 0 ? player.duration : 1)) * 342 - 12)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    isDragging = true
-                                    let percent = min(max(0, Double(value.location.x / 342)), 1)
-                                    dragTime = percent * player.duration
-                                }
-                                .onEnded { _ in
-                                    player.seek(to: dragTime)
-                                    isDragging = false
-                                }
-                        )
+                    Capsule()
+                        .fill(Color.orange)
+                        .frame(width: max(0, CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * (UIScreen.main.bounds.width - 80)), height: 6)
                 }
-                .frame(width: 342)
                 
                 HStack {
-                    Text(formatDuration(isDragging ? dragTime : player.currentTime))
+                    Text(formatTime(player.currentTime))
                     Spacer()
-                    Text(formatDuration(player.duration))
+                    Text(formatTime(player.duration))
                 }
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(AppColors.textSecondary)
-                .padding(.horizontal, 24)
             }
             .padding(.top, 48)
 

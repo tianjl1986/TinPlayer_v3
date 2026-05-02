@@ -13,23 +13,22 @@ enum PlaybackMode {
     }
 }
 
+@MainActor
 class MusicPlayer: ObservableObject {
     static let shared = MusicPlayer()
     
     var player: AVPlayer?
-    private var playerItemContext = 0
+    private var playerObserver: Any?
+    private var timeObserver: Any?
     
     @Published var isPlaying = false
     @Published var currentTrack: Track?
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var playbackMode: PlaybackMode = .list
-    
-    // 兼容旧代码的别名
-    var playbackTime: TimeInterval { currentTime }
-    
-    private var timeObserver: Any?
-    private var playlist: [Track] = []
+    @Published var playlist: [Track] = []
+    @Published var currentTrackLyrics: [LyricLine] = []
+    @Published var currentLyricIndex: Int = 0
     
     init() {
         setupAudioSession()
@@ -44,17 +43,36 @@ class MusicPlayer: ObservableObject {
     
     private func setupRemoteCommandCenter() {
         let commandCenter = MPRemoteCommandCenter.shared()
-        commandCenter.playCommand.addTarget { [unowned self] _ in self.resume(); return .success }
-        commandCenter.pauseCommand.addTarget { [unowned self] _ in self.pause(); return .success }
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.resume() }
+            return .success
+        }
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.pause() }
+            return .success
+        }
     }
     
-    private var playerObserver: Any?
-    
     func playTrack(_ track: Track, in list: [Track] = []) {
-        if !list.isEmpty { self.playlist = list }
+        if !list.isEmpty {
+            self.playlist = list
+        } else if self.playlist.isEmpty {
+            self.playlist = [track]
+        }
+        
         self.currentTrack = track
+        self.currentTrackLyrics = [] // 重置歌词
+        
+        // 🚀 触发在线歌词搜索
+        Task {
+            let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
+            await MainActor.run {
+                self.currentTrackLyrics = lyrics
+            }
+        }
         
         let url: URL?
+        // ... (保持原有的 URL 解析逻辑)
         if track.fileName.hasPrefix("ipod-library://") {
             url = URL(string: track.fileName)
         } else if track.fileName.isEmpty {
@@ -63,36 +81,47 @@ class MusicPlayer: ObservableObject {
             url = URL(fileURLWithPath: track.fileName)
         }
         
-        guard let validURL = url else { return }
+        guard let validURL = url else {
+            print("❌ Invalid URL for track: \(track.title)")
+            return
+        }
         
-        // 清理旧的通知监听
+        // 清理旧的通知和观察者
+        stopObserver()
         if let observer = playerObserver {
             NotificationCenter.default.removeObserver(observer)
+            playerObserver = nil
         }
         
         let playerItem = AVPlayerItem(url: validURL)
-        player = AVPlayer(playerItem: playerItem)
+        let newPlayer = AVPlayer(playerItem: playerItem)
+        self.player = newPlayer
         
         Task {
-            if let duration = try? await playerItem.asset.load(.duration) {
+            do {
+                let duration = try await playerItem.asset.load(.duration)
                 await MainActor.run {
                     self.duration = duration.seconds
                 }
+            } catch {
+                print("❌ Failed to load duration: \(error)")
             }
         }
         
-        player?.play()
+        newPlayer.play()
         self.isPlaying = true
         startObserver()
         
         // 监听播放结束，严格遵守播放模式
         playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
-            guard let self = self else { return }
-            if self.playbackMode == .loop {
-                self.seek(to: 0)
-                self.resume()
-            } else {
-                self.skipNext()
+            Task { @MainActor in
+                guard let self = self else { return }
+                if self.playbackMode == .loop {
+                    self.seek(to: 0)
+                    self.resume()
+                } else {
+                    self.skipNext()
+                }
             }
         }
     }
@@ -105,7 +134,8 @@ class MusicPlayer: ObservableObject {
     func resume() { player?.play(); isPlaying = true }
     
     func skipNext() {
-        guard !playlist.isEmpty, let current = currentTrack, let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
+        guard !playlist.isEmpty, let current = currentTrack, 
+              let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
         
         let nextIdx: Int
         if playbackMode == .shuffle {
@@ -117,7 +147,8 @@ class MusicPlayer: ObservableObject {
     }
     
     func skipPrevious() {
-        guard !playlist.isEmpty, let current = currentTrack, let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
+        guard !playlist.isEmpty, let current = currentTrack, 
+              let idx = playlist.firstIndex(where: { $0.id == current.id }) else { return }
         
         let prevIdx: Int
         if playbackMode == .shuffle {
@@ -141,14 +172,26 @@ class MusicPlayer: ObservableObject {
         }
     }
     
-    private func startObserver() {
+    private func stopObserver() {
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
+            timeObserver = nil
         }
-        
+    }
+    
+    private func startObserver() {
+        stopObserver()
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
         timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            self?.currentTime = time.seconds
+            Task { @MainActor in
+                guard let self = self else { return }
+                self.currentTime = time.seconds
+                
+                // 🚀 同步歌词索引
+                if let index = self.currentTrackLyrics.lastIndex(where: { $0.time <= time.seconds }) {
+                    self.currentLyricIndex = index
+                }
+            }
         }
     }
 }
