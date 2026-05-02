@@ -1,224 +1,76 @@
 import SwiftUI
 
-// MARK: - 音乐库页 (最终稳定版)
 struct LibraryGridView: View {
-    @StateObject private var libraryService = MusicLibraryService.shared
-    @StateObject private var player = MusicPlayer.shared
-    @State private var showSettings = false
-    @State private var showPlayer = false
-    @State private var isShelfMode = false
-    @State private var expandedAlbum: String? = nil
-
-    let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
-
+    @EnvironmentObject var libraryService: MusicLibraryService
+    @EnvironmentObject var musicPlayer: MusicPlayer
+    @State private var expandedAlbumId: UUID? = nil
+    
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                headerView
-                contentView
-            }
-            .background(AppColors.background)
-            .ignoresSafeArea(edges: .bottom)
-            .sheet(isPresented: $showSettings) { SettingsView() }
-            .fullScreenCover(isPresented: $showPlayer) { NowPlayingView() }
-            .onAppear {
-                if libraryService.tracks.isEmpty {
-                    libraryService.requestPermissionAndScan()
-                }
-            }
-        }
-    }
-
-    // ── 顶部栏 ──
-    private var headerView: some View {
-        AppHeader(
-            title: "MY COLLECTION".localized,
-            leftItem: AnyView(
-                Button(action: { showSettings = true }) {
-                    Text("<")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(AppColors.textPrimary)
-                        .frame(width: 40, height: 40)
-                }
-            ),
-            rightItem: AnyView(
-                Button(action: { withAnimation { isShelfMode.toggle() } }) {
-                    Text(isShelfMode ? "⊞" : "≡")
-                        .font(.system(size: 20, weight: .regular))
-                        .foregroundColor(AppColors.textPrimary)
-                        .frame(width: 40, height: 40)
-                }
-            )
-        )
-    }
-
-    // ── 内容分发区 ──
-    private var contentView: some View {
         ZStack {
-            if libraryService.isScanning {
-                scanningView
-            } else if libraryService.tracks.isEmpty {
-                EmptyLibraryView {
-                    libraryService.requestPermissionAndScan()
-                }
-            } else if isShelfMode {
-                shelfScrollView
-            } else {
-                gridScrollView
-            }
-        }
-    }
-
-    // ── 扫描中状态 ──
-    private var scanningView: some View {
-        VStack(spacing: 16) {
-            ProgressView().scaleEffect(1.2)
-            Text("SCANNING...".localized)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(AppColors.textSecondary)
-                .tracking(2)
-        }
-        .frame(maxHeight: .infinity)
-    }
-
-    // ── 书架模式列表 ──
-    private var shelfScrollView: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                ForEach(groupedAlbums, id: \.key) { group in
-                    AlbumShelfRow(
-                        albumName: group.key,
-                        tracks: group.tracks,
-                        isExpanded: expandedAlbum == group.key
-                    ) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            expandedAlbum = (expandedAlbum == group.key) ? nil : group.key
+            Color.black.edgesIgnoringSafeArea(.all)
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    headerView
+                    
+                    ForEach(libraryService.albums) { album in
+                        VStack(spacing: 0) {
+                            AlbumRowHeader(album: album, isExpanded: expandedAlbumId == album.id)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                        expandedAlbumId = (expandedAlbumId == album.id) ? nil : album.id
+                                    }
+                                }
+                            
+                            if expandedAlbumId == album.id {
+                                TrackExpansionView(album: album)
+                                    .transition(.asymmetric(
+                                        insertion: .opacity.combined(with: .move(edge: .top)),
+                                        removal: .opacity
+                                    ))
+                            }
                         }
-                    } onTrackTap: { track in
-                        player.play(track: track, in: group.tracks)
-                        showPlayer = true
                     }
                 }
             }
-            .padding(.top, 8)
         }
     }
-
-    // ── 网格模式列表 ──
-    private var gridScrollView: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(groupedAlbums, id: \.key) { group in
-                    let firstTrack = group.tracks.first
-                    
-                    // 创建 Album 模型对象 (coverImage 传空字符串以匹配 String 类型要求)
-                    let album = Album(
-                        title: group.key,
-                        artist: firstTrack?.artist ?? "Unknown",
-                        coverImage: "", 
-                        trackCount: group.tracks.count,
-                        releaseYear: ""
-                    )
-                    
-                    NavigationLink(destination: AlbumDetailView(album: album)) {
-                        AlbumGridCard(
-                            title: group.key,
-                            artist: album.artist,
-                            artwork: firstTrack?.artwork // 这里传真正的 UIImage? 给视图显示
-                        )
-                    }
-                }
-            }
-            .padding(24)
-        }
-    }
-
-    // 按专辑分组逻辑
-    private var groupedAlbums: [AlbumGroup] {
-        let dict = Dictionary(grouping: libraryService.tracks, by: { $0.album })
-        let groups = dict.map { (key, value) -> AlbumGroup in
-            let sortedTracks = value.sorted { $0.title < $1.title }
-            return AlbumGroup(key: key, tracks: sortedTracks)
-        }
-        return groups.sorted { $0.key < $1.key }
-    }
-}
-
-// MARK: - 辅助组件
-
-struct EmptyLibraryView: View {
-    let onScan: () -> Void
-    var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "music.note.list").font(.system(size: 64)).foregroundColor(AppColors.textSecondary.opacity(0.3))
-            VStack(spacing: 8) {
-                Text("YOUR LIBRARY IS EMPTY".localized).font(.system(size: 14, weight: .bold)).foregroundColor(AppColors.textPrimary)
-                Text("Add music to your device or tap scan below".localized).font(.system(size: 12, weight: .regular)).foregroundColor(AppColors.textSecondary).multilineTextAlignment(.center)
-            }.padding(.horizontal, 40)
-            Button(action: onScan) {
-                Text("SCAN LIBRARY".localized).font(.system(size: 14, weight: .bold)).foregroundColor(AppColors.textPrimary).frame(width: 200, height: 50).background(AppColors.background).skeuoRaised(cornerRadius: 25)
-            }
-        }.frame(maxHeight: .infinity)
-    }
-}
-
-struct AlbumGroup {
-    let key: String
-    let tracks: [LocalTrack]
-}
-
-struct AlbumGridCard: View {
-    let title: String; let artist: String; let artwork: UIImage?
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                if let img = artwork { 
-                    Image(uiImage: img).resizable().aspectRatio(contentMode: .fill) 
-                } else { 
-                    Rectangle().fill(Color(hex: "#E0E0E0"))
-                    Image(systemName: "music.note").font(.system(size: 32)).foregroundColor(AppColors.textSecondary.opacity(0.4)) 
-                }
-            }.frame(maxWidth: .infinity).aspectRatio(1, contentMode: .fit).cornerRadius(4).clipped()
-            
-            Text(title).font(.system(size: 14, weight: .bold)).foregroundColor(AppColors.textPrimary).lineLimit(2).padding(.top, 10)
-            Text(artist).font(.system(size: 12, weight: .regular)).foregroundColor(AppColors.textSecondary).lineLimit(1).padding(.top, 4)
-        }
-    }
-}
-
-struct AlbumShelfRow: View {
-    let albumName: String; let tracks: [LocalTrack]; let isExpanded: Bool; let onTap: () -> Void; let onTrackTap: (LocalTrack) -> Void
-    var body: some View {
-        VStack(spacing: 0) {
-            Button(action: onTap) {
-                ZStack(alignment: .leading) {
-                    if let artwork = tracks.first?.artwork {
-                        Image(uiImage: artwork).resizable().aspectRatio(contentMode: .fill).frame(height: 64).clipped().blur(radius: 8).overlay(Color.black.opacity(0.6))
-                    } else { Color.black }
-                    HStack {
-                        Text("\(tracks.first?.artist ?? "Unknown") - \(albumName)").font(.system(size: 14, weight: .bold)).foregroundColor(.white).lineLimit(1)
-                        Spacer(); Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundColor(.white.opacity(0.7)).rotationEffect(.degrees(isExpanded ? 90 : 0))
-                    }.padding(.horizontal, 24)
-                }.frame(maxWidth: .infinity).frame(height: 64)
-            }.buttonStyle(PlainButtonStyle())
-            
-            if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(tracks.indices, id: \.self) { i in
-                        Button(action: { onTrackTap(tracks[i]) }) {
-                            HStack {
-                                Text("\(i + 1).").font(.system(size: 14, weight: .regular)).foregroundColor(AppColors.textSecondary).frame(width: 28, alignment: .leading)
-                                Text(tracks[i].title).font(.system(size: 14, weight: .medium)).foregroundColor(AppColors.textPrimary)
-                                Spacer(); Text(formatDuration(tracks[i].duration)).font(.system(size: 12, weight: .regular)).foregroundColor(AppColors.textSecondary)
-                            }.padding(.horizontal, 24).frame(height: 44).background(AppColors.background)
-                        }.buttonStyle(PlainButtonStyle())
-                        Divider().padding(.leading, 24)
-                    }
-                }.background(AppColors.background)
+    
+    private var headerView: some View {
+        HStack {
+            Text("MY COLLECTION")
+                .font(.system(size: 24, weight: .black))
+                .foregroundColor(.white)
+                .tracking(2)
+            Spacer()
+            // 🚀 这里点击去设置
+            NavigationLink(destination: SettingsView()) {
+                Image(systemName: "gearshape.fill").foregroundColor(.white)
             }
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 30)
     }
 }
+
+struct AlbumRowHeader: View {
+    let album: Album
+    let isExpanded: Bool
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            if let image = album.coverImage {
+                Image(uiImage: image).resizable().frame(width: 54, height: 54).cornerRadius(6)
+            } else {
+                Color.gray.opacity(0.3).frame(width: 54, height: 54).cornerRadius(6)
+            }
+            Text("\(album.artist) - \(album.title)")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(.white)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                .foregroundColor(.white.opacity(0.4))
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14
