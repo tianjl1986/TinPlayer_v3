@@ -22,11 +22,11 @@ jobs:
         run: |
           set -e
           
-          # 0. 清理旧产物
+          # 0. 清理
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive
           
           echo "🚀 Starting build..."
-          # 1. 执行 Archive 打包
+          # 1. 编译
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -35,44 +35,27 @@ jobs:
             SKIP_INSTALL=NO
 
           echo "📦 Assembling App bundle..."
-          
-          # 2. 创建 Payload 结构
           mkdir -p Payload/TinPlayer.app
           
-          # 3. 提取二进制执行文件
-          echo "🔍 Searching for executable binary..."
+          # 2. 提取二进制
           BINARY_PATH=$(find ./TinPlayer.xcarchive/Products -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
-          if [ -z "$BINARY_PATH" ]; then
-             BINARY_PATH=$(find ./TinPlayer.xcarchive -type f -perm +111 ! -name "*.plist" ! -name "*.sh" | head -n 1)
-          fi
+          cp "$BINARY_PATH" Payload/TinPlayer.app/TinPlayer
+          chmod +x Payload/TinPlayer.app/TinPlayer
           
-          if [ -n "$BINARY_PATH" ]; then
-            echo "✅ Found Binary: $BINARY_PATH"
-            cp "$BINARY_PATH" Payload/TinPlayer.app/TinPlayer
-            chmod +x Payload/TinPlayer.app/TinPlayer
-          else
-            echo "❌ Fatal Error: Executable binary not found!"
-            exit 1
-          fi
+          # 3. 🚀 【地毯式搜索资源】
+          echo "🔍 Brute-force searching for resources..."
           
-          # 4. 提取 Asset Catalog
-          echo "🔍 Searching for Assets.car..."
-          ASSETS_CAR=$(find . -name "Assets.car" | head -n 1)
-          if [ -z "$ASSETS_CAR" ]; then
-             ASSETS_CAR=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "Assets.car" -path "*/TinPlayer*/*" | head -n 1)
-          fi
+          # 找所有的 Assets.car
+          find . -name "Assets.car" -exec cp -v {} Payload/TinPlayer.app/ \; || true
           
-          if [ -n "$ASSETS_CAR" ]; then
-            echo "✅ Found Assets.car: $ASSETS_CAR"
-            cp "$ASSETS_CAR" Payload/TinPlayer.app/
-          else
-            echo "⚠️ Assets.car missing."
-          fi
+          # 找所有的 .bundle 文件夹 (Swift Package 资源通常在这里)
+          # 我们把 bundle 里的内容直接倒出来
+          find . -name "*.bundle" -type d -exec cp -rv {}/. Payload/TinPlayer.app/ \; || true
           
-          # 5. 复制资源
-          find . -name "*.lproj" -exec cp -r {} Payload/TinPlayer.app/ \; || true
-          
-          # 6. 生成 Info.plist
+          # 找所有的本地化文件
+          find . -name "*.lproj" -type d -exec cp -rv {} Payload/TinPlayer.app/ \; || true
+
+          # 4. 生成 Info.plist
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -92,17 +75,16 @@ jobs:
           </plist>
           EOF
           
-          # 7. 打包并检查
-          echo "🗜️ Packaging IPA..."
+          # 5. 打包
           zip -q -r TinPlayer.ipa Payload
-          echo "✅ IPA Created Success"
+          echo "✅ Final IPA Created"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.0-fix-${{ github.run_number }}"
-          name: "Tin Player Final Build #${{ github.run_number }}"
-          body: "🚀 最终修复版。如果大小在 1MB 以上，请放心下载。安装请用 AltStore。"
+          tag_name: "v1.3.0-brute-${{ github.run_number }}"
+          name: "Tin Player Brute Build #${{ github.run_number }}"
+          body: "🔥 暴力资源抓取版。请检查大小！"
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
