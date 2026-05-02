@@ -1,4 +1,4 @@
-name: TinPlayer Architecture Fix Build
+name: TinPlayer Bruteforce Build
 
 on:
   push:
@@ -18,17 +18,14 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Fix Package Architecture
+      - name: Prepare Environment
         run: |
           set -e
-          # 🚀 核心修复 A：将 .executableTarget 改为 .target
-          # 这是让 iOSApplication 能够正确链接代码的关键
-          sed -i '' 's/\.executableTarget/\.target/g' Package.swift
-          
-          # 🚀 核心修复 B：创建 .swiftpm 结构
           mkdir -p TinPlayer.swiftpm
           cp -R ./* TinPlayer.swiftpm/ || true
           cd TinPlayer.swiftpm
+          # 恢复为 executableTarget
+          sed -i '' 's/\.target(/.executableTarget(/g' Package.swift
           sed -i '' '/appIcon: .asset("AppIcon"),/d' Package.swift
 
       - name: Archive Project
@@ -44,37 +41,45 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Final Extraction
+      - name: 🚀 暴力灌顶打包 (Bruteforce Packaging)
         run: |
           set -e
           APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
+          echo "🎯 初始 App 路径: $APP_PATH"
+          
           mkdir -p Payload
           cp -RL "$APP_PATH" Payload/
           
           APP_DIR_NAME=$(basename "$APP_PATH")
           INFOPLIST="Payload/$APP_DIR_NAME/Info.plist"
-          
-          # 获取二进制名，如果读不到就强制用 TinPlayer
           BIN_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$INFOPLIST" 2>/dev/null || echo "TinPlayer")
           
-          # 🚀 最终兜底：如果这个二进制太小，说明链接失败，我们去缓存里找 AppModule 的库文件替换它
-          BIN_SIZE=$(ls -l "Payload/$APP_DIR_NAME/$BIN_NAME" | awk '{print $5}')
-          if [ "$BIN_SIZE" -lt 200000 ]; then
-             echo "⚠️ 检测到二进制异常偏小 ($BIN_SIZE bytes)，尝试寻找 AppModule 实体..."
-             REAL_BIN=$(find ./DerivedData -name "AppModule" -type f -perm +111 -size +1M | head -n 1)
-             if [ -n "$REAL_BIN" ]; then
-                echo "🎯 发现 AppModule 实体，正在替换..."
-                cp -L "$REAL_BIN" "Payload/$APP_DIR_NAME/$BIN_NAME"
+          echo "🔍 正在缓存中搜寻真正的二进制灵魂..."
+          # 在 DerivedData 中寻找编译产出的真正大文件
+          REAL_BIN=$(find ./DerivedData -type f -perm +111 -size +1M | grep -v "xctest" | head -n 1)
+          
+          if [ -n "$REAL_BIN" ]; then
+             echo "🔥 抓到了！真正的二进制在: $REAL_BIN ($(du -h "$REAL_BIN" | cut -f1))"
+             echo "⚡ 正在执行灵魂灌顶..."
+             cp -f "$REAL_BIN" "Payload/$APP_DIR_NAME/$BIN_NAME"
+          else
+             echo "⚠️ 没找到超过 1MB 的二进制，尝试寻找任何名为 AppModule 的可执行文件..."
+             ALT_BIN=$(find ./DerivedData -name "AppModule" -type f -perm +111 | head -n 1)
+             if [ -n "$ALT_BIN" ]; then
+                cp -f "$ALT_BIN" "Payload/$APP_DIR_NAME/$BIN_NAME"
              fi
           fi
           
           chmod +x "Payload/$APP_DIR_NAME/$BIN_NAME"
           
+          # 写入权限描述（必填）
+          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string 'Play music'" "$INFOPLIST" 2>/dev/null || true
+          
           zip -q -r TinPlayer.ipa Payload
-          echo "✅ 最终战斗结论 - IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
+          echo "✅ 暴力打包完成 - IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-ArchFixed
+          name: TinPlayer-Bruteforce-Success
           path: TinPlayer.ipa
