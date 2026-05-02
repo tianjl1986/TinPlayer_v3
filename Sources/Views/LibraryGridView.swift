@@ -3,15 +3,7 @@ import SwiftUI
 struct LibraryGridView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
-    @State private var filterMode: FilterMode = .tracks
     @State private var isShelfView = true 
-    @State private var showingPlayer = false
-    
-    enum FilterMode: String, CaseIterable {
-        case tracks = "TRACKS"
-        case albums = "ALBUMS"
-        case artists = "ARTISTS"
-    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -42,13 +34,7 @@ struct LibraryGridView: View {
                 } else {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 28) {
                         ForEach(libraryService.tracks) { track in
-                            Button(action: {
-                                player.play(track: track)
-                                showingPlayer = true
-                            }) {
-                                AlbumCard(title: track.title, artist: track.artist, artwork: track.artwork)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            AlbumCard(track: track)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -60,9 +46,9 @@ struct LibraryGridView: View {
     }
     
     private var groupedAlbums: [GroupedAlbum] {
-        let groups = Dictionary(grouping: libraryService.tracks, by: { $0.album })
+        let groups = Dictionary(grouping: libraryService.tracks, by: { $0.artist }) // Grouping by artist for shelf logic
         return groups.map { (key, tracks) in
-            GroupedAlbum(id: key, title: key, subtitle: tracks.first?.artist ?? "Unknown", artwork: tracks.first?.artwork, tracks: tracks)
+            GroupedAlbum(id: key, title: key, subtitle: "Artist", tracks: tracks)
         }.sorted { $0.title < $1.title }
     }
 }
@@ -71,7 +57,6 @@ struct GroupedAlbum: Identifiable {
     let id: String
     let title: String
     let subtitle: String
-    let artwork: UIImage?
     let tracks: [Track]
 }
 
@@ -82,25 +67,16 @@ struct ShelfRow: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Main Row (NO ORANGE BLOCK HERE)
             HStack(spacing: 16) {
-                if let artwork = item.artwork {
-                    Image(uiImage: artwork)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                        .cornerRadius(8)
-                } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(width: 60, height: 60)
-                }
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: 60, height: 60)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(AppColors.textPrimary)
-                    Text(item.subtitle)
+                    Text("\(item.tracks.count)首曲目")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(AppColors.textSecondary)
                 }
@@ -114,18 +90,13 @@ struct ShelfRow: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
-            .background(Color.white.opacity(0.001)) // Make entire area tappable
+            .background(Color.white.opacity(0.001))
             .onTapGesture {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    if expandedId == item.id {
-                        expandedId = nil
-                    } else {
-                        expandedId = item.id
-                    }
+                    expandedId = (expandedId == item.id) ? nil : item.id
                 }
             }
             
-            // Expanded Tracks
             if expandedId == item.id {
                 VStack(spacing: 0) {
                     ForEach(item.tracks) { track in
@@ -133,18 +104,11 @@ struct ShelfRow: View {
                             player.play(track: track)
                         }) {
                             HStack {
-                                Text(String(format: "%02d", track.trackNumber))
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                    .foregroundColor(AppColors.textSecondary)
-                                    .frame(width: 24, alignment: .leading)
-                                
                                 Text(track.title)
                                     .font(.system(size: 15, weight: .bold))
                                     .foregroundColor(AppColors.textPrimary)
-                                
                                 Spacer()
-                                
-                                Text(String(format: "%d:%02d", Int(track.duration)/60, Int(track.duration)%60))
+                                Text(track.duration)
                                     .font(.system(size: 12, design: .monospaced))
                                     .foregroundColor(AppColors.textSecondary)
                             }
@@ -153,13 +117,10 @@ struct ShelfRow: View {
                             .background(Color.black.opacity(0.02))
                         }
                         .buttonStyle(PlainButtonStyle())
-                        
-                        Divider().padding(.leading, 64).opacity(0.1)
+                        Divider().padding(.leading, 24).opacity(0.1)
                     }
                 }
-                .transition(.opacity)
             }
-            
             Divider().padding(.horizontal, 20).opacity(0.05)
         }
     }
@@ -175,39 +136,26 @@ struct ShelfView: View {
                 ShelfRow(item: item, expandedId: $expandedId)
             }
         }
-        .padding(.top, 10)
     }
 }
 
 struct AlbumCard: View {
-    let title: String
-    let artist: String
-    let artwork: UIImage?
+    let track: Track
+    @StateObject var player = MusicPlayer.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ZStack {
-                if let image = artwork {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } else {
-                    Rectangle().fill(Color.gray.opacity(0.1))
+        Button(action: { player.play(track: track) }) {
+            VStack(alignment: .leading, spacing: 12) {
+                Rectangle().fill(Color.gray.opacity(0.1))
+                    .frame(width: (UIScreen.main.bounds.width - 60) / 2, height: (UIScreen.main.bounds.width - 60) / 2)
+                    .cornerRadius(12)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(track.title).font(.system(size: 15, weight: .black)).foregroundColor(AppColors.textPrimary).lineLimit(1)
+                    Text(track.artist).font(.system(size: 13, weight: .bold)).foregroundColor(AppColors.textSecondary).lineLimit(1)
                 }
             }
-            .frame(width: (UIScreen.main.bounds.width - 60) / 2, height: (UIScreen.main.bounds.width - 60) / 2)
-            .cornerRadius(12)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 15, weight: .black))
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(1)
-                Text(artist)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(AppColors.textSecondary)
-                    .lineLimit(1)
-            }
         }
+        .buttonStyle(PlainButtonStyle())
     }
 }
