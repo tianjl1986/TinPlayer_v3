@@ -67,7 +67,7 @@ struct HomeView: View {
                                             Spacer()
                                         }
                                         .padding()
-                                        .background(AppColors.background)
+                                        .background(themeManager.background)
                                         .skeuoSunken(cornerRadius: 12)
                                     }
                                     
@@ -155,7 +155,7 @@ struct HomeView: View {
                                     .frame(width: 150)
                                 }
                                 .padding()
-                                .background(AppColors.background)
+                                .background(themeManager.background)
                                 .skeuoSunken(cornerRadius: 16)
                                 .padding(.horizontal, 24)
                             }

@@ -12,7 +12,7 @@ struct AppHeader: View {
             // 居中标题：Inter Bold 14pt，letterSpacing 2
             Text(title)
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(themeManager.textPrimary)
                 .tracking(2)
                 .frame(maxWidth: .infinity, alignment: .center)
 
@@ -32,6 +32,6 @@ struct AppHeader: View {
         }
         .frame(height: 60)
         .padding(.horizontal, 24)
-        .background(AppColors.background)
+        .background(themeManager.background)
     }
 }

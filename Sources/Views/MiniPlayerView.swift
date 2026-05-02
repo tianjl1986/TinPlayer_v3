@@ -7,7 +7,8 @@ struct MiniPlayerView: View {
     
     var body: some View {
         if let track = player.currentTrack {
-            VStack(spacing: 0) {
+            // Use Button instead of onTapGesture for better event handling
+            Button(action: { showPlayer = true }) {
                 HStack(spacing: 16) {
                     // Small Rotating Record
                     ZStack {
@@ -40,26 +41,30 @@ struct MiniPlayerView: View {
                                 .font(.system(size: 16))
                                 .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
+                                .background(themeManager.background)
                                 .skeuoRaised(radius: 4, offset: 2)
                         }
+                        .buttonStyle(PlainButtonStyle())
                         
                         Button(action: { player.skipNext() }) {
                             Image(systemName: "forward.fill")
                                 .font(.system(size: 14))
                                 .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
+                                .background(themeManager.background)
                                 .skeuoRaised(cornerRadius: 22)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
                 .background(themeManager.background)
                 .skeuoSunken(radius: 8, offset: 4)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .onTapGesture { showPlayer = true }
             }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
             .fullScreenCover(isPresented: $showPlayer) {
                 NowPlayingView()
             }

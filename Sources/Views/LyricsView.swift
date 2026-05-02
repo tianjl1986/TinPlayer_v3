@@ -37,7 +37,7 @@ struct LyricsView: View {
                 
                 // 🚀 2. Typewriter Platen Roller (Printer Mechanical Assembly)
                 ZStack {
-                    // Main Roller Body (Figma 10411:3203)
+                    // Main Roller Body (Figma 9893:14780)
                     Capsule()
                         .fill(
                             LinearGradient(colors: [
@@ -53,25 +53,25 @@ struct LyricsView: View {
                             Capsule().stroke(Color.black.opacity(0.8), lineWidth: 1)
                         )
                     
-                    // Roller Knobs (Restored with proper alignment - Fix White Outline)
+                    // Roller Knobs (Figma 9960:15442/3)
                     HStack {
                         metalKnob
                         Spacer()
                         metalKnob
                     }
-                    .padding(.horizontal, -12) // Overlap slightly per mechanical design
+                    .padding(.horizontal, -20)
                 }
                 .padding(.horizontal, 24)
                 .zIndex(10)
-                .offset(y: 16)
+                .offset(y: 12)
                 
                 // 🚀 3. Paper Sheet (Figma 9893:14779)
                 ZStack {
                     RoundedRectangle(cornerRadius: 2)
-                        .fill(themeManager.currentTheme == .light ? Color(hex: "#F4F4F0") : Color(hex: "#121212")) // 🚀 Figma 10411:3210
+                        .fill(themeManager.currentTheme == .light ? Color(hex: "#F4F4F0") : Color(hex: "#121212"))
                         .skeuoRaised(radius: 8, offset: 4)
                         .overlay(
-                            // 🚀 Paper Grid Pattern (High Fidelity restoration)
+                            // Paper Grid Pattern
                             GeometryReader { geo in
                                 Path { path in
                                     let spacing: CGFloat = 16
@@ -129,61 +129,76 @@ struct LyricsView: View {
                 }
                 .padding(.horizontal, 24)
                 
-                // 🚀 4. Bottom Controls (Standardized)
-                VStack(spacing: 24) {
-                    // Mini Progress Bar on Bottom
-                    VStack(spacing: 8) {
-                        HStack {
-                            Text(formatDuration(player.currentTime))
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundColor(themeManager.textSecondary)
-                            Spacer()
-                            Text(formatDuration(player.duration))
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundColor(themeManager.textSecondary)
-                        }
-                        .padding(.horizontal, 24)
+                // 🚀 4. Progress Bar (Figma 9956:15426)
+                HStack(spacing: 16) {
+                    Text(formatDuration(player.currentTime))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(themeManager.textSecondary)
+                    
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(themeManager.currentTheme == .light ? Color(hex: "#E5E5E5") : Color(hex: "#222222"))
+                            .frame(height: 8)
+                            .skeuoSunken(radius: 8, offset: 4)
                         
-                        ZStack(alignment: .leading) {
-                            Capsule()
-                                .fill(themeManager.background)
-                                .frame(height: 6)
-                                .skeuoSunken(radius: 2, offset: 1)
-                            
-                            Capsule()
-                                .fill(Color.orange)
-                                .frame(width: max(0, (UIScreen.main.bounds.width - 48) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 6)
-                        }
-                        .padding(.horizontal, 24)
+                        Capsule()
+                            .fill(themeManager.currentTheme == .light ? Color(hex: "#404040") : Color.orange)
+                            .frame(width: max(0, (UIScreen.main.bounds.width - 160) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 8)
                     }
                     
-                    // Control Row
-                    HStack(spacing: 0) {
-                        playbackButton(icon: "backward.fill", size: 54, action: { player.skipPrevious() })
-                        Spacer()
-                        playbackButton(icon: player.isPlaying ? "pause.fill" : "play.fill", size: 72, action: { player.togglePlayPause() })
-                        Spacer()
-                        playbackButton(icon: "forward.fill", size: 54, action: { player.skipNext() })
-                    }
-                    .padding(.horizontal, 48)
+                    Text(formatDuration(player.duration))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(themeManager.textSecondary)
                 }
-                .padding(.vertical, 32)
-                .background(themeManager.background)
+                .padding(.horizontal, 24)
+                .padding(.top, 40)
+                .padding(.bottom, 32)
+                
+                // 🚀 5. Playback Controls (Figma 9956:15430)
+                HStack(spacing: 0) {
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Text("LRC")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(themeManager.textSecondary)
+                            .frame(width: 40, height: 40)
+                            .skeuoRaised(cornerRadius: 20)
+                    }
+                    Spacer()
+                    Button(action: { player.skipPrevious() }) {
+                        Image(systemName: "backward.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(themeManager.textPrimary)
+                            .frame(width: 56, height: 56)
+                            .skeuoRaised(cornerRadius: 28)
+                    }
+                    Spacer()
+                    Button(action: { player.togglePlayPause() }) {
+                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(themeManager.textPrimary)
+                            .frame(width: 72, height: 72)
+                            .skeuoRaised(cornerRadius: 36)
+                    }
+                    Spacer()
+                    Button(action: { player.skipNext() }) {
+                        Image(systemName: "forward.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(themeManager.textPrimary)
+                            .frame(width: 56, height: 56)
+                            .skeuoRaised(cornerRadius: 28)
+                    }
+                    Spacer()
+                    Button(action: { player.togglePlaybackMode() }) {
+                        Text("Q")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(themeManager.textSecondary)
+                            .frame(width: 40, height: 40)
+                            .skeuoRaised(cornerRadius: 20)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 60)
             }
-        }
-    }
-    
-    private func playbackButton(icon: String, size: CGFloat, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(themeManager.background)
-                    .skeuoRaised(radius: 8, offset: 4)
-                Image(systemName: icon)
-                    .font(.system(size: size * 0.4, weight: .bold))
-                    .foregroundColor(themeManager.textPrimary)
-            }
-            .frame(width: size, height: size)
         }
     }
     
@@ -210,7 +225,7 @@ struct LyricsView: View {
                     Color(hex: "#999999")
                 ], startPoint: .top, endPoint: .bottom)
             )
-            .frame(width: 44, height: 44)
+            .frame(width: 60, height: 60)
             .overlay(
                 Circle()
                     .stroke(
@@ -218,6 +233,12 @@ struct LyricsView: View {
                         lineWidth: 1
                     )
             )
-            .shadow(color: .black.opacity(0.3), radius: 4, x: 2, y: 2)
+            .shadow(color: .black.opacity(0.3), radius: 12, x: 4, y: 8)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }

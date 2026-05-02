@@ -41,16 +41,6 @@ class ThemeManager: ObservableObject {
     }
 }
 
-struct AppColors {
-    static var background: Color { ThemeManager.shared.background }
-    static var textPrimary: Color { ThemeManager.shared.textPrimary }
-    static var textSecondary: Color { ThemeManager.shared.textSecondary }
-    static var separator: Color { ThemeManager.shared.separator }
-    static var shadowLight: Color { ThemeManager.shared.shadowLight }
-    static var shadowDark: Color { ThemeManager.shared.shadowDark }
-    static var vinylBlack: Color { ThemeManager.shared.vinylBlack }
-}
-
 struct SkeuoToggleStyle: ToggleStyle {
     @ObservedObject var themeManager = ThemeManager.shared
     

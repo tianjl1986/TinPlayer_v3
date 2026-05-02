@@ -41,32 +41,27 @@ struct NowPlayingView: View {
             .padding(.top, 48)
             
             VStack(spacing: 12) {
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(themeManager.background)
-                        .frame(height: 8) // 🚀 Figma matched height
-                        .skeuoSunken(radius: 4, offset: 2)
+                HStack(spacing: 16) { // 🚀 Figma 9880:14744
+                    Text(formatDuration(player.currentTime))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(themeManager.textSecondary)
                     
-                    Capsule()
-                        .fill(Color.orange) // 🚀 Consistent with design accent
-                        .frame(width: max(0, (UIScreen.main.bounds.width - 96) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 8)
-                }
-                .padding(.horizontal, 48)
-                .overlay(
-                    HStack {
-                        Text(formatDuration(player.currentTime))
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .foregroundColor(themeManager.textSecondary)
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(themeManager.currentTheme == .light ? Color(hex: "#E5E5E5") : Color(hex: "#222222"))
+                            .frame(height: 8)
+                            .skeuoSunken(radius: 8, offset: 4) // 🚀 Figma 9880:14746
                         
-                        Spacer()
-                        
-                        Text(formatDuration(player.duration))
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .foregroundColor(themeManager.textSecondary)
+                        Capsule()
+                            .fill(themeManager.currentTheme == .light ? Color(hex: "#404040") : Color.orange)
+                            .frame(width: max(0, (UIScreen.main.bounds.width - 160) * (player.duration > 0 ? player.currentTime / player.duration : 0)), height: 8)
                     }
-                    .padding(.horizontal, 48)
-                    .offset(y: -24) // 🚀 Position times above the bar per Figma 10411:1899
-                )
+                    
+                    Text(formatDuration(player.duration))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundColor(themeManager.textSecondary)
+                }
+                .padding(.horizontal, 24)
             }
             .padding(.bottom, 48)
 
@@ -75,43 +70,43 @@ struct NowPlayingView: View {
             // 🚀 拟物化控制台 (Raised Buttons)
             HStack(spacing: 0) {
                 Button(action: { showLyrics = true }) {
-                    Image(systemName: "quote.bubble.fill")
-                        .font(.system(size: 16))
-                        .foregroundColor(AppColors.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .skeuoRaised(cornerRadius: 22)
+                    Text("LRC")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(themeManager.textSecondary)
+                        .frame(width: 40, height: 40) // 🚀 Figma 9880:14749
+                        .skeuoRaised(cornerRadius: 20)
                 }
                 Spacer()
                 Button(action: { player.skipPrevious() }) {
                     Image(systemName: "backward.fill")
                         .font(.system(size: 18))
                         .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 56, height: 56)
+                        .frame(width: 56, height: 56) // 🚀 Figma 9880:14751
                         .skeuoRaised(cornerRadius: 28)
                 }
                 Spacer()
                 Button(action: { player.togglePlayPause() }) {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 32))
+                        .font(.system(size: 28))
                         .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 80, height: 80) // 🚀 Figma 80x80
-                        .skeuoRaised(cornerRadius: 40)
+                        .frame(width: 72, height: 72) // 🚀 Figma 9880:14753
+                        .skeuoRaised(cornerRadius: 36)
                 }
                 Spacer()
                 Button(action: { player.skipNext() }) {
                     Image(systemName: "forward.fill")
                         .font(.system(size: 18))
                         .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 56, height: 56)
+                        .frame(width: 56, height: 56) // 🚀 Figma 9880:14755
                         .skeuoRaised(cornerRadius: 28)
                 }
                 Spacer()
                 Button(action: { player.togglePlaybackMode() }) {
-                    Image(systemName: player.playbackMode.iconName)
-                        .font(.system(size: 16))
-                        .foregroundColor(themeManager.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .skeuoRaised(cornerRadius: 22)
+                    Text("Q")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(themeManager.textSecondary)
+                        .frame(width: 40, height: 40) // 🚀 Figma 9880:14757
+                        .skeuoRaised(cornerRadius: 20)
                 }
             }
             .padding(.horizontal, 24)

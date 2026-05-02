@@ -2,31 +2,33 @@ import SwiftUI
 
 struct AlbumDetailView: View {
     @Environment(\.presentationMode) var presentationMode
-    @EnvironmentObject var musicPlayer: MusicPlayer
+    @ObservedObject var player = MusicPlayer.shared
     @ObservedObject var themeManager = ThemeManager.shared
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     let album: Album
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            AppColors.background.ignoresSafeArea()
+            themeManager.background.ignoresSafeArea()
             
             VStack(spacing: 0) {
+                // 🚀 App Header (Figma 9930:15071)
                 AppHeader(
-                    title: "ALBUM".localized,
+                    title: localizationManager.t("ALBUM"),
                     leftItem: AnyView(
                         Button(action: { presentationMode.wrappedValue.dismiss() }) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 20))
+                                .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(themeManager.textPrimary)
-                                .frame(width: 40, height: 40)
+                                .frame(width: 44, height: 44)
                         }
                     )
                 )
                 
-                ScrollView {
-                    VStack(spacing: 32) {
-                        // 🚀 Album Header (Figma 9931:15076)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 32) { // 🚀 Figma 9931:15075 itemSpacing
+                        // 🚀 1. Album Header (Figma 9931:15076)
                         VStack(spacing: 24) {
                             if let image = album.coverImage {
                                 Image(uiImage: image)
@@ -34,101 +36,109 @@ struct AlbumDetailView: View {
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 160, height: 160)
                                     .cornerRadius(8)
+                                    .skeuoRaised(radius: 4, offset: 2)
                             } else {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(AppColors.textPrimary.opacity(0.1))
+                                    .fill(themeManager.textSecondary.opacity(0.1))
                                     .frame(width: 160, height: 160)
                             }
                             
                             VStack(spacing: 8) {
                                 Text(album.title)
                                     .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(AppColors.textPrimary)
+                                    .foregroundColor(themeManager.textPrimary)
                                     .multilineTextAlignment(.center)
                                 
                                 Text("\(album.artist) • \(album.releaseYear)")
-                                    .font(.system(size: 14, weight: .regular))
+                                    .font(.system(size: 14))
                                     .foregroundColor(themeManager.textSecondary)
                             }
                             
+                            // Action Buttons (Play All / Shuffle)
                             HStack(spacing: 16) {
                                 Button(action: {
                                     if let first = album.tracks.first {
-                                        musicPlayer.playTrack(first, in: album.tracks)
+                                        player.playTrack(first, in: album.tracks)
                                     }
                                 }) {
-                                    Text("Play All")
+                                    Text(localizationManager.t("PLAY ALL"))
                                         .font(.system(size: 14, weight: .bold))
                                         .foregroundColor(themeManager.textPrimary)
-                                        .frame(width: 99, height: 41)
-                                        .skeuoRaised(radius: 4, offset: 2)
+                                        .frame(width: 120, height: 44)
+                                        .skeuoRaised(cornerRadius: 22)
                                 }
                                 
                                 Button(action: {
-                                    // Shuffle and play
                                     let shuffled = album.tracks.shuffled()
                                     if let first = shuffled.first {
-                                        musicPlayer.playTrack(first, in: shuffled)
+                                        player.playTrack(first, in: shuffled)
                                     }
                                 }) {
-                                    Text("Shuffle")
+                                    Text(localizationManager.t("SHUFFLE"))
                                         .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(AppColors.textPrimary)
-                                        .frame(width: 98, height: 41)
-                                        .skeuoRaised(cornerRadius: 24)
+                                        .foregroundColor(themeManager.textPrimary)
+                                        .frame(width: 120, height: 44)
+                                        .skeuoRaised(cornerRadius: 22)
                                 }
                             }
                         }
                         .padding(.top, 24)
                         
-                        // 🚀 Track List (Figma 9931:15081)
+                        // 🚀 2. Track List (Figma 9931:15081)
                         VStack(spacing: 0) {
                             ForEach(Array(album.tracks.enumerated()), id: \.element.id) { index, track in
                                 Button(action: {
-                                    musicPlayer.playTrack(track, in: album.tracks)
+                                    player.playTrack(track, in: album.tracks)
                                 }) {
                                     HStack(spacing: 16) {
                                         Text(String(format: "%02d", index + 1))
                                             .font(.system(size: 14, design: .monospaced))
-                                            .foregroundColor(AppColors.textSecondary)
+                                            .foregroundColor(themeManager.textSecondary)
                                             .frame(width: 30)
                                         
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(track.title)
                                                 .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(musicPlayer.currentTrack?.id == track.id ? .orange : AppColors.textPrimary)
+                                                .foregroundColor(player.currentTrack?.id == track.id ? .orange : themeManager.textPrimary)
                                             Text(track.artist)
                                                 .font(.system(size: 13))
-                                                .foregroundColor(AppColors.textSecondary)
+                                                .foregroundColor(themeManager.textSecondary)
                                         }
                                         
                                         Spacer()
                                         
                                         Text(track.duration)
                                             .font(.system(size: 14))
-                                            .foregroundColor(AppColors.textSecondary)
+                                            .foregroundColor(themeManager.textSecondary)
                                     }
-                                    .padding(.vertical, 14)
+                                    .padding(.vertical, 16) // 🚀 Figma 9931:15087 padding
                                     .padding(.horizontal, 20)
-                                    .background(musicPlayer.currentTrack?.id == track.id ? AppColors.background.opacity(0.5) : Color.clear)
+                                    .contentShape(Rectangle())
+                                    .background(player.currentTrack?.id == track.id ? Color.orange.opacity(0.1) : Color.clear)
                                 }
                                 
                                 if index < album.tracks.count - 1 {
-                                    Divider().padding(.leading, 66).background(AppColors.separator)
+                                    Divider()
+                                        .padding(.leading, 66)
+                                        .opacity(0.1)
                                 }
                             }
                         }
-                        .background(AppColors.background)
-                        .skeuoSunken(cornerRadius: 16)
-                        .padding(20)
+                        .background(themeManager.currentTheme == .light ? Color.white : Color(hex: "#1A1A1A"))
+                        .cornerRadius(16)
+                        .skeuoSunken(radius: 4, offset: 2)
+                        .padding(.horizontal, 24)
                         
-                        Spacer(minLength: 120) // 🚀 修复“掉下去”的关键：用动态 Spacer 代替硬编码 Padding
+                        Spacer(minLength: 140)
                     }
+                    .padding(.bottom, 60)
                 }
             }
             
+            // Mini Player Overlaid at bottom
             MiniPlayerView()
                 .padding(.bottom, 10)
+                .zIndex(100) // Ensure it's on top but check if it blocks
         }
         .navigationBarHidden(true)
     }

@@ -8,11 +8,10 @@ struct LibraryGridView: View {
     @Environment(\.presentationMode) var presentationMode
     
     let filter: LibraryFilter
-    @State private var isGridView = false // 🚀 默认书架视图，用户要求优先还原
+    @State private var isGridView = false
     
     var filteredAlbums: [Album] {
         if filter == .artist {
-            // Group by artist and return one representative album per artist
             let grouped = Dictionary(grouping: libraryService.albums, by: { $0.artist })
             return grouped.values.compactMap { $0.first }.sorted(by: { $0.artist < $1.artist })
         }
@@ -21,30 +20,30 @@ struct LibraryGridView: View {
     
     var body: some View {
         ZStack {
-            AppColors.background.ignoresSafeArea()
+            themeManager.background.ignoresSafeArea()
             
             VStack(spacing: 0) {
                 AppHeader(
-                    title: filter == .album ? "ALBUMS".localized : "ARTISTS".localized,
+                    title: filter == .album ? localizationManager.t("ALBUMS") : localizationManager.t("ARTISTS"),
                     leftItem: AnyView(
                         Button(action: { presentationMode.wrappedValue.dismiss() }) {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 20))
-                                .foregroundColor(AppColors.textPrimary)
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
                         }
                     ),
                     rightItem: AnyView(
                         Button(action: { isGridView.toggle() }) {
                             Image(systemName: isGridView ? "text.justify" : "square.grid.2x2")
-                                .foregroundColor(AppColors.textPrimary)
+                                .foregroundColor(themeManager.textPrimary)
                                 .frame(width: 44, height: 44)
                                 .skeuoRaised(cornerRadius: 12)
                         }
                     )
                 )
                 
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     if isGridView {
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 24), GridItem(.flexible(), spacing: 24)], spacing: 24) {
                             ForEach(filteredAlbums) { album in
@@ -55,21 +54,23 @@ struct LibraryGridView: View {
                         }
                         .padding(24)
                     } else {
-                        // 🚀 1:1 Bookshelf Layout
-                        VStack(spacing: 12) {
+                        // 🚀 1:1 Bookshelf Layout (Figma 9897:14825)
+                        VStack(spacing: 8) { // 🚀 itemSpacing 8
                             ForEach(filteredAlbums) { album in
                                 AlbumBookshelfSpine(album: album)
                             }
                         }
-                        .padding(24)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 24)
                     }
-                    Spacer(minLength: 120)
+                    Spacer(minLength: 140)
                 }
             }
             
             VStack {
                 Spacer()
                 MiniPlayerView()
+                    .padding(.bottom, 10)
             }
         }
         .navigationBarHidden(true)
@@ -81,76 +82,81 @@ struct AlbumBookshelfSpine: View {
     @State private var isExpanded = false
     @EnvironmentObject var musicPlayer: MusicPlayer
     @ObservedObject var themeManager = ThemeManager.shared
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(spacing: 0) {
-            // 🚀 Spine Header (Figma 10411:1930)
-            ZStack(alignment: .leading) {
-                if let image = album.coverImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 54)
-                        .clipped()
-                        .blur(radius: 20)
-                        .overlay(Color.black.opacity(0.4))
-                } else {
-                    Color(hex: "#1a1a1a")
-                        .frame(height: 54)
-                }
-                
-                HStack(spacing: 16) {
-                    Rectangle()
-                        .fill(Color.orange.opacity(0.8))
-                        .frame(width: 4, height: 54)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(album.title)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        
-                        Text(album.artist)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.7))
-                            .lineLimit(1)
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.5))
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                        .padding(.trailing, 16)
-                }
-            }
-            .cornerRadius(8)
-            .skeuoRaised(radius: 4, offset: 2)
-            .contentShape(Rectangle())
-            .onTapGesture {
+        VStack(spacing: 4) { // 🚀 Figma 9897:14836 itemSpacing
+            // 🚀 Spine Header Button (Fixed reliability)
+            Button(action: {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                     isExpanded.toggle()
                 }
+            }) {
+                ZStack(alignment: .leading) {
+                    // Blurred background from cover
+                    if let image = album.coverImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 54)
+                            .clipped()
+                            .blur(radius: 30) // 🚀 Figma 10024:16571
+                            .overlay(Color.black.opacity(0.4))
+                    } else {
+                        Color(hex: "#1A1A1A")
+                            .frame(height: 54)
+                    }
+                    
+                    HStack(spacing: 16) {
+                        // Color Indicator (Fixed per Figma)
+                        Rectangle()
+                            .fill(Color.orange.opacity(0.8))
+                            .frame(width: 4, height: 54)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(album.title)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            
+                            Text(album.artist)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.white.opacity(0.7))
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white.opacity(0.5))
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                            .padding(.trailing, 16)
+                    }
+                }
+                .cornerRadius(8)
+                .skeuoRaised(radius: 8, offset: 4) // 🚀 Figma matched shadow
             }
+            .buttonStyle(PlainButtonStyle())
             
-            // 🚀 Expanded Tracklist
+            // 🚀 Expanded Tracklist (Figma 9897:14840)
             if isExpanded {
                 VStack(spacing: 0) {
                     NavigationLink(destination: AlbumDetailView(album: album)) {
                         HStack {
-                            Image(systemName: "info.circle")
-                            Text("Album Details".localized)
+                            Image(systemName: "info.circle.fill")
+                            Text(localizationManager.t("ALBUM DETAILS"))
                             Spacer()
                             Image(systemName: "chevron.right")
                         }
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.orange)
                         .padding(16)
-                        .background(Color.orange.opacity(0.1))
+                        .background(Color.orange.opacity(0.05))
                     }
                     
                     Divider()
+                        .opacity(0.1)
                     
                     ForEach(Array(album.tracks.enumerated()), id: \.element.id) { index, track in
                         Button(action: {
@@ -174,15 +180,17 @@ struct AlbumBookshelfSpine: View {
                             }
                             .padding(.vertical, 12)
                             .padding(.horizontal, 16)
+                            .contentShape(Rectangle())
                         }
                         
                         if index < album.tracks.count - 1 {
-                            Divider().padding(.leading, 52)
+                            Divider().padding(.leading, 52).opacity(0.05)
                         }
                     }
                 }
-                .background(themeManager.background.opacity(0.5))
+                .background(themeManager.currentTheme == .light ? Color.white.opacity(0.8) : Color(hex: "#1A1A1A").opacity(0.8))
                 .cornerRadius(8)
+                .skeuoSunken(radius: 2, offset: 1)
                 .padding(.top, 4)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
@@ -192,6 +200,8 @@ struct AlbumBookshelfSpine: View {
 
 struct AlbumGridItem: View {
     let album: Album
+    @ObservedObject var themeManager = ThemeManager.shared
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             ZStack {
@@ -203,21 +213,21 @@ struct AlbumGridItem: View {
                         .cornerRadius(4)
                 } else {
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(AppColors.textSecondary.opacity(0.1))
+                        .fill(themeManager.textSecondary.opacity(0.1))
                         .frame(width: 160, height: 160)
                 }
             }
-            .skeuoRaised(cornerRadius: 8)
+            .skeuoRaised(radius: 4, offset: 2)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(album.title)
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundColor(themeManager.textPrimary)
                     .lineLimit(1)
                 
                 Text(album.artist)
                     .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(AppColors.textSecondary)
+                    .foregroundColor(themeManager.textSecondary)
                     .lineLimit(1)
             }
         }
