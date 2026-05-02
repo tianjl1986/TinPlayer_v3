@@ -1,4 +1,4 @@
-name: TinPlayer Official Bundle Build
+name: TinPlayer Production Build
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
       - name: Build
         run: |
           set -e
-          # 使用强制方案生成 Bundle
+          # 强制编译出完整的 Bundle 结构
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -35,36 +35,34 @@ jobs:
           rm -rf Payload TinPlayer.ipa
           mkdir -p Payload
 
-          echo "🔍 正在寻找官方生成的 .app 包..."
-          # 优先寻找 Build/Products 下真正的 .app 目录
+          echo "🔍 正在寻找官方 .app 包..."
           REAL_APP=$(find ./DerivedData/Build/Products -name "*.app" -type d | head -n 1)
           
           if [ -n "$REAL_APP" ]; then
              echo "✅ 找到官方包: $REAL_APP"
              cp -R "$REAL_APP" Payload/TinPlayer.app
           else
-             echo "⚠️ 未找到 .app 包，执行紧急备选方案..."
+             echo "⚠️ 执行备选方案..."
              mkdir -p Payload/TinPlayer.app
              PRODUCT_DIR=$(find ./DerivedData/Build/Products -name "Release-iphoneos" -type d | head -n 1)
              cp -R "$PRODUCT_DIR/" Payload/TinPlayer.app/
           fi
 
-          # 确保二进制文件存在且正确
-          # 寻找 Payload/TinPlayer.app 目录下真正的 Mach-O 执行文件
-          echo "🔍 校验二进制文件类型..."
+          # 核心校验：确保找到真正的 Mach-O 64-bit 格式文件
+          echo "🔍 正在校验主二进制文件..."
           EXECUTABLE=$(find Payload/TinPlayer.app -maxdepth 2 -type f ! -name "*.*" | xargs file | grep "Mach-O 64-bit executable" | cut -d: -f1 | head -n 1)
           
           if [ -n "$EXECUTABLE" ]; then
-             echo "✅ 锁定二进制: $EXECUTABLE"
+             echo "✅ 锁定主程序: $EXECUTABLE"
+             # 统一重命名为 TinPlayer，确保和 Info.plist 匹配
              mv "$EXECUTABLE" Payload/TinPlayer.app/TinPlayer
              chmod +x Payload/TinPlayer.app/TinPlayer
           else
-             echo "❌ 严重错误: 没找到任何有效的 Mach-O 二进制文件！"
+             echo "❌ 失败: 没找到有效的 Mach-O 二进制文件！"
              exit 1
           fi
 
-          # 注入/修正 Info.plist
-          # 注意：CFBundleExecutable 必须和二进制文件名完全一致
+          # 注入完整且正确的 Info.plist
           cat << 'EOF' > Payload/TinPlayer.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -72,4 +70,37 @@ jobs:
           <dict>
               <key>CFBundleExecutable</key><string>TinPlayer</string>
               <key>CFBundleIdentifier</key><string>com.skeuo.tinplayer</string>
-              <key>CFBundleName</key><string
+              <key>CFBundleName</key><string>TinPlayer</string>
+              <key>CFBundlePackageType</key><string>APPL</string>
+              <key>CFBundleShortVersionString</key><string>1.3.0</string>
+              <key>CFBundleVersion</key><string>26</string>
+              <key>LSRequiresIPhoneOS</key><true/>
+              <key>UILaunchScreen</key><dict/>
+              <key>MinimumOSVersion</key><string>16.0</string>
+              <key>UIDeviceFamily</key><array><integer>1</integer></array>
+              <key>UIFileSharingEnabled</key><true/>
+              <key>LSSupportsOpeningDocumentsInPlace</key><true/>
+              <key>NSAppleMusicUsageDescription</key>
+              <string>我们需要访问您的媒体库以扫描和播放本地音乐。</string>
+              <key>UIBackgroundModes</key><array><string>audio</string></array>
+          </dict>
+          </plist>
+          EOF
+
+          # 封装
+          zip -q -r TinPlayer.ipa Payload
+          echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TinPlayer-v1.3.0-Production
+          path: TinPlayer.ipa
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v1.3.0-production"
+          files: TinPlayer.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
