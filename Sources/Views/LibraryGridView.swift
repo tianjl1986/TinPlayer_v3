@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - 音乐库页 (结构拆解版 - 最终修正)
+// MARK: - 音乐库页 (最终稳定版)
 struct LibraryGridView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
@@ -32,6 +32,7 @@ struct LibraryGridView: View {
         }
     }
 
+    // ── 顶部栏 ──
     private var headerView: some View {
         AppHeader(
             title: "MY COLLECTION".localized,
@@ -54,6 +55,7 @@ struct LibraryGridView: View {
         )
     }
 
+    // ── 内容分发区 ──
     private var contentView: some View {
         ZStack {
             if libraryService.isScanning {
@@ -70,6 +72,7 @@ struct LibraryGridView: View {
         }
     }
 
+    // ── 扫描中状态 ──
     private var scanningView: some View {
         VStack(spacing: 16) {
             ProgressView().scaleEffect(1.2)
@@ -81,6 +84,7 @@ struct LibraryGridView: View {
         .frame(maxHeight: .infinity)
     }
 
+    // ── 书架模式列表 ──
     private var shelfScrollView: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
@@ -103,15 +107,18 @@ struct LibraryGridView: View {
         }
     }
 
+    // ── 网格模式列表 ──
     private var gridScrollView: some View {
         ScrollView(showsIndicators: false) {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(groupedAlbums, id: \.key) { group in
                     let firstTrack = group.tracks.first
+                    
+                    // 创建 Album 模型对象 (coverImage 传空字符串以匹配 String 类型要求)
                     let album = Album(
                         title: group.key,
                         artist: firstTrack?.artist ?? "Unknown",
-                        coverImage: firstTrack?.artwork,
+                        coverImage: "", 
                         trackCount: group.tracks.count,
                         releaseYear: ""
                     )
@@ -120,7 +127,7 @@ struct LibraryGridView: View {
                         AlbumGridCard(
                             title: group.key,
                             artist: album.artist,
-                            artwork: album.coverImage
+                            artwork: firstTrack?.artwork // 这里传真正的 UIImage? 给视图显示
                         )
                     }
                 }
@@ -129,6 +136,7 @@ struct LibraryGridView: View {
         }
     }
 
+    // 按专辑分组逻辑
     private var groupedAlbums: [AlbumGroup] {
         let dict = Dictionary(grouping: libraryService.tracks, by: { $0.album })
         let groups = dict.map { (key, value) -> AlbumGroup in
@@ -139,7 +147,7 @@ struct LibraryGridView: View {
     }
 }
 
-// MARK: - 辅助组件 (保持不变)
+// MARK: - 辅助组件
 
 struct EmptyLibraryView: View {
     let onScan: () -> Void
@@ -167,12 +175,17 @@ struct AlbumGridCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                if let img = artwork { Image(uiImage: img).resizable().aspectRatio(contentMode: .fill) }
-                else { Rectangle().fill(Color(hex: "#E0E0E0")); Image(systemName: "music.note").font(.system(size: 32)).foregroundColor(AppColors.textSecondary.opacity(0.4)) }
+                if let img = artwork { 
+                    Image(uiImage: img).resizable().aspectRatio(contentMode: .fill) 
+                } else { 
+                    Rectangle().fill(Color(hex: "#E0E0E0"))
+                    Image(systemName: "music.note").font(.system(size: 32)).foregroundColor(AppColors.textSecondary.opacity(0.4)) 
+                }
             }.frame(maxWidth: .infinity).aspectRatio(1, contentMode: .fit).cornerRadius(4).clipped()
+            
             Text(title).font(.system(size: 14, weight: .bold)).foregroundColor(AppColors.textPrimary).lineLimit(2).padding(.top, 10)
             Text(artist).font(.system(size: 12, weight: .regular)).foregroundColor(AppColors.textSecondary).lineLimit(1).padding(.top, 4)
-        }.padding(0)
+        }
     }
 }
 
@@ -191,6 +204,7 @@ struct AlbumShelfRow: View {
                     }.padding(.horizontal, 24)
                 }.frame(maxWidth: .infinity).frame(height: 64)
             }.buttonStyle(PlainButtonStyle())
+            
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(tracks.indices, id: \.self) { i in
