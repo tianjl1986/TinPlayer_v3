@@ -28,7 +28,6 @@ jobs:
       - name: Build with No Stripping
         run: |
           set -e
-          # 禁用所有代码裁剪和压缩，强制保留所有符号
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild build \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -45,10 +44,10 @@ jobs:
           mkdir -p Payload/TinPlayer.app/Frameworks
 
           echo "🔍 寻找所有大于 500KB 的产物..."
-          find ./DerivedData -type f -size +500k ! -path "*/.git/*"
+          find ./DerivedData -type f -size +500k ! -path "*/.git/*" || true
           
           echo "🔍 寻找所有的 .swiftmodule (确定代码在哪)..."
-          find ./DerivedData -name "*.swiftmodule"
+          find ./DerivedData -name "*.swiftmodule" || true
 
           # 抓取主程序
           REAL_BINARY=$(find ./DerivedData/Build/Products -name "TinPlayer" -type f ! -name "*.*" -perm +111 | head -n 1)
@@ -87,7 +86,7 @@ jobs:
           echo "✅ 最终 IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
-        uses: upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: TinPlayer-v1.3.0-Diagnostic
           path: TinPlayer.ipa
