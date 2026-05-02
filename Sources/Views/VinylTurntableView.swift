@@ -36,11 +36,11 @@ struct VinylTurntableView: View {
                     // Grooves (Simulated with Gradient)
                     Circle()
                         .fill(AngularGradient(stops: [
-                            .init(color: Color(hexString: "#1a1a1a"), position: 0),
-                            .init(color: Color(hexString: "#4d4d4d"), position: 0.25),
-                            .init(color: Color(hexString: "#1a1a1a"), position: 0.5),
-                            .init(color: Color(hexString: "#4d4d4d"), position: 0.75),
-                            .init(color: Color(hexString: "#1a1a1a"), position: 1)
+                            .init(color: Color(hexString: "#1a1a1a"), location: 0),
+                            .init(color: Color(hexString: "#4d4d4d"), location: 0.25),
+                            .init(color: Color(hexString: "#1a1a1a"), location: 0.5),
+                            .init(color: Color(hexString: "#4d4d4d"), location: 0.75),
+                            .init(color: Color(hexString: "#1a1a1a"), location: 1)
                         ], center: .center))
                         .frame(width: 290, height: 290)
                     
@@ -105,8 +105,6 @@ struct VinylTurntableView: View {
     }
     
     private func stopRotation() {
-        // Animation will naturally stop when player.isPlaying is false if using state-based rotation
-        // But for smooth stop, we'd need more complex logic. 
-        // For now, let's just use the current simple logic.
+        // Animation naturally stops if we reset or use a more controlled approach
     }
 }

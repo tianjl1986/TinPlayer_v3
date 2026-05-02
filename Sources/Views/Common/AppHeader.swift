@@ -5,8 +5,15 @@ struct AppHeader: View {
     let leftItem: AnyView?
     let rightItem: AnyView?
     
-    // 1:1 鍍忕礌绾ц璁″弬鏁?    private let headerHeight: CGFloat = 64
+    // 🚀 Figma 1:1 像素级设计参数
+    private let headerHeight: CGFloat = 64
     private let horizontalPadding: CGFloat = 24
+    
+    init(title: String, leftItem: AnyView? = nil, rightItem: AnyView? = nil) {
+        self.title = title
+        self.leftItem = leftItem
+        self.rightItem = rightItem
+    }
     
     var body: some View {
         HStack(spacing: 0) {
@@ -23,7 +30,7 @@ struct AppHeader: View {
             // Title (Pixel-Perfect Typography)
             Text(title.uppercased())
                 .font(.system(size: 15, weight: .black))
-                .kerning(2.5) // Figma 閲岀殑瀛楃闂磋窛
+                .kerning(2.5) // Figma 字符间距
                 .foregroundColor(DesignTokens.textPrimary)
             
             Spacer()
@@ -38,5 +45,6 @@ struct AppHeader: View {
         }
         .padding(.horizontal, horizontalPadding)
         .frame(height: headerHeight)
-        .padding(.top, 10) // 鑰冭檻鍒板垬娴峰睆鐨勮瑙夐噸蹇冨亸绉?    }
+        .padding(.top, 10) 
+    }
 }

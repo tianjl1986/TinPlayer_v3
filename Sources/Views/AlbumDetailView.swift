@@ -7,9 +7,6 @@ struct AlbumDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar - 9930:15071
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
             // 1. 顶部栏 (Raised)
             AppHeader(
                 title: album.title,
@@ -20,7 +17,8 @@ struct AlbumDetailView: View {
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
-            ).padding(.horizontal, 24)
+            )
+            .padding(.horizontal, 24)
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 40) {
@@ -91,6 +89,7 @@ struct AlbumDetailView: View {
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 12)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     .padding(.bottom, 48)

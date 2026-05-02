@@ -1,13 +1,14 @@
 import Foundation
+import Combine
 
-@MainActor
 class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
+    
     @Published var language: String = UserDefaults.standard.string(forKey: "app_lang") ?? "en" {
         didSet { UserDefaults.standard.set(language, forKey: "app_lang") }
     }
     
-    private let translations = [
+    private let translations: [String: [String: String]] = [
         "en": [
             "MY COLLECTION": "MY COLLECTION",
             "SETTINGS": "SETTINGS",

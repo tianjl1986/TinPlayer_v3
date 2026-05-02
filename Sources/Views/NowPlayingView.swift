@@ -54,7 +54,7 @@ struct NowPlayingView: View {
             
             // 4. 进度条 (拟物化槽位) - 9880:14744
             HStack(spacing: 16) {
-                Text(formatDuration(player.currentTime))
+                Text(Utils.formatDuration(player.currentTime))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundColor(DesignTokens.textSecondary)
                 
@@ -71,7 +71,7 @@ struct NowPlayingView: View {
                         .frame(width: max(0, CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)) * 200), height: 8)
                 }
                 
-                Text(formatDuration(player.duration))
+                Text(Utils.formatDuration(player.duration))
                     .font(.system(size: 12, weight: .bold, design: .monospaced))
                     .foregroundColor(DesignTokens.textSecondary)
             }
@@ -83,10 +83,4 @@ struct NowPlayingView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
     }
-}
-
-private func formatDuration(_ seconds: TimeInterval) -> String {
-    let minutes = Int(seconds) / 60
-    let remainingSeconds = Int(seconds) % 60
-    return String(format: "%d:%02d", minutes, remainingSeconds)
 }
