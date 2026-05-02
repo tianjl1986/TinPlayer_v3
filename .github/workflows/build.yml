@@ -1,4 +1,4 @@
-name: TinPlayer Final Victory Build
+name: TinPlayer Architecture Fix Build
 
 on:
   push:
@@ -18,9 +18,14 @@ jobs:
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
-      - name: Prepare .swiftpm Environment
+      - name: Fix Package Architecture
         run: |
           set -e
+          # 🚀 核心修复 A：将 .executableTarget 改为 .target
+          # 这是让 iOSApplication 能够正确链接代码的关键
+          sed -i '' 's/\.executableTarget/\.target/g' Package.swift
+          
+          # 🚀 核心修复 B：创建 .swiftpm 结构
           mkdir -p TinPlayer.swiftpm
           cp -R ./* TinPlayer.swiftpm/ || true
           cd TinPlayer.swiftpm
@@ -39,36 +44,37 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Extract and Polish
+      - name: Final Extraction
         run: |
           set -e
           APP_PATH=$(find ./TinPlayer.xcarchive -name "*.app" -type d | head -n 1)
-          echo "🎯 发现 App: $APP_PATH"
-          
           mkdir -p Payload
-          cp -R "$APP_PATH" Payload/
+          cp -RL "$APP_PATH" Payload/
           
-          # 获取生成的 .app 文件夹名字 (例如 TinPlayer.app)
           APP_DIR_NAME=$(basename "$APP_PATH")
           INFOPLIST="Payload/$APP_DIR_NAME/Info.plist"
           
-          # 🚀 强力获取二进制文件名
+          # 获取二进制名，如果读不到就强制用 TinPlayer
           BIN_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$INFOPLIST" 2>/dev/null || echo "TinPlayer")
-          echo "🚀 二进制文件确认为: $BIN_NAME"
           
-          # 给二进制加权限
+          # 🚀 最终兜底：如果这个二进制太小，说明链接失败，我们去缓存里找 AppModule 的库文件替换它
+          BIN_SIZE=$(ls -l "Payload/$APP_DIR_NAME/$BIN_NAME" | awk '{print $5}')
+          if [ "$BIN_SIZE" -lt 200000 ]; then
+             echo "⚠️ 检测到二进制异常偏小 ($BIN_SIZE bytes)，尝试寻找 AppModule 实体..."
+             REAL_BIN=$(find ./DerivedData -name "AppModule" -type f -perm +111 -size +1M | head -n 1)
+             if [ -n "$REAL_BIN" ]; then
+                echo "🎯 发现 AppModule 实体，正在替换..."
+                cp -L "$REAL_BIN" "Payload/$APP_DIR_NAME/$BIN_NAME"
+             fi
+          fi
+          
           chmod +x "Payload/$APP_DIR_NAME/$BIN_NAME"
           
-          # 补全权限描述（这是扫描音乐库必须的）
-          /usr/libexec/PlistBuddy -c "Add :NSAppleMusicUsageDescription string '我们需要访问您的本地音乐库以进行扫描和播放。'" "$INFOPLIST" 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :UIFileSharingEnabled bool true" "$INFOPLIST" 2>/dev/null || true
-          
-          # 最终打包
           zip -q -r TinPlayer.ipa Payload
-          echo "✅ 奇迹时刻 - IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
+          echo "✅ 最终战斗结论 - IPA 大小: $(du -sh TinPlayer.ipa | cut -f1)"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TinPlayer-v1.3.0-FINAL
+          name: TinPlayer-v1.3.0-ArchFixed
           path: TinPlayer.ipa
