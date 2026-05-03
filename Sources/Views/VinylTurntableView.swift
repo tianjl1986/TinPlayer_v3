@@ -42,9 +42,9 @@ struct VinylTurntableView: View {
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm Assembly (Equidistant from top and right, inside base)
+            // 3. Tonearm Assembly (Position shifted per user request)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 140, y: -140) // Balanced distance to top and right edges
+                .offset(x: 110, y: -90) // Shifted 30px left and 50px down
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
