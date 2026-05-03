@@ -9,21 +9,12 @@ struct HomeView: View {
         NavigationView {
             ZStack(alignment: .bottom) {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 40) {
-                        // 1. App Header
+                    VStack(spacing: 32) {
+                        // 1. App Header (Matching Settings Style)
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("SKEUOPLAYER")
-                                    .font(.system(size: 24, weight: .black))
-                                    .tracking(2)
-                                    .foregroundColor(DesignTokens.textPrimary)
-                                
-                                if isScanning {
-                                    Text("SCANNING LIBRARY...")
-                                        .font(.system(size: 10, weight: .black))
-                                        .foregroundColor(DesignTokens.textActive)
-                                }
-                            }
+                            Text("SKEUOPLAYER")
+                                .font(.system(size: 28, weight: .black))
+                                .foregroundColor(DesignTokens.textPrimary)
                             
                             Spacer()
                             
@@ -31,26 +22,26 @@ struct HomeView: View {
                                 Image(systemName: "gearshape.fill")
                                     .font(.system(size: 20))
                                     .foregroundColor(DesignTokens.textSecondary)
-                                    .frame(width: 44, height: 44)
-                                    .skeuoRaised(cornerRadius: 12)
+                                    .frame(width: 48, height: 48)
+                                    .skeuoRaised(cornerRadius: 14)
                             }
                         }
                         .padding(.horizontal, 24)
                         .padding(.top, 20)
                         
-                        // 2. Main Navigation Grid (Foobar2000 Style)
-                        VStack(spacing: 24) {
-                            HStack(spacing: 24) {
+                        // 2. Navigation Grid (Image 1 Style)
+                        VStack(spacing: 20) {
+                            HStack(spacing: 20) {
                                 NavigationLink(destination: LibraryShelfView()) {
                                     HomeNavCard(title: "ALBUMS", icon: "square.stack.fill", count: libraryService.albums.count)
                                 }
                                 
-                                NavigationLink(destination: LibraryGridView()) {
+                                NavigationLink(destination: ArtistListView()) {
                                     HomeNavCard(title: "ARTISTS", icon: "person.2.fill", count: Set(libraryService.albums.map { $0.artist }).count)
                                 }
                             }
                             
-                            HStack(spacing: 24) {
+                            HStack(spacing: 20) {
                                 NavigationLink(destination: LibraryGridView()) {
                                     HomeNavCard(title: "FOLDERS", icon: "folder.fill", count: libraryService.mediaFolders.count)
                                 }
@@ -62,80 +53,48 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 24)
                         
-                        // 3. Recently Played
+                        // 3. Recently Played Section
                         VStack(alignment: .leading, spacing: 20) {
                             Text("RECENTLY PLAYED")
-                                .font(.system(size: 12, weight: .black))
+                                .font(.system(size: 13, weight: .black))
                                 .tracking(1)
                                 .foregroundColor(DesignTokens.textSecondary)
                                 .padding(.horizontal, 24)
                             
-                                if libraryService.playlist.isEmpty {
-                                    // Empty State
-                                    Button(action: { performInitialScan() }) {
-                                        VStack(spacing: 16) {
-                                            Image(systemName: "music.note.list")
-                                                .font(.system(size: 40))
-                                            Text("TAP TO SCAN MEDIA")
-                                                .font(.system(size: 14, weight: .black))
-                                        }
-                                        .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 180)
-                                        .skeuoSunken(cornerRadius: 24)
-                                        .padding(.horizontal, 24)
-                                    }
-                                } else {
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 20) {
-                                            ForEach(libraryService.playlist.prefix(10)) { track in
-                                                NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track) }) {
-                                                    VStack(alignment: .leading, spacing: 12) {
-                                                        ZStack {
-                                                            RoundedRectangle(cornerRadius: 16)
-                                                                .fill(DesignTokens.surfaceMain)
-                                                                .frame(width: 140, height: 140)
-                                                                .skeuoRaised(cornerRadius: 16)
-                                                            
-                                                            if let album = libraryService.albums.first(where: { $0.tracks.contains(track) }),
-                                                               let cover = album.coverImage {
-                                                                Image(uiImage: cover)
-                                                                    .resizable()
-                                                                    .aspectRatio(contentMode: .fill)
-                                                                    .frame(width: 130, height: 130)
-                                                                    .cornerRadius(12)
-                                                            } else {
-                                                                Image(systemName: "music.note")
-                                                                    .font(.system(size: 40))
-                                                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
-                                                            }
-                                                        }
-                                                        
-                                                        VStack(alignment: .leading, spacing: 2) {
-                                                            Text(track.title.uppercased())
-                                                                .font(.system(size: 12, weight: .black))
-                                                                .foregroundColor(DesignTokens.textPrimary)
-                                                                .lineLimit(1)
-                                                            Text(track.artist.uppercased())
-                                                                .font(.system(size: 10, weight: .bold))
-                                                                .foregroundColor(DesignTokens.textSecondary)
-                                                                .lineLimit(1)
-                                                        }
-                                                    }
-                                                }
-                                                .buttonStyle(PlainButtonStyle())
-                                            }
-                                        }
-                                        .padding(.horizontal, 24)
-                                    }
+                            if libraryService.playlist.isEmpty {
+                                // Empty State Row
+                                HStack {
+                                    Image(systemName: "music.note")
+                                        .foregroundColor(DesignTokens.textSecondary)
+                                    Text("No music found. Scan to start.")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(DesignTokens.textSecondary)
                                 }
+                                .padding(24)
+                                .frame(maxWidth: .infinity)
+                                .skeuoSunken(cornerRadius: 16)
+                                .padding(.horizontal, 24)
+                                .onTapGesture { performInitialScan() }
+                            } else {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 20) {
+                                        ForEach(libraryService.playlist.prefix(6)) { track in
+                                            NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track) }) {
+                                                RecentTrackCard(track: track)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+                                        }
+                                    }
+                                    .padding(.horizontal, 24)
+                                }
+                            }
                         }
                         
                         Spacer(minLength: 120)
                     }
                 }
                 
-                // Mini Player
+                // Mini Player Overlay
                 if player.currentTrack != nil {
                     NavigationLink(destination: NowPlayingView()) {
                         MiniPlayerView()
@@ -160,9 +119,8 @@ struct HomeView: View {
         isScanning = true
         Task {
             libraryService.scanLibrary()
-            await MainActor.run {
-                isScanning = false
-            }
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            await MainActor.run { isScanning = false }
         }
     }
 }
@@ -173,26 +131,67 @@ struct HomeNavCard: View {
     let count: Int
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 24))
+                .font(.system(size: 28))
                 .foregroundColor(DesignTokens.textPrimary)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 14, weight: .black))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                 Text("\(count) ITEMS")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
+        .padding(24)
         .background(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 24)
                 .fill(DesignTokens.surfaceMain)
-                .skeuoRaised(cornerRadius: 20)
+                .skeuoRaised(cornerRadius: 24)
         )
+    }
+}
+
+struct RecentTrackCard: View {
+    let track: Track
+    @StateObject private var libraryService = MusicLibraryService.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(DesignTokens.surfaceMain)
+                    .frame(width: 150, height: 150)
+                    .skeuoRaised(cornerRadius: 18)
+                
+                if let album = libraryService.albums.first(where: { $0.tracks.contains(track) }),
+                   let cover = album.coverImage {
+                    Image(uiImage: cover)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 138, height: 138)
+                        .cornerRadius(14)
+                } else {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 40))
+                        .foregroundColor(DesignTokens.textSecondary.opacity(0.2))
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(track.title.uppercased())
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundColor(DesignTokens.textPrimary)
+                    .lineLimit(1)
+                Text(track.artist.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .lineLimit(1)
+            }
+        }
+        .frame(width: 150)
     }
 }

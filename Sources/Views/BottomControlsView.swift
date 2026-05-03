@@ -3,36 +3,35 @@ import SwiftUI
 struct BottomControlsView: View {
     @StateObject private var player = MusicPlayer.shared
     @State private var showLyrics = false
-    @State private var showQueue = false
     
     // Figma 1:1 标尺
-    private let sideButtonSize: CGFloat = 40 // Lyrics/Queue
-    private let navButtonSize: CGFloat = 56  // Prev/Next
-    private let playButtonSize: CGFloat = 72 // Play
-    private let spacing: CGFloat = 19.5
+    private let sideButtonSize: CGFloat = 44
+    private let navButtonSize: CGFloat = 56
+    private let playButtonSize: CGFloat = 72
+    private let spacing: CGFloat = 20
     
     var body: some View {
         HStack(spacing: spacing) {
-            // 1. Lyrics Toggle - 9880:14749
+            // 1. Lyrics Toggle
             Button(action: { showLyrics = true }) {
                 Text("LRC")
                     .font(.system(size: 10, weight: .black))
                     .foregroundColor(DesignTokens.textSecondary)
             }
-            .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 20))
+            .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 22))
             .fullScreenCover(isPresented: $showLyrics) {
                 LyricsView()
             }
             
-            // 2. Prev - 9880:14751
+            // 2. Prev
             Button(action: { player.skipPrevious() }) {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 16, weight: .black))
+                    .font(.system(size: 18, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
             }
             .buttonStyle(SkeuoButtonStyle(size: navButtonSize, cornerRadius: 28))
             
-            // 3. Play - 9880:14753
+            // 3. Play/Pause
             Button(action: { player.togglePlayPause() }) {
                 Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 24, weight: .black))
@@ -40,26 +39,25 @@ struct BottomControlsView: View {
             }
             .buttonStyle(SkeuoButtonStyle(size: playButtonSize, cornerRadius: 36))
             
-            // 4. Next - 9880:14755
+            // 4. Next
             Button(action: { player.skipNext() }) {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 16, weight: .black))
+                    .font(.system(size: 18, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
             }
             .buttonStyle(SkeuoButtonStyle(size: navButtonSize, cornerRadius: 28))
             
-            // 5. Queue - 9880:14757
-            Button(action: { showQueue = true }) {
-                Text("Q")
-                    .font(.system(size: 12, weight: .bold))
+            // 5. Play Mode (Cycle through List, Loop, Shuffle)
+            Button(action: { player.togglePlaybackMode() }) {
+                Image(systemName: player.playbackMode.iconName)
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
             }
-            .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 20))
+            .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 22))
         }
     }
 }
 
-// MARK: - 1:1 拟物化按钮样式
 struct SkeuoButtonStyle: ButtonStyle {
     let size: CGFloat
     let cornerRadius: CGFloat
@@ -80,7 +78,7 @@ struct SkeuoButtonStyle: ButtonStyle {
                     }
                 }
             )
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.5), value: configuration.isPressed)
     }
 }

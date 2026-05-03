@@ -7,11 +7,11 @@ struct LyricsView: View {
     // Figma 1:1 几何参数
     private let rollerHeight: CGFloat = 40
     private let knobSize: CGSize = CGSize(width: 48, height: 48)
-    private let paperWidth: CGFloat = 320
+    private let paperWidth: CGFloat = 340
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header (60px)
+            // 1. Header
             AppHeader(
                 title: "LYRICS",
                 leftItem: AnyView(
@@ -24,25 +24,24 @@ struct LyricsView: View {
             )
             .padding(.horizontal, 24)
             
-            // 2. 机械打字机区域
+            // 2. Typewriter Area
             ZStack(alignment: .top) {
-                // 纸张
+                // Paper
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 32) {
-                            Spacer(minLength: 160)
+                        VStack(alignment: .leading, spacing: 28) {
+                            Spacer(minLength: 140)
                             
                             if player.currentTrackLyrics.isEmpty {
-                                Text("NO LYRICS...")
+                                Text("NO LYRICS FOUND")
                                     .font(.system(size: 14, weight: .black))
-                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.2))
+                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
                                     .frame(maxWidth: .infinity)
                             } else {
                                 ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
                                     TypewriterText(
                                         text: line.text,
-                                        isCurrent: index == player.currentLyricIndex,
-                                        isPast: index < player.currentLyricIndex
+                                        isCurrent: index == player.currentLyricIndex
                                     )
                                     .id(index)
                                 }
@@ -50,9 +49,9 @@ struct LyricsView: View {
                             
                             Spacer(minLength: 300)
                         }
-                        .frame(width: paperWidth, alignment: .leading)
+                        .frame(width: paperWidth - 60, alignment: .leading)
+                        .padding(.horizontal, 30)
                         .background(Color.white)
-                        .padding(.top, 20)
                     }
                     .onChange(of: player.currentLyricIndex) { newIndex in
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
@@ -66,74 +65,51 @@ struct LyricsView: View {
                 .offset(y: 30)
                 .zIndex(0)
                 
-                // 滚轴组件 (Roller Assembly)
+                // Roller Assembly
                 HStack(spacing: 0) {
-                    // 左旋钮
-                    ZStack {
-                        Circle()
-                            .fill(DesignTokens.surfaceMain)
-                            .skeuoRaised(cornerRadius: 24)
-                            .frame(width: knobSize.width, height: knobSize.height)
-                        
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 12, weight: .black))
-                            .foregroundColor(DesignTokens.textSecondary)
-                            .frame(width: 24, height: 24) // Fixed frame for rotation center
-                            .rotationEffect(.degrees(player.currentTime * 90))
-                    }
-                    .offset(x: -10)
+                    Image("knob_light")
+                        .resizable()
+                        .frame(width: knobSize.width, height: knobSize.height)
+                        .offset(x: -12)
                     
-                    // 滚轴主体
-                    Rectangle()
-                        .fill(DesignTokens.rollerGradient)
+                    Image("roller_light")
+                        .resizable()
                         .frame(height: rollerHeight)
-                        .overlay(
-                            Rectangle()
-                                .stroke(Color.black.opacity(0.1), lineWidth: 1)
-                        )
                     
-                    // 右旋钮
-                    ZStack {
-                        Circle()
-                            .fill(DesignTokens.surfaceMain)
-                            .skeuoRaised(cornerRadius: 24)
-                            .frame(width: knobSize.width, height: knobSize.height)
-                        
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 12, weight: .black))
-                            .foregroundColor(DesignTokens.textSecondary)
-                            .frame(width: 24, height: 24) // Fixed frame for rotation center
-                            .rotationEffect(.degrees(player.currentTime * 90))
-                    }
-                    .offset(x: 10)
+                    Image("knob_light")
+                        .resizable()
+                        .frame(width: knobSize.width, height: knobSize.height)
+                        .offset(x: 12)
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 8)
                 .zIndex(1)
             }
             .frame(maxHeight: .infinity)
             
-            // 3. 底部进度
-            VStack(spacing: 24) {
-                VStack(spacing: 12) {
+            // 3. Spacing and Controls
+            VStack(spacing: 36) {
+                // Progress Bar
+                VStack(spacing: 8) {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(DesignTokens.surfaceMain)
-                                .skeuoSunken(cornerRadius: 4)
+                                .fill(Color.black.opacity(0.1))
                                 .frame(height: 8)
+                                .skeuoSunken(cornerRadius: 4)
                             
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(Color(hexString: "#404040"))
-                                .frame(width: max(0, geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1))), height: 8)
+                                .fill(DesignTokens.textPrimary.opacity(0.7))
+                                .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
                         }
                     }
                     .frame(height: 8)
-                    .padding(.horizontal, 32)
                 }
+                .padding(.horizontal, 40)
                 
                 BottomControlsView()
-                    .padding(.bottom, 48)
+                    .padding(.bottom, 40)
             }
+            .padding(.top, 24)
             .background(DesignTokens.surfaceMain)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
@@ -143,48 +119,33 @@ struct LyricsView: View {
 struct TypewriterText: View {
     let text: String
     let isCurrent: Bool
-    let isPast: Bool
-    
-    @State private var visibleCount: Int = 0
-    @State private var timer: Timer?
+    @State private var revealedCharacters: Int = 0
     
     var body: some View {
-        HStack(spacing: 0) {
-            Text(String(text.prefix(visibleCount)))
-                .font(.custom("AmericanTypewriter-Bold", size: 22))
-                .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary)
-                .opacity(isPast ? 0.3 : (isCurrent ? 1.0 : 0.6))
-                .multilineTextAlignment(.leading)
-            
-            if isCurrent && visibleCount < text.count {
-                Rectangle()
-                    .fill(DesignTokens.textActive)
-                    .frame(width: 2, height: 24)
-                    .opacity(0.8)
+        Text(isCurrent ? String(text.prefix(revealedCharacters)) : text)
+            .font(.system(size: 16, weight: isCurrent ? .black : .bold, design: .monospaced))
+            .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary.opacity(0.4))
+            .fixedSize(horizontal: false, vertical: true)
+            .multilineTextAlignment(.leading) // Ensure leading alignment
+            .onAppear {
+                if isCurrent {
+                    animate()
+                }
             }
-            
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading) // Ensure leading alignment
-        .padding(.horizontal, 40)
-        .onAppear {
-            if isCurrent { startTyping() }
-            else { visibleCount = text.count }
-        }
-        .onChange(of: isCurrent) { newValue in
-            if newValue { startTyping() }
-            else { visibleCount = text.count }
-        }
+            .onChange(of: isCurrent) { current in
+                if current {
+                    revealedCharacters = 0
+                    animate()
+                }
+            }
     }
     
-    private func startTyping() {
-        visibleCount = 0
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { t in
-            if visibleCount < text.count {
-                visibleCount += 1
+    private func animate() {
+        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            if revealedCharacters < text.count {
+                revealedCharacters += 1
             } else {
-                t.invalidate()
+                timer.invalidate()
             }
         }
     }

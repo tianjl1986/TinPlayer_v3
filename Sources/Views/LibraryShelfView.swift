@@ -9,7 +9,7 @@ struct LibraryShelfView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar
+            // 1. Top Bar - Fixed padding to avoid "too centered" buttons
             AppHeader(
                 title: "MY COLLECTION",
                 leftItem: AnyView(
@@ -27,7 +27,6 @@ struct LibraryShelfView: View {
                     }
                 )
             )
-            .padding(.horizontal, 24)
             
             // Hidden NavigationLink for programmatic navigation
             NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
@@ -35,7 +34,7 @@ struct LibraryShelfView: View {
             }
             
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     ForEach(libraryService.albums) { album in
                         AlbumShelfSpine(
                             album: album,
@@ -59,7 +58,7 @@ struct LibraryShelfView: View {
                 .padding(24)
             }
         }
-        .background(DesignTokens.surfaceLight.ignoresSafeArea())
+        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }
@@ -73,43 +72,45 @@ struct AlbumShelfSpine: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Spine Header
+            // Spine Header - White background as requested
             Button(action: onTap) {
                 HStack(spacing: 16) {
                     if let cover = album.coverImage {
                         Image(uiImage: cover)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 40, height: 40)
-                            .cornerRadius(4)
+                            .frame(width: 48, height: 48)
+                            .cornerRadius(6)
                     } else {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.shadowDark.opacity(0.3))
-                            .frame(width: 40, height: 40)
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(DesignTokens.shadowDark.opacity(0.2))
+                            .frame(width: 48, height: 48)
                     }
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(album.title.uppercased())
-                            .font(.system(size: 14, weight: .black))
+                            .font(.system(size: 15, weight: .black))
                             .foregroundColor(DesignTokens.textPrimary)
                         Text(album.artist.uppercased())
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(DesignTokens.textSecondary)
                     }
                     
                     Spacer()
                     
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundColor(DesignTokens.textSecondary)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
                 .padding(.horizontal, 20)
-                .frame(height: 72)
-                .background(DesignTokens.surfaceMain)
+                .frame(height: 80)
+                .background(Color.white) // Changed to white as requested
+                .cornerRadius(12)
                 .skeuoRaised(cornerRadius: 12)
             }
             .buttonStyle(PlainButtonStyle())
+            .zIndex(1)
             
             if isExpanded {
                 VStack(spacing: 0) {
@@ -125,8 +126,8 @@ struct AlbumShelfSpine: View {
                                     .foregroundColor(DesignTokens.textSecondary)
                             }
                             .padding(.horizontal, 24)
-                            .padding(.vertical, 14)
-                            .background(Color.black.opacity(0.03))
+                            .padding(.vertical, 16)
+                            .background(Color.black.opacity(0.02))
                         }
                         .buttonStyle(PlainButtonStyle())
                         
@@ -136,14 +137,16 @@ struct AlbumShelfSpine: View {
                     
                     NavigationLink(destination: AlbumDetailView(album: album)) {
                         Text("VIEW FULL ALBUM")
-                            .font(.system(size: 10, weight: .black))
+                            .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textActive)
-                            .padding(.vertical, 16)
+                            .padding(.vertical, 18)
                     }
                 }
-                .background(DesignTokens.surfaceMain.opacity(0.5))
+                .background(DesignTokens.surfaceLight.opacity(0.8))
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
+                .padding(.top, -12) // Overlap with spine
                 .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(0)
             }
         }
     }

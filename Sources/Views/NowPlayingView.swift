@@ -6,99 +6,91 @@ struct NowPlayingView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header (60px height) - 9880:14736
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(DesignTokens.textPrimary)
-                }
-                
-                Spacer()
-                
-                Text("NOW PLAYING")
-                    .font(.system(size: 14, weight: .black))
-                    .tracking(2)
-                    .foregroundColor(DesignTokens.textPrimary)
-                
-                Spacer()
-                
-                Button(action: { /* More action */ }) {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(DesignTokens.textPrimary)
-                }
-            }
-            .frame(height: 60)
+            // 1. Header (Using AppHeader for consistency)
+            AppHeader(
+                title: "NOW PLAYING",
+                leftItem: AnyView(
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                                .font(.system(size: 16, weight: .bold))
+                        }
+                        .foregroundColor(DesignTokens.textActive)
+                    }
+                ),
+                rightItem: AnyView(
+                    Button(action: { /* More */ }) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DesignTokens.textPrimary)
+                    }
+                )
+            )
             .padding(.horizontal, 24)
             
-            // Spacing: 32px (92 - 60)
-            Spacer().frame(height: 32)
+            Spacer().frame(height: 20)
             
-            // 2. 黑胶唱机 (400px height) - 9880:14740
+            // 2. Turntable Area
             VinylTurntableView()
                 .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
             
-            // Spacing: 65px (557 - 492)
-            Spacer().frame(height: 65)
+            Spacer().frame(height: 40)
             
-            // 3. 歌曲信息 (56px height) - 9880:14741
-            VStack(spacing: 8) {
-                Text(player.currentTrack?.title.uppercased() ?? "SKEUOMORPHIC DREAMS")
-                    .font(.system(size: 24, weight: .black))
+            // 3. Track Info
+            VStack(spacing: 12) {
+                Text(player.currentTrack?.title ?? "SKEUOMORPHIC DREAMS")
+                    .font(.system(size: 28, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .lineLimit(1)
+                    .multilineTextAlignment(.center)
                 
-                Text(player.currentTrack?.artist.uppercased() ?? "THE VINYL ORCHESTRA")
-                    .font(.system(size: 14, weight: .bold))
+                Text(player.currentTrack?.artist ?? "THE VINYL ORCHESTRA")
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
                     .lineLimit(1)
             }
-            .frame(height: 56)
             .padding(.horizontal, 40)
             
-            // Spacing: 32px (Figma: 32 between Track Info and Progress Bar)
-            Spacer().frame(height: 32)
+            Spacer().frame(height: 40)
             
-            // 4. 进度条 (15px height) - 9880:14744
-            HStack(spacing: 16) {
-                Text(formatDuration(player.currentTime))
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
-                    .frame(width: 45, alignment: .leading)
+            // 4. Progress Bar (Figma Style: Sunken and Slanted)
+            VStack(spacing: 8) {
+                HStack {
+                    Text(formatDuration(player.currentTime))
+                    Spacer()
+                    Text(formatDuration(player.duration))
+                }
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(DesignTokens.textSecondary)
                 
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        // Track Line - 9880:14746
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.surfaceMain)
-                            .skeuoSunken(cornerRadius: 4)
-                            .frame(height: 8)
+                        // Track
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.black.opacity(0.1))
+                            .frame(height: 12)
+                            .skeuoSunken(cornerRadius: 6)
                         
-                        // Progress Fill - 10007:16500
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(hexString: "#404040"))
-                            .frame(width: max(0, geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1))), height: 8)
+                        // Fill
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(DesignTokens.textPrimary.opacity(0.8))
+                            .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 12)
                     }
                 }
-                .frame(height: 8)
-                
-                Text(formatDuration(player.duration))
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
-                    .frame(width: 45, alignment: .trailing)
+                .frame(height: 12)
             }
-            .padding(.horizontal, 24) // Figma: 24px horizontal padding
-            .frame(height: 15)
+            .padding(.horizontal, 32)
             
-            // Spacing: 48px
-            Spacer().frame(height: 48)
+            Spacer().frame(height: 50)
             
-            // 5. 控制面板 (72px height) - 9880:14748
+            // 5. Controls
             BottomControlsView()
                 .padding(.horizontal, 24)
-                .padding(.bottom, 48)
+                .padding(.bottom, 40)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
+        .navigationBarHidden(true)
     }
 }

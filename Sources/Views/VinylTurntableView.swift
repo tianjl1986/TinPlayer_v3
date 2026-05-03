@@ -4,51 +4,36 @@ struct VinylTurntableView: View {
     @StateObject private var player = MusicPlayer.shared
     @StateObject private var libraryService = MusicLibraryService.shared
     @State private var rotation: Double = 0
-    @State private var isSpinning: Bool = false
     
-    // Figma 1:1 几何参数
-    private let baseSize: CGFloat = 340
+    // Geometry constants based on assets
+    private let baseSize: CGFloat = 360
     private let platterSize: CGFloat = 300
     private let recordSize: CGFloat = 280
-    private let labelSize: CGFloat = 100
+    private let labelSize: CGFloat = 90
     
     var body: some View {
         ZStack {
-            // 1. 底座 (Raised Base) - 9880:14740
-            Circle()
-                .fill(DesignTokens.surfaceMain)
+            // 1. Turntable Base (Static Background)
+            Image("turntable_base_light")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
                 .frame(width: baseSize, height: baseSize)
-                .skeuoRaised(cornerRadius: baseSize/2)
             
-            // 2. 转盘 (Sunken Platter) - 10007:16492
-            Circle()
-                .fill(DesignTokens.surfaceMain)
-                .frame(width: platterSize, height: platterSize)
-                .skeuoSunken(cornerRadius: platterSize/2)
-            
-            // 3. 黑胶唱片 (The Record)
+            // 2. Rotating Platter & Record
             ZStack {
-                // 唱片主体 (Vinyl Texture)
-                Circle()
-                    .fill(Color.black)
+                // Platter
+                Image("platter_light")
+                    .resizable()
+                    .frame(width: platterSize, height: platterSize)
+                
+                // Vinyl Record
+                Image("vinyl_record_light")
+                    .resizable()
                     .frame(width: recordSize, height: recordSize)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            .padding(2)
-                    )
                 
-                // 唱片纹理 (Grooves)
-                ForEach(0..<10) { i in
-                    Circle()
-                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                        .padding(CGFloat(i * 12))
-                }
-                
-                // 4. 专辑封面 (Label)
+                // Album Cover (Label)
                 ZStack {
                     if let track = player.currentTrack {
-                        // 寻找对应专辑封面
                         let album = libraryService.albums.first(where: { $0.tracks.contains(track) })
                         if let cover = album?.coverImage {
                             Image(uiImage: cover)
@@ -61,7 +46,7 @@ struct VinylTurntableView: View {
                                 .fill(DesignTokens.surfaceLight)
                                 .frame(width: labelSize, height: labelSize)
                             Image(systemName: "music.note")
-                                .font(.system(size: 40))
+                                .font(.system(size: 30))
                                 .foregroundColor(DesignTokens.textSecondary.opacity(0.2))
                         }
                     } else {
@@ -70,15 +55,22 @@ struct VinylTurntableView: View {
                             .frame(width: labelSize, height: labelSize)
                     }
                     
-                    // 中心孔
-                    Circle()
-                        .fill(DesignTokens.surfaceMain)
-                        .frame(width: 8, height: 8)
-                        .skeuoSunken(cornerRadius: 4)
+                    // Center Spindle Piece
+                    Image("spindle_light")
+                        .resizable()
+                        .frame(width: 20, height: 20)
                 }
             }
             .rotationEffect(.degrees(rotation))
-            .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+            
+            // 3. Tonearm (Placed over the record)
+            Image("tonearm_light")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 180)
+                .rotationEffect(.degrees(player.isPlaying ? -25 : -45), anchor: .topTrailing)
+                .offset(x: 100, y: -60)
+                .animation(.spring(response: 0.8, dampingFraction: 0.7), value: player.isPlaying)
         }
         .onAppear {
             if player.isPlaying {
@@ -88,8 +80,6 @@ struct VinylTurntableView: View {
         .onChange(of: player.isPlaying) { isPlaying in
             if isPlaying {
                 startRotation()
-            } else {
-                stopRotation()
             }
         }
     }
@@ -98,9 +88,5 @@ struct VinylTurntableView: View {
         withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
             rotation += 360
         }
-    }
-    
-    private func stopRotation() {
-        // Stop animation logic
     }
 }
