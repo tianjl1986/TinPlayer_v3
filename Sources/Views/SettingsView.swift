@@ -92,7 +92,50 @@ struct SettingsView: View {
                         }
                     }
                     
-                    // 4. MAINTENANCE
+                    // 4. APPEARANCE & LOCALIZATION
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("APPEARANCE")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundColor(DesignTokens.textSecondary)
+                            .padding(.horizontal, 4)
+                        
+                        SkeuoSettingsGroup {
+                            HStack {
+                                Text(ThemeManager.shared.isDark ? "Dark Mode" : "Light Mode")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(DesignTokens.textPrimary)
+                                Spacer()
+                                Toggle("", isOn: Binding(
+                                    get: { ThemeManager.shared.isDark },
+                                    set: { _ in ThemeManager.shared.toggleTheme() }
+                                ))
+                                .labelsHidden()
+                                .toggleStyle(SwitchToggleStyle(tint: DesignTokens.textActive))
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                            
+                            Divider().padding(.horizontal, 20)
+                            
+                            HStack {
+                                Text("Language")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(DesignTokens.textPrimary)
+                                Spacer()
+                                Button(action: {
+                                    loc.language = (loc.language == "en" ? "zh" : "en")
+                                }) {
+                                    Text(loc.language == "en" ? "English" : "中文")
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(DesignTokens.textActive)
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                        }
+                    }
+                    
+                    // 5. MAINTENANCE
                     VStack(alignment: .leading, spacing: 12) {
                         Text("MAINTENANCE")
                             .font(.system(size: 11, weight: .black))

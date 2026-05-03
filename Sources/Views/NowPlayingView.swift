@@ -75,7 +75,7 @@ struct NowPlayingView: View {
                 // 5. Controls
                 BottomControlsView(showLyrics: $showLyrics)
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 48)
+                    .padding(.bottom, 64)
             }
             .blur(radius: showLyrics ? 20 : 0)
             .animation(.easeInOut, value: showLyrics)

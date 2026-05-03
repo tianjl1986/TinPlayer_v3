@@ -165,17 +165,13 @@ struct AlbumShelfPill: View {
                             HStack(spacing: 8) {
                                 Text("\(index + 1).")
                                     .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.4))
+                                    .foregroundColor(DesignTokens.textPrimary.opacity(0.4))
                                 
                                 Text(track.title)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(DesignTokens.textPrimary)
                                 
                                 Spacer()
-                                
-                                Image(systemName: "play.circle.fill")
-                                    .font(.system(size: 14))
-                                    .opacity(0.2)
                             }
                             .padding(.horizontal, 24)
                             .padding(.vertical, 16)

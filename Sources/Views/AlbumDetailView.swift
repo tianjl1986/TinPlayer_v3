@@ -49,7 +49,6 @@ struct AlbumDetailView: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 280, height: 280)
                     .cornerRadius(24)
-                    .shadow(color: Color.black.opacity(0.4), radius: 20, x: 0, y: 15)
             } else {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(DesignTokens.surfaceMain)

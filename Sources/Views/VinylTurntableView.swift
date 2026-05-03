@@ -6,7 +6,7 @@ struct VinylTurntableView: View {
     @Binding var showLyrics: Bool
     @State private var rotation: Double = 0
     
-    private let baseSize: CGFloat = 340
+    private let baseSize: CGFloat = 360
     
     var body: some View {
         ZStack {
@@ -38,7 +38,7 @@ struct VinylTurntableView: View {
             
             // 3. Tonearm Assembly (Pivot fixed at top-right, using slice)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 75, y: -95)
+                .offset(x: 90, y: -120)
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
@@ -57,8 +57,8 @@ struct TonearmView: View {
         Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 120, height: 280) // Adjust based on slice dimensions
-            .rotationEffect(.degrees(isMoving ? 25 : 0), anchor: .top)
+            .frame(width: 90, height: 240) // Reduced size
+            .rotationEffect(.degrees(isMoving ? 20 : 0), anchor: .top)
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }

@@ -112,7 +112,7 @@ struct LyricsView: View {
                 }
                 .zIndex(10)
             }
-            .frame(maxHeight: .infinity)
+            .padding(.bottom, 20)
             
             // 4. Progress Bar & Controls (1:1 Design)
             VStack(spacing: 24) {
