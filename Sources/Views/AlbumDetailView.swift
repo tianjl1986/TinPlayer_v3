@@ -24,13 +24,24 @@ struct AlbumDetailView: View {
                 VStack(spacing: 40) {
                     // 2. 专辑封面卡片 (拟物悬浮)
                     VStack(spacing: 24) {
-                        AsyncImage(url: URL(string: album.coverUrl)) { image in
-                            image.resizable()
-                        } placeholder: {
-                            Color.gray.opacity(0.1)
+                        ZStack {
+                            if let image = album.coverImage {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 240, height: 240)
+                                    .cornerRadius(24)
+                            } else {
+                                RoundedRectangle(cornerRadius: 24)
+                                    .fill(DesignTokens.surfaceMain)
+                                    .frame(width: 240, height: 240)
+                                    .overlay(
+                                        Image(systemName: "music.note")
+                                            .font(.system(size: 80))
+                                            .foregroundColor(DesignTokens.textSecondary.opacity(0.1))
+                                    )
+                            }
                         }
-                        .frame(width: 240, height: 240)
-                        .cornerRadius(24)
                         .skeuoRaised(cornerRadius: 24)
                         
                         VStack(spacing: 8) {
@@ -46,7 +57,7 @@ struct AlbumDetailView: View {
                         
                         // 播放控制按钮
                         HStack(spacing: 16) {
-                            Button(action: { player.playTrack(album.tracks.first!, in: album.tracks) }) {
+                            NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(album.tracks.first!, in: album.tracks) }) {
                                 Text("Play All")
                                     .font(.system(size: 14, weight: .black))
                                     .foregroundColor(DesignTokens.textPrimary)
@@ -67,10 +78,10 @@ struct AlbumDetailView: View {
                     }
                     .padding(.top, 24)
                     
-                    // 3. Track List - 9931:15081
-                    VStack(spacing: 16) {
+                    // 3. Track List
+                    VStack(spacing: 0) {
                         ForEach(Array(album.tracks.enumerated()), id: \.offset) { index, track in
-                            Button(action: { player.playTrack(track, in: album.tracks) }) {
+                            NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track, in: album.tracks) }) {
                                 HStack(spacing: 16) {
                                     Text(String(format: "%02d", index + 1))
                                         .font(.system(size: 12, weight: .black, design: .monospaced))
@@ -87,7 +98,8 @@ struct AlbumDetailView: View {
                                         .foregroundColor(DesignTokens.textSecondary)
                                 }
                                 .padding(.horizontal, 24)
-                                .padding(.vertical, 12)
+                                .padding(.vertical, 16)
+                                .background(player.currentTrack?.id == track.id ? Color.black.opacity(0.05) : Color.clear)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -96,7 +108,7 @@ struct AlbumDetailView: View {
                 }
             }
         }
-        .background(DesignTokens.surfaceLight.ignoresSafeArea())
+        .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }

@@ -41,7 +41,7 @@ struct HomeView: View {
                         // 2. Main Navigation Grid (Foobar2000 Style)
                         VStack(spacing: 24) {
                             HStack(spacing: 24) {
-                                NavigationLink(destination: LibraryGridView()) {
+                                NavigationLink(destination: LibraryShelfView()) {
                                     HomeNavCard(title: "ALBUMS", icon: "square.stack.fill", count: libraryService.albums.count)
                                 }
                                 
@@ -70,54 +70,65 @@ struct HomeView: View {
                                 .foregroundColor(DesignTokens.textSecondary)
                                 .padding(.horizontal, 24)
                             
-                            if libraryService.playlist.isEmpty {
-                                // Empty State
-                                Button(action: { performInitialScan() }) {
-                                    VStack(spacing: 16) {
-                                        Image(systemName: "music.note.list")
-                                            .font(.system(size: 40))
-                                        Text("TAP TO SCAN MEDIA")
-                                            .font(.system(size: 14, weight: .black))
+                                if libraryService.playlist.isEmpty {
+                                    // Empty State
+                                    Button(action: { performInitialScan() }) {
+                                        VStack(spacing: 16) {
+                                            Image(systemName: "music.note.list")
+                                                .font(.system(size: 40))
+                                            Text("TAP TO SCAN MEDIA")
+                                                .font(.system(size: 14, weight: .black))
+                                        }
+                                        .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 180)
+                                        .skeuoSunken(cornerRadius: 24)
+                                        .padding(.horizontal, 24)
                                     }
-                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 180)
-                                    .skeuoSunken(cornerRadius: 24)
-                                    .padding(.horizontal, 24)
-                                }
-                            } else {
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 20) {
-                                        ForEach(libraryService.playlist.prefix(5)) { track in
-                                            Button(action: { player.playTrack(track) }) {
-                                                VStack(alignment: .leading, spacing: 12) {
-                                                    RoundedRectangle(cornerRadius: 16)
-                                                        .fill(DesignTokens.surfaceMain)
-                                                        .frame(width: 140, height: 140)
-                                                        .skeuoRaised(cornerRadius: 16)
-                                                        .overlay(
-                                                            Image(systemName: "music.note")
-                                                                .font(.system(size: 40))
-                                                                .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
-                                                        )
-                                                    
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text(track.title.uppercased())
-                                                            .font(.system(size: 12, weight: .black))
-                                                            .foregroundColor(DesignTokens.textPrimary)
-                                                            .lineLimit(1)
-                                                        Text(track.artist.uppercased())
-                                                            .font(.system(size: 10, weight: .bold))
-                                                            .foregroundColor(DesignTokens.textSecondary)
-                                                            .lineLimit(1)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 20) {
+                                            ForEach(libraryService.playlist.prefix(10)) { track in
+                                                NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track) }) {
+                                                    VStack(alignment: .leading, spacing: 12) {
+                                                        ZStack {
+                                                            RoundedRectangle(cornerRadius: 16)
+                                                                .fill(DesignTokens.surfaceMain)
+                                                                .frame(width: 140, height: 140)
+                                                                .skeuoRaised(cornerRadius: 16)
+                                                            
+                                                            if let album = libraryService.albums.first(where: { $0.tracks.contains(track) }),
+                                                               let cover = album.coverImage {
+                                                                Image(uiImage: cover)
+                                                                    .resizable()
+                                                                    .aspectRatio(contentMode: .fill)
+                                                                    .frame(width: 130, height: 130)
+                                                                    .cornerRadius(12)
+                                                            } else {
+                                                                Image(systemName: "music.note")
+                                                                    .font(.system(size: 40))
+                                                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
+                                                            }
+                                                        }
+                                                        
+                                                        VStack(alignment: .leading, spacing: 2) {
+                                                            Text(track.title.uppercased())
+                                                                .font(.system(size: 12, weight: .black))
+                                                                .foregroundColor(DesignTokens.textPrimary)
+                                                                .lineLimit(1)
+                                                            Text(track.artist.uppercased())
+                                                                .font(.system(size: 10, weight: .bold))
+                                                                .foregroundColor(DesignTokens.textSecondary)
+                                                                .lineLimit(1)
+                                                        }
                                                     }
                                                 }
+                                                .buttonStyle(PlainButtonStyle())
                                             }
                                         }
+                                        .padding(.horizontal, 24)
                                     }
-                                    .padding(.horizontal, 24)
                                 }
-                            }
                         }
                         
                         Spacer(minLength: 120)

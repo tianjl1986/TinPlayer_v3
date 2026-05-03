@@ -15,9 +15,20 @@ struct MiniPlayerView: View {
                             .frame(width: 48, height: 48)
                             .skeuoRaised(cornerRadius: 24)
                         
-                        Circle()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            .frame(width: 40, height: 40)
+                        if let album = MusicLibraryService.shared.albums.first(where: { $0.tracks.contains(track) }),
+                           let cover = album.coverImage {
+                            Image(uiImage: cover)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 44, height: 44)
+                                .clipShape(Circle())
+                                .rotationEffect(.degrees(player.isPlaying ? 360 : 0))
+                                .animation(player.isPlaying ? .linear(duration: 10).repeatForever(autoreverses: false) : .default, value: player.isPlaying)
+                        } else {
+                            Circle()
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                .frame(width: 40, height: 40)
+                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
@@ -63,9 +74,6 @@ struct MiniPlayerView: View {
             .buttonStyle(PlainButtonStyle())
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
-            .fullScreenCover(isPresented: $showPlayer) {
-                NowPlayingView()
-            }
         }
     }
 }

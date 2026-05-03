@@ -57,43 +57,46 @@ struct NowPlayingView: View {
             .frame(height: 56)
             .padding(.horizontal, 40)
             
-            // Spacing: 48px (661 - 613)
-            Spacer().frame(height: 48)
+            // Spacing: 32px (Figma: 32 between Track Info and Progress Bar)
+            Spacer().frame(height: 32)
             
             // 4. 进度条 (15px height) - 9880:14744
-            VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                Text(formatDuration(player.currentTime))
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .frame(width: 45, alignment: .leading)
+                
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
+                        // Track Line - 9880:14746
                         RoundedRectangle(cornerRadius: 4)
                             .fill(DesignTokens.surfaceMain)
                             .skeuoSunken(cornerRadius: 4)
                             .frame(height: 8)
                         
+                        // Progress Fill - 10007:16500
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color(hexString: "#404040"))
                             .frame(width: max(0, geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1))), height: 8)
                     }
                 }
                 .frame(height: 8)
-                .padding(.leading, 72)
-                .padding(.trailing, 74) // 精确匹配 244px 宽度
                 
-                HStack {
-                    Text(formatDuration(player.currentTime))
-                    Spacer()
-                    Text(formatDuration(player.duration))
-                }
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(DesignTokens.textSecondary)
-                .padding(.horizontal, 32)
+                Text(formatDuration(player.duration))
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .frame(width: 45, alignment: .trailing)
             }
+            .padding(.horizontal, 24) // Figma: 24px horizontal padding
             .frame(height: 15)
             
-            // Spacing: 48px (724 - 676)
+            // Spacing: 48px
             Spacer().frame(height: 48)
             
             // 5. 控制面板 (72px height) - 9880:14748
             BottomControlsView()
+                .padding(.horizontal, 24)
                 .padding(.bottom, 48)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
