@@ -2,7 +2,9 @@ import SwiftUI
 
 struct NowPlayingView: View {
     @ObservedObject var player = MusicPlayer.shared
+    @ObservedObject var theme = ThemeManager.shared
     @Environment(\.presentationMode) var presentationMode
+    @State private var showLyrics = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +19,7 @@ struct NowPlayingView: View {
                     }
                 ),
                 rightItem: AnyView(
-                    Button(action: { /* More options if needed */ }) {
+                    Button(action: { /* More options */ }) {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
@@ -25,9 +27,9 @@ struct NowPlayingView: View {
                 )
             )
             
-            // 2. Turntable Area - Fixed Height to prevent "growing" animation
+            // 2. Turntable Area
             ZStack {
-                VinylTurntableView()
+                VinylTurntableView(showLyrics: $showLyrics)
             }
             .frame(height: 360)
             .padding(.top, 20)
@@ -51,7 +53,7 @@ struct NowPlayingView: View {
             
             Spacer(minLength: 20)
             
-            // 4. Progress Bar with Times on Sides (1:1 Design Layout)
+            // 4. Progress Bar
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
                     Text(formatDuration(player.currentTime))
@@ -72,12 +74,15 @@ struct NowPlayingView: View {
             Spacer(minLength: 40)
             
             // 5. Controls
-            BottomControlsView()
+            BottomControlsView(showLyrics: $showLyrics)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 48)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .fullScreenCover(isPresented: $showLyrics) {
+            LyricsView(showLyrics: $showLyrics)
+        }
     }
     
     private var progressBar: some View {

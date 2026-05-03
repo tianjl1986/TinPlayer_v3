@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct BottomControlsView: View {
-    @StateObject private var player = MusicPlayer.shared
-    @State private var showLyrics = false
+    @ObservedObject var player = MusicPlayer.shared
+    @Binding var showLyrics: Bool
     
     // Figma 1:1 标尺
     private let sideButtonSize: CGFloat = 44
@@ -19,9 +19,6 @@ struct BottomControlsView: View {
                     .foregroundColor(DesignTokens.textSecondary)
             }
             .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 22))
-            .fullScreenCover(isPresented: $showLyrics) {
-                LyricsView()
-            }
             
             // 2. Prev
             Button(action: { player.skipPrevious() }) {

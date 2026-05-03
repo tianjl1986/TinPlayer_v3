@@ -1,55 +1,83 @@
 import SwiftUI
 
 struct DesignTokens {
-    // Surface Colors from Section 10249:2
-    static let surfaceMain = Color(hexString: "#e5e5e5")      // Skeuo Main Surface
-    static let surfaceSecondary = Color(hexString: "#fafafa") // Secondary Surface
-    static let surfaceLight = Color(hexString: "#f2f2f2")     // WF Fill Light (Library/Settings)
-    static let background = surfaceMain
+    // Reactive colors based on theme
+    static var surfaceMain: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#1a1a1a") : Color(hexString: "#e5e5e5")
+    }
+    
+    static var surfaceSecondary: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#0d0d0d") : Color(hexString: "#fafafa")
+    }
+    
+    static var surfaceLight: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#262626") : Color(hexString: "#f2f2f2")
+    }
+    
+    static var background: Color { surfaceMain }
     
     // Text Colors
-    static let textPrimary = Color(hexString: "#1a1a1a")      // Text-Primary
-    static let textSecondary = Color(hexString: "#808080")    // Text-Secondary
-    static let textActive = Color(hexString: "#3b82f6")       // Active/Accent (Blue)
+    static var textPrimary: Color {
+        ThemeManager.shared.isDark ? Color.white : Color(hexString: "#1a1a1a")
+    }
     
-    // Skeuomorphic Shadows
-    static let shadowDark = Color(hexString: "#b3b3b3")       // For Raised/Sunken effect
-    static let shadowLight = Color.white                      // For Highlights
+    static var textSecondary: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#a1a1a1") : Color(hexString: "#808080")
+    }
     
-    // Gradients - 1:1 Figma Angular
-    static let vinylGradient = AngularGradient(
-        gradient: Gradient(stops: [
-            .init(color: Color(hexString: "#1A1A1A"), location: 0),
-            .init(color: Color(hexString: "#4D4D4D"), location: 0.25),
-            .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
-            .init(color: Color(hexString: "#4D4D4D"), location: 0.75),
-            .init(color: Color(hexString: "#1A1A1A"), location: 1)
-        ]),
-        center: .center
-    )
+    static var textActive: Color {
+        Color(hexString: "#3b82f6") // Accent remains consistent or slightly adjusted
+    }
     
-    static let spindleGradient = AngularGradient(
-        gradient: Gradient(stops: [
-            .init(color: Color(hexString: "#999999"), location: 0),
-            .init(color: Color(hexString: "#E5E5E5"), location: 0.25),
-            .init(color: Color(hexString: "#999999"), location: 0.5),
-            .init(color: Color(hexString: "#E5E5E5"), location: 0.75),
-            .init(color: Color(hexString: "#999999"), location: 1)
-        ]),
-        center: .center
-    )
+    // Skeuomorphic Shadows - Invert for Dark Mode
+    static var shadowDark: Color {
+        ThemeManager.shared.isDark ? Color.black.opacity(0.8) : Color(hexString: "#b3b3b3")
+    }
+    
+    static var shadowLight: Color {
+        ThemeManager.shared.isDark ? Color.white.opacity(0.1) : Color.white
+    }
+    
+    // Gradients
+    static var vinylGradient: AngularGradient {
+        AngularGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color(hexString: "#1A1A1A"), location: 0),
+                .init(color: Color(hexString: "#4D4D4D"), location: 0.25),
+                .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
+                .init(color: Color(hexString: "#4D4D4D"), location: 0.75),
+                .init(color: Color(hexString: "#1A1A1A"), location: 1)
+            ]),
+            center: .center
+        )
+    }
+    
+    static var spindleGradient: AngularGradient {
+        AngularGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color(hexString: "#999999"), location: 0),
+                .init(color: Color(hexString: "#E5E5E5"), location: 0.25),
+                .init(color: Color(hexString: "#999999"), location: 0.5),
+                .init(color: Color(hexString: "#E5E5E5"), location: 0.75),
+                .init(color: Color(hexString: "#999999"), location: 1)
+            ]),
+            center: .center
+        )
+    }
 
-    static let rollerGradient = LinearGradient(
-        gradient: Gradient(stops: [
-            .init(color: Color(hexString: "#0D0D0D"), location: 0),
-            .init(color: Color(hexString: "#333333"), location: 0.2),
-            .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
-            .init(color: Color(hexString: "#333333"), location: 0.8),
-            .init(color: Color(hexString: "#0D0D0D"), location: 1)
-        ]),
-        startPoint: .top,
-        endPoint: .bottom
-    )
+    static var rollerGradient: LinearGradient {
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: Color(hexString: "#0D0D0D"), location: 0),
+                .init(color: Color(hexString: "#333333"), location: 0.2),
+                .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
+                .init(color: Color(hexString: "#333333"), location: 0.8),
+                .init(color: Color(hexString: "#0D0D0D"), location: 1)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
 }
 
 extension View {

@@ -141,7 +141,7 @@ class MusicLibraryService: ObservableObject {
         let durationValue = (try? await asset.load(.duration))?.seconds ?? 0
         let track = Track(title: title, artist: artist, fileName: url.path, duration: formatDuration(durationValue))
         
-        if let idx = albumsList.firstIndex(where: { $0.title == albumName }) {
+        if let idx = albumsList.firstIndex(where: { $0.title == albumName && $0.artist == artist }) {
             albumsList[idx].tracks.append(track)
             if albumsList[idx].coverImage == nil { albumsList[idx].coverImage = artwork }
         } else {

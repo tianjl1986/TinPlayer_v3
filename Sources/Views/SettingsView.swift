@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject private var loc = LocalizationManager.shared
     @Environment(\.presentationMode) var presentationMode
     
+    @ObservedObject private var theme = ThemeManager.shared
     @AppStorage("app_theme") private var appTheme: String = "Light"
     
     var body: some View {
@@ -82,9 +83,9 @@ struct SettingsView: View {
                             Divider().padding(.horizontal, 20)
                             
                             Button(action: {
-                                appTheme = (appTheme == "Light" ? "Dark" : "Light")
+                                theme.currentTheme = (theme.currentTheme == "Light" ? "Dark" : "Light")
                             }) {
-                                SkeuoSettingsRow(title: loc.t("Theme"), value: loc.t(appTheme), isLink: true, showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("Theme"), value: loc.t(theme.currentTheme), isLink: true, showBackground: false)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
