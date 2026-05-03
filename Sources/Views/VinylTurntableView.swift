@@ -42,9 +42,9 @@ struct VinylTurntableView: View {
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm Assembly (Pivot moved inward, inside base)
+            // 3. Tonearm Assembly (Equidistant from top and right, inside base)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 110, y: -110) // Moved inward to be inside the base
+                .offset(x: 140, y: -140) // Balanced distance to top and right edges
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
@@ -63,7 +63,7 @@ struct TonearmView: View {
         Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 120, height: 320) // Increased size
+            .frame(width: 110, height: 290) // Middle value between 260 and 320
             .rotationEffect(.degrees(isMoving ? 4 : -2), anchor: .top) // More vertical angle
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
