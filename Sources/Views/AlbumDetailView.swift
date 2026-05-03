@@ -97,32 +97,17 @@ struct AlbumDetailView: View {
                     
                     // 3. Track List
                     VStack(spacing: 0) {
-                        ForEach(0..<album.tracks.count, id: \.self) { index in
+                        ForEach(album.tracks.indices, id: \.self) { index in
                             let track = album.tracks[index]
-                            Button(action: {
-                                player.playTrack(track, in: album.tracks)
-                                navigateToNowPlaying = true
-                            }) {
-                                HStack(spacing: 16) {
-                                    Text(String(format: "%02d", index + 1))
-                                        .font(.system(size: 12, weight: .black, design: .monospaced))
-                                        .foregroundColor(DesignTokens.textSecondary)
-                                    
-                                    Text(track.title)
-                                        .font(.system(size: 14, weight: .bold))
-                                        .foregroundColor(player.currentTrack?.id == track.id ? DesignTokens.textActive : DesignTokens.textPrimary)
-                                    
-                                    Spacer()
-                                    
-                                    Text(track.duration)
-                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                        .foregroundColor(DesignTokens.textSecondary)
+                            AlbumTrackRow(
+                                track: track,
+                                index: index,
+                                isSelected: player.currentTrack?.id == track.id,
+                                onPlay: {
+                                    player.playTrack(track, in: album.tracks)
+                                    navigateToNowPlaying = true
                                 }
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 16)
-                                .background(player.currentTrack?.id == track.id ? Color.black.opacity(0.05) : Color.clear)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            )
                         }
                     }
                     .padding(.bottom, 48)
@@ -131,5 +116,36 @@ struct AlbumDetailView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+    }
+}
+
+struct AlbumTrackRow: View {
+    let track: Track
+    let index: Int
+    let isSelected: Bool
+    let onPlay: () -> Void
+    
+    var body: some View {
+        Button(action: onPlay) {
+            HStack(spacing: 16) {
+                Text(String(format: "%02d", index + 1))
+                    .font(.system(size: 12, weight: .black, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                
+                Text(track.title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(isSelected ? DesignTokens.textActive : DesignTokens.textPrimary)
+                
+                Spacer()
+                
+                Text(track.duration)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+            .background(isSelected ? Color.black.opacity(0.05) : Color.clear)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

@@ -142,33 +142,13 @@ struct AlbumShelfSpine: View {
     private var trackList: some View {
         VStack(spacing: 0) {
             ForEach(album.tracks) { track in
-                Button(action: { onPlayTrack(track) }) {
-                    HStack {
-                        Text(track.title)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(DesignTokens.textPrimary)
-                        Spacer()
-                        Text(formatDuration(track.duration))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(DesignTokens.textSecondary)
-                    }
-                    .padding(.vertical, 12)
-                    .padding(.horizontal, 16)
-                    .background(DesignTokens.surfaceLight.opacity(0.5))
-                    .cornerRadius(8)
-                }
-                .buttonStyle(PlainButtonStyle())
+                TrackRowView(track: track, onPlay: { onPlayTrack(track) })
                 
                 Divider()
                     .padding(.horizontal, 24)
             }
             
-            NavigationLink(destination: AlbumDetailView(album: album)) {
-                Text("VIEW FULL ALBUM")
-                    .font(.system(size: 11, weight: .black))
-                    .foregroundColor(DesignTokens.textActive)
-                    .padding(.vertical, 18)
-            }
+            fullAlbumLink
         }
         .background(DesignTokens.surfaceLight.opacity(0.8))
         .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
@@ -177,9 +157,40 @@ struct AlbumShelfSpine: View {
         .zIndex(0)
     }
     
-    private func formatDuration(_ duration: TimeInterval) -> String {
-        let mins = Int(duration) / 60
-        let secs = Int(duration) % 60
-        return String(format: "%02d:%02d", mins, secs)
+    private var fullAlbumLink: some View {
+        NavigationLink(destination: AlbumDetailView(album: album)) {
+            Text("VIEW FULL ALBUM")
+                .font(.system(size: 11, weight: .black))
+                .foregroundColor(DesignTokens.textActive)
+                .padding(.vertical, 18)
+        }
+    }
+}
+
+struct TrackRowView: View {
+    let track: Track
+    let onPlay: () -> Void
+    @StateObject private var player = MusicPlayer.shared
+    
+    var body: some View {
+        let isSelected = player.currentTrack?.id == track.id
+        
+        Button(action: onPlay) {
+            HStack {
+                Text(track.title)
+                    .font(.system(size: 14, weight: isSelected ? .bold : .medium))
+                    .foregroundColor(isSelected ? DesignTokens.textActive : DesignTokens.textPrimary)
+                
+                Spacer()
+                
+                Text(formatDuration(track.duration))
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(isSelected ? DesignTokens.textActive.opacity(0.1) : Color.clear)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
