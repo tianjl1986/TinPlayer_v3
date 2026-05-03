@@ -101,9 +101,14 @@ struct AlbumDetailView: View {
         VStack(spacing: 0) {
             ForEach(Array(album.tracks.enumerated()), id: \.offset) { index, track in
                 TrackRow(index: index, track: track, onSelect: {
-                    player.currentAlbum = album
-                    player.playTrack(track, in: album.tracks)
-                    player.showNowPlaying = true
+                    if player.currentTrack?.id == track.id {
+                        // Already playing this track, just show the view
+                        player.showNowPlaying = true
+                    } else {
+                        player.currentAlbum = album
+                        player.playTrack(track, in: album.tracks)
+                        player.showNowPlaying = true
+                    }
                 })
             }
         }

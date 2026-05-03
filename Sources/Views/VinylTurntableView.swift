@@ -39,18 +39,18 @@ struct VinylTurntableView: View {
                                 .frame(width: 115, height: 115) // Increased by 20px
                                 .clipShape(Circle())
                             
-                            // 2.5 Center Spindle (Missing slice added)
+                            // 2.5 Center Spindle (Size reduced by half)
                             Image(theme.isDark ? "spindle_dark" : "spindle_light")
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .frame(width: 32, height: 32)
+                                .frame(width: 16, height: 16) // 16x16
                         }
                     }
                 }
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm Assembly (Position shifted per user request)
+            // 3. Tonearm Assembly
             TonearmView(isMoving: player.isPlaying)
                 .offset(x: 110, y: -90) 
         }
@@ -72,7 +72,7 @@ struct TonearmView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 110, height: 290) 
-            .rotationEffect(.degrees(isMoving ? -6 : 0), anchor: .top) // Playing: -6, Paused: 0 (Vertical)
+            .rotationEffect(.degrees(isMoving ? -12 : 0), anchor: .top) // Corrected: 0 when paused, tilted when moving
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }

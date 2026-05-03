@@ -54,7 +54,7 @@ struct ShelfViewContent: View {
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 16) { 
+            LazyVStack(spacing: 11) { 
                 ForEach(libraryService.albums, id: \.id) { album in
                     AlbumShelfPill(
                         album: album,
@@ -148,7 +148,7 @@ struct AlbumShelfPill: View {
             }
             .frame(height: 52) // Unified height reduction
             .background(Color.black)
-            .cornerRadius(12)
+            .cornerRadius(6)
             .contentShape(Rectangle())
             .onTapGesture { onToggle() }
             // Removed skeuoRaised for shelf cards per user request to clean up shadows
@@ -158,9 +158,13 @@ struct AlbumShelfPill: View {
                     ForEach(Array(album.tracks.indices), id: \.self) { index in
                         let track = album.tracks[index]
                         Button(action: {
-                            player.currentAlbum = album
-                            player.playTrack(track, in: album.tracks)
-                            player.showNowPlaying = true
+                            if player.currentTrack?.id == track.id {
+                                player.showNowPlaying = true
+                            } else {
+                                player.currentAlbum = album
+                                player.playTrack(track, in: album.tracks)
+                                player.showNowPlaying = true
+                            }
                         }) {
                             HStack(spacing: 8) {
                                 Text("\(index + 1).")
@@ -200,7 +204,7 @@ struct AlbumShelfPill: View {
                     }
                 }
                 .background(DesignTokens.surfaceMain)
-                .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
+                .cornerRadius(6, corners: [.bottomLeft, .bottomRight])
                 .padding(.top, 4)
             }
         }
