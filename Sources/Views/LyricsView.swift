@@ -9,8 +9,7 @@ struct LyricsView: View {
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     // 🚀 Figma 1:1 精确几何参数
-    private let rollerHeight: CGFloat = 36
-    private let knobSize: CGFloat = 48
+    private let knobSize: CGFloat = 32
     private let paperWidth: CGFloat = 320
     
     var body: some View {

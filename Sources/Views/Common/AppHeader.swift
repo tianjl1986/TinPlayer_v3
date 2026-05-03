@@ -29,8 +29,8 @@ struct AppHeader: View {
             
             // Title (Pixel-Perfect Typography & Truncation)
             Text(title.uppercased())
-                .font(.system(size: 15, weight: .black))
-                .kerning(2.5) // Figma Letter Spacing
+                .font(.system(size: 17, weight: .black))
+                .kerning(1.5)
                 .foregroundColor(DesignTokens.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)

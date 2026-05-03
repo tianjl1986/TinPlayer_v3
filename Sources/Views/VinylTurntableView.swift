@@ -10,10 +10,10 @@ struct VinylTurntableView: View {
     // Geometry constants based on assets - Adjusted for 1:1 fidelity
     private let baseSize: CGFloat = 335
     private let platterSize: CGFloat = 310
-    private let recordSize: CGFloat = 290
-    private let labelSize: CGFloat = 64
-    private let tonearmWidth: CGFloat = 140
-    private let tonearmPivotOffset: CGFloat = 32
+    private let recordSize: CGFloat = 320 // 🚀 Larger record
+    private let labelSize: CGFloat = 140 // 🚀 2x Larger artwork label
+    private let tonearmWidth: CGFloat = 100 // 🚀 Further reduced to match draft
+    private let tonearmPivotOffset: CGFloat = 20
     
     // Timer for smooth rotation
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -91,7 +91,7 @@ struct VinylTurntableView: View {
                 Image(theme.isDark ? "arm_base_dark" : "arm_base_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 64, height: 64)
+                    .frame(width: 44, height: 44) // 🚀 Reduced base size
                 
                 // Tonearm Image (Aligned Pivot)
                 Image(theme.isDark ? "tonearm_dark" : "tonearm_light")

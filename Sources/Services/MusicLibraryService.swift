@@ -71,9 +71,10 @@ class MusicLibraryService: ObservableObject {
                 var tracks: [Track] = []
                 for item in collection.items {
                     let track = Track(
+                        id: "sys-\(item.persistentID)",
                         title: item.title ?? "Unknown Track",
                         artist: item.artist ?? artist,
-                        fileName: item.assetURL?.absoluteString ?? "",
+                        fileName: item.assetURL?.absoluteString ?? "sys-\(item.persistentID)",
                         duration: formatDuration(item.playbackDuration)
                     )
                     tracks.append(track)
@@ -89,6 +90,7 @@ class MusicLibraryService: ObservableObject {
                         }
                     } else {
                         let newAlbum = Album(
+                            id: "sys-alb-\(representativeItem.albumPersistentID)",
                             title: albumTitle,
                             artist: artist,
                             coverImage: artwork,
