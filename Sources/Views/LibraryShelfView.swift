@@ -6,161 +6,207 @@ struct LibraryShelfView: View {
     @State private var expandedAlbumID: String? = nil
     @Environment(\.presentationMode) var presentationMode
     
-    // 🚀 注入控制视图切换的状态
-    @Binding var isGridView: Bool
-    @State private var showSearch = false
+    @AppStorage("is_grid_view") var isGridView: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header: 恢复所有功能
+            // 1. Header: 统一处理切换逻辑
             AppHeader(
-                title: "MY COLLECTION",
+                title: isGridView ? "COLLECTION" : "MY COLLECTION",
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 ),
                 rightItem: AnyView(
-                    Button(action: { isGridView.toggle() }) { // 🚀 恢复方格切换
-                        Image(systemName: "square.grid.2x2.fill")
-                            .font(.system(size: 20))
+                    Button(action: { 
+                        withAnimation(.spring()) {
+                            isGridView.toggle() 
+                        }
+                    }) {
+                        // 切换图标：根据当前模式显示另一个模式的图标
+                        Image(systemName: isGridView ? "list.bullet" : "square.grid.2x2.fill")
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
             )
             
-            // 2. Shelf Content
-            ScrollView {
-                LazyVStack(spacing: 24) {
-                    ForEach(libraryService.albums) { album in
-                        NewAlbumShelfItem(
-                            album: album,
-                            isExpanded: expandedAlbumID == album.id,
-                            onToggle: {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                    if expandedAlbumID == album.id {
-                                        expandedAlbumID = nil
-                                    } else {
-                                        expandedAlbumID = album.id
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 100)
+            // 2. Content: 动态切换布局
+            if isGridView {
+                GridViewContent()
+            } else {
+                ShelfViewContent(expandedAlbumID: $expandedAlbumID)
             }
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
+        .navigationBarHidden(true)
     }
 }
 
-struct NewAlbumShelfItem: View {
+// MARK: - 布局组件化
+
+struct ShelfViewContent: View {
+    @StateObject private var libraryService = MusicLibraryService.shared
+    @Binding var expandedAlbumID: String?
+    
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) { 
+                ForEach(libraryService.albums, id: \.id) { album in
+                    AlbumShelfPill(
+                        album: album,
+                        isExpanded: expandedAlbumID == album.id,
+                        onToggle: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                if expandedAlbumID == album.id {
+                                    expandedAlbumID = nil
+                                } else {
+                                    expandedAlbumID = album.id
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 24)
+            .padding(.bottom, 100)
+        }
+    }
+}
+
+struct GridViewContent: View {
+    @StateObject private var libraryService = MusicLibraryService.shared
+    
+    private let columns = [
+        GridItem(.flexible(), spacing: 20),
+        GridItem(.flexible(), spacing: 20)
+    ]
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // 网格标题（根据设计稿补齐）
+                Text("\(libraryService.albums.count) ALBUMS")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .padding(.horizontal, 24)
+                
+                LazyVGrid(columns: columns, spacing: 24) {
+                    ForEach(libraryService.albums) { album in
+                        NavigationLink(destination: AlbumDetailView(album: album)) {
+                            AlbumCard(album: album)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 120)
+            }
+            .padding(.top, 24)
+        }
+    }
+}
+
+// MARK: - 原有组件逻辑保留并优化
+
+struct AlbumShelfPill: View {
     let album: Album
     let isExpanded: Bool
     let onToggle: () -> Void
     @StateObject private var player = MusicPlayer.shared
+    @State private var navigateToAlbum: Album? = nil
     
     var body: some View {
         VStack(spacing: 0) {
-            // 🚀 头部：使用独立容器，确保点击绝不透传
             ZStack {
-                // Background
                 if let cover = album.coverImage {
                     Image(uiImage: cover)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: 100)
-                        .blur(radius: 20)
-                        .overlay(Color.black.opacity(0.45))
+                        .frame(height: 72)
+                        .blur(radius: 25)
+                        .overlay(Color.black.opacity(0.6))
                         .clipped()
                 } else {
-                    DesignTokens.surfaceLight.frame(height: 100)
+                    Color.black.opacity(0.8)
                 }
                 
-                // Content
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(album.title.uppercased())
-                            .font(.system(size: 18, weight: .black))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        Text(album.artist.uppercased())
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white.opacity(0.7))
-                            .lineLimit(1)
-                    }
-                    Spacer()
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 16, weight: .black))
+                HStack {
+                    Text("\(album.artist) - \(album.title)")
+                        .font(.system(size: 15, weight: .heavy))
                         .foregroundColor(.white)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white.opacity(0.5))
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
                 }
                 .padding(.horizontal, 24)
             }
-            .frame(height: 100)
+            .frame(height: 72)
+            .background(Color.black)
             .cornerRadius(12)
-            .skeuoRaised(cornerRadius: 12)
             .contentShape(Rectangle())
-            .onTapGesture(perform: onToggle) // 🚀 使用 Gesture 替代 Button，彻底隔离
+            .onTapGesture { onToggle() }
+            .skeuoRaised(cornerRadius: 12)
             
-            // 🚀 列表：只有在展开时才渲染，避免占位冲突
             if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(album.tracks) { track in
-                        NewTrackRow(track: track) {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(album.tracks.indices), id: \.self) { index in
+                        let track = album.tracks[index]
+                        Button(action: {
                             player.playTrack(track, in: album.tracks)
-                            player.showNowPlaying = true // 🚀 恢复点击跳转播放页
+                            player.showNowPlaying = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Text("\(index + 1).")
+                                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.4))
+                                
+                                Text(track.title)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "play.circle.fill")
+                                    .font(.system(size: 14))
+                                    .opacity(0.2)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 16)
+                            .contentShape(Rectangle())
                         }
-                        if track.id != album.tracks.last?.id {
-                            Divider()
-                                .background(Color.white.opacity(0.1))
-                                .padding(.horizontal, 16)
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        if index < album.tracks.count - 1 {
+                            Divider().background(Color.white.opacity(0.1)).padding(.horizontal, 24)
                         }
                     }
+                    
+                    Button(action: { navigateToAlbum = album }) {
+                        HStack {
+                            Spacer()
+                            Text("VIEW FULL ALBUM")
+                                .font(.system(size: 10, weight: .black))
+                                .padding(8)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(6)
+                                .foregroundColor(.white)
+                        }
+                        .padding(16)
+                    }
                 }
-                .padding(.vertical, 10)
-                .background(DesignTokens.surfaceLight.opacity(0.3))
+                .background(Color(hexString: "#121212"))
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-                .transition(.asymmetric(
-                    insertion: .opacity.combined(with: .move(edge: .top)),
-                    removal: .opacity
-                ))
+                .padding(.top, 4)
             }
         }
-    }
-}
-
-struct NewTrackRow: View {
-    let track: Track
-    let action: () -> Void
-    @ObservedObject var player = MusicPlayer.shared
-    
-    var body: some View {
-        let isSelected = player.currentTrack?.id == track.id
-        
-        Button(action: action) {
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(track.title)
-                        .font(.system(size: 15, weight: isSelected ? .black : .bold))
-                        .foregroundColor(isSelected ? DesignTokens.accent : DesignTokens.textPrimary)
-                    Text(track.artist)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(DesignTokens.textSecondary.opacity(0.8))
-                }
-                Spacer()
-                Text(track.duration)
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
-            }
-            .padding(.vertical, 14)
-            .padding(.horizontal, 20)
-            .background(isSelected ? DesignTokens.accent.opacity(0.1) : Color.clear)
+        .fullScreenCover(item: $navigateToAlbum) { album in
+            AlbumDetailView(album: album)
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }

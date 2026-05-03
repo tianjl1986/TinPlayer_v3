@@ -1,121 +1,41 @@
 import SwiftUI
 
 struct DesignTokens {
-    // Reactive colors based on theme
-    static var surfaceMain: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#1a1a1a") : Color(hexString: "#e5e5e5")
-    }
+    // 1. Dynamic Backgrounds
+    static let surfaceMain = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#121212") : UIColor(hexString: "#F0F0F0")
+    })
     
-    static var surfaceSecondary: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#0d0d0d") : Color(hexString: "#fafafa")
-    }
+    static let surfaceSecondary = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#000000") : UIColor(hexString: "#FFFFFF")
+    })
     
-    static var surfaceLight: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#262626") : Color(hexString: "#f2f2f2")
-    }
+    // 2. Text Colors
+    static let textPrimary = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
+    })
     
-    static var background: Color { surfaceMain }
+    static let textSecondary = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#8E8E93") : UIColor(hexString: "#666666")
+    })
     
-    // Text Colors
-    static var textPrimary: Color {
-        ThemeManager.shared.isDark ? Color.white : Color(hexString: "#1a1a1a")
-    }
+    static let textActive = Color.blue // Accent color
     
-    static var textSecondary: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#a1a1a1") : Color(hexString: "#808080")
-    }
+    // 3. Specialized Colors for Skeuomorphism
+    static let skeuoShadowLight = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.05) : UIColor.white
+    })
     
-    static var textActive: Color {
-        Color(hexString: "#3b82f6") // Accent remains consistent or slightly adjusted
-    }
-    
-    // Skeuomorphic Shadows - Invert for Dark Mode
-    static var shadowDark: Color {
-        ThemeManager.shared.isDark ? Color.black.opacity(0.8) : Color(hexString: "#b3b3b3")
-    }
-    
-    static var shadowLight: Color {
-        ThemeManager.shared.isDark ? Color.white.opacity(0.1) : Color.white
-    }
-    
-    // Gradients
-    static var vinylGradient: AngularGradient {
-        AngularGradient(
-            gradient: Gradient(stops: [
-                .init(color: Color(hexString: "#1A1A1A"), location: 0),
-                .init(color: Color(hexString: "#4D4D4D"), location: 0.25),
-                .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
-                .init(color: Color(hexString: "#4D4D4D"), location: 0.75),
-                .init(color: Color(hexString: "#1A1A1A"), location: 1)
-            ]),
-            center: .center
-        )
-    }
-    
-    static var spindleGradient: AngularGradient {
-        AngularGradient(
-            gradient: Gradient(stops: [
-                .init(color: Color(hexString: "#999999"), location: 0),
-                .init(color: Color(hexString: "#E5E5E5"), location: 0.25),
-                .init(color: Color(hexString: "#999999"), location: 0.5),
-                .init(color: Color(hexString: "#E5E5E5"), location: 0.75),
-                .init(color: Color(hexString: "#999999"), location: 1)
-            ]),
-            center: .center
-        )
-    }
-
-    static var rollerGradient: LinearGradient {
-        LinearGradient(
-            gradient: Gradient(stops: [
-                .init(color: Color(hexString: "#0D0D0D"), location: 0),
-                .init(color: Color(hexString: "#333333"), location: 0.2),
-                .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
-                .init(color: Color(hexString: "#333333"), location: 0.8),
-                .init(color: Color(hexString: "#0D0D0D"), location: 1)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
+    static let skeuoShadowDark = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.8) : UIColor(hexString: "#D1D9E6")
+    })
 }
 
-extension View {
-    func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
-        self.background(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(DesignTokens.surfaceMain)
-                .shadow(color: DesignTokens.shadowLight, radius: 8, x: -4, y: -4)
-                .shadow(color: DesignTokens.shadowDark, radius: 8, x: 4, y: 4)
-        )
-    }
-    
-    func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {
-        self.background(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(DesignTokens.surfaceMain)
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowDark, lineWidth: 2)
-                        .blur(radius: 4)
-                        .offset(x: 2, y: 2)
-                        .mask(RoundedRectangle(cornerRadius: cornerRadius))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowLight, lineWidth: 2)
-                        .blur(radius: 4)
-                        .offset(x: -2, y: -2)
-                        .mask(RoundedRectangle(cornerRadius: cornerRadius))
-                )
-        )
-    }
-}
-
-extension Color {
-    init(hexString: String) {
+// Helper for Hex Colors
+extension UIColor {
+    convenience init(hexString: String) {
         let hex = hexString.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
+        var int = UInt64()
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch hex.count {
@@ -126,14 +46,8 @@ extension Color {
         case 8: // ARGB (32-bit)
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
-            (a, r, g, b) = (1, 1, 1, 0)
+            (a, r, g, b) = (255, 0, 0, 0)
         }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
+        self.init(red: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: CGFloat(a) / 255)
     }
 }

@@ -1,30 +1,20 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.presentationMode) var presentationMode
     @StateObject private var libraryService = MusicLibraryService.shared
     @ObservedObject private var loc = LocalizationManager.shared
-    @Environment(\.presentationMode) var presentationMode
-    
-    @ObservedObject private var theme = ThemeManager.shared
-    @AppStorage("app_theme") private var appTheme: String = "Light"
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header - Standardized
+            // Header
             AppHeader(
-                title: loc.t("SETTINGS"),
+                title: "SETTINGS",
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
-                    }
-                ),
-                rightItem: AnyView(
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Text(loc.t("DONE"))
-                            .font(.system(size: 14, weight: .black))
-                            .foregroundColor(DesignTokens.textActive)
                     }
                 )
             )
@@ -32,81 +22,107 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
                     
-                    // Section: CLASSIFICATION
+                    // 1. CLASSIFICATION
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(loc.t("CLASSIFICATION"))
+                        Text("CLASSIFICATION")
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
+                            .padding(.horizontal, 4)
                         
                         SkeuoSettingsGroup {
-                            NavigationLink(destination: LibraryShelfView()) {
-                                SkeuoSettingsRow(title: loc.t("By Album"), value: ">", isLink: true, showBackground: false)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            
+                            SkeuoSettingsRow(title: "By Album", value: ">", isLink: true, showBackground: false)
                             Divider().padding(.horizontal, 20)
-                            
-                            NavigationLink(destination: ArtistListView()) {
-                                SkeuoSettingsRow(title: loc.t("By Artist"), value: ">", isLink: true, showBackground: false)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            SkeuoSettingsRow(title: "By Artist", value: ">", isLink: true, showBackground: false)
                         }
                     }
                     
-                    // Section: MEDIA LIBRARY
+                    // 2. MEDIA FOLDERS
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(loc.t("MEDIA LIBRARY"))
+                        Text("MEDIA FOLDERS")
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
+                            .padding(.horizontal, 4)
                         
-                        SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: loc.t("Media Folders"), value: "\(libraryService.mediaFolders.count) \(loc.t("Folders"))", showBackground: false)
-                                .contentShape(Rectangle())
-                            Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: loc.t("Auto-scan on startup"), value: "Enabled", isToggle: true, showBackground: false)
-                                .contentShape(Rectangle())
-                        }
-                    }
-
-                    // Section: APPEARANCE
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(loc.t("GENERAL SETTINGS"))
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(DesignTokens.textSecondary)
-                        
-                        SkeuoSettingsGroup {
-                            Button(action: {
-                                loc.language = (loc.language == "en" ? "zh" : "en")
-                            }) {
-                                SkeuoSettingsRow(title: loc.t("Interface Language"), value: loc.language == "en" ? "English" : "中文", isLink: true, showBackground: false)
-                                    .contentShape(Rectangle())
+                        VStack(spacing: 16) {
+                            ForEach(libraryService.mediaFolders, id: \.self) { folder in
+                                HStack {
+                                    Text(folder)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(DesignTokens.textPrimary)
+                                    Spacer()
+                                    Image(systemName: "minus")
+                                        .font(.system(size: 12, weight: .bold))
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 18)
+                                .background(DesignTokens.surfaceLight)
+                                .cornerRadius(12)
+                                .skeuoRaised(cornerRadius: 12)
                             }
-                            .buttonStyle(PlainButtonStyle())
                             
-                            Divider().padding(.horizontal, 20)
-                            
-                            Button(action: {
-                                theme.currentTheme = (theme.currentTheme == "Light" ? "Dark" : "Light")
-                            }) {
-                                SkeuoSettingsRow(title: loc.t("Theme"), value: loc.t(theme.currentTheme), isLink: true, showBackground: false)
-                                    .contentShape(Rectangle())
+                            Button(action: { /* Add folder logic */ }) {
+                                HStack {
+                                    Text("+ Add Folder")
+                                        .font(.system(size: 14, weight: .heavy))
+                                        .foregroundColor(DesignTokens.textPrimary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 18)
+                                .background(Color(hexString: "#E0E0E0"))
+                                .cornerRadius(12)
+                                .skeuoRaised(cornerRadius: 12)
                             }
-                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
-                    // Danger Zone
-                    Button(action: { /* Reset */ }) {
-                        Text(loc.t("RESET APPLICATION DATA"))
-                            .font(.system(size: 12, weight: .black))
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                            .skeuoRaised(cornerRadius: 16)
+                    // 3. SCANNING OPTIONS
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("SCANNING OPTIONS")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundColor(DesignTokens.textSecondary)
+                            .padding(.horizontal, 4)
+                        
+                        SkeuoSettingsGroup {
+                            SkeuoSettingsRow(title: "Parse .cue sheets", value: "[ ON ]", isLink: true, showBackground: false)
+                            Divider().padding(.horizontal, 20)
+                            SkeuoSettingsRow(title: "Search for .lrc lyrics", value: "[ ON ]", isLink: true, showBackground: false)
+                            Divider().padding(.horizontal, 20)
+                            SkeuoSettingsRow(title: "Auto-scan on startup", value: "[ OFF ]", isLink: false, showBackground: false)
+                        }
                     }
-                    .padding(.top, 20)
+                    
+                    // 4. MAINTENANCE
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("MAINTENANCE")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundColor(DesignTokens.textSecondary)
+                            .padding(.horizontal, 4)
+                        
+                        VStack(spacing: 16) {
+                            Button(action: { libraryService.scanLibrary() }) {
+                                Text("Rescan Now")
+                                    .font(.system(size: 14, weight: .heavy))
+                                    .foregroundColor(DesignTokens.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 18)
+                                    .background(Color(hexString: "#E0E0E0"))
+                                    .cornerRadius(12)
+                                    .skeuoRaised(cornerRadius: 12)
+                            }
+                            
+                            Button(action: { libraryService.clearLibrary() }) {
+                                Text("Clear Library")
+                                    .font(.system(size: 14, weight: .heavy))
+                                    .foregroundColor(DesignTokens.textPrimary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 18)
+                                    .background(Color(hexString: "#E0E0E0"))
+                                    .cornerRadius(12)
+                                    .skeuoRaised(cornerRadius: 12)
+                            }
+                        }
+                    }
                     
                     Spacer(minLength: 100)
                 }
@@ -114,9 +130,7 @@ struct SettingsView: View {
                 .padding(.top, 24)
             }
         }
-        .background(DesignTokens.surfaceLight.ignoresSafeArea())
+        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }
-
-

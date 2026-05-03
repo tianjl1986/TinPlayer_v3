@@ -31,39 +31,38 @@ struct NowPlayingView: View {
                 .frame(height: 360)
                 .padding(.top, 20)
                 
-                // 3. Track Info
-                VStack(spacing: 8) {
+                // 3. Track Info (Left Aligned as per Image 6)
+                VStack(alignment: .leading, spacing: 8) {
                     Text(player.currentTrack?.title ?? "Unknown Title")
-                        .font(.system(size: 24, weight: .black))
+                        .font(.system(size: 28, weight: .bold))
                         .foregroundColor(DesignTokens.textPrimary)
                         .lineLimit(1)
-                        .truncationMode(.tail)
                     
                     Text(player.currentTrack?.artist ?? "Unknown Artist")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(DesignTokens.textSecondary)
                         .lineLimit(1)
-                        .truncationMode(.tail)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 40)
-                .padding(.top, 32)
+                .padding(.top, 40)
                 
                 Spacer(minLength: 20)
                 
-                // 4. Progress Bar
+                // 4. Progress Bar (1:1 Sunken Style)
                 VStack(spacing: 12) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 12) {
                         Text(formatDuration(player.currentTime))
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundColor(DesignTokens.textSecondary)
-                            .frame(width: 45, alignment: .leading)
+                            .frame(width: 50, alignment: .leading)
                         
                         progressBar
                         
                         Text(formatDuration(player.duration))
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundColor(DesignTokens.textSecondary)
-                            .frame(width: 45, alignment: .trailing)
+                            .frame(width: 50, alignment: .trailing)
                     }
                 }
                 .padding(.horizontal, 32)

@@ -30,6 +30,7 @@ class MusicPlayer: ObservableObject {
     @Published var currentTrackLyrics: [LyricLine] = []
     @Published var currentLyricIndex: Int = 0
     @Published var isSearchingLyrics: Bool = false
+    @Published var showNowPlaying: Bool = false
     
     init() {
         setupAudioSession()

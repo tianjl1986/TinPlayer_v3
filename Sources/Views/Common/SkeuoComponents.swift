@@ -58,18 +58,18 @@ struct AlbumCard: View {
     let album: Album
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             ZStack {
                 if let cover = album.coverImage {
                     Image(uiImage: cover)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 140, height: 140)
-                        .cornerRadius(16)
+                        .frame(width: 155, height: 155)
+                        .cornerRadius(8)
                 } else {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 8)
                         .fill(DesignTokens.surfaceMain)
-                        .frame(width: 140, height: 140)
+                        .frame(width: 155, height: 155)
                         .overlay(
                             Image(systemName: "music.note")
                                 .font(.system(size: 40))
@@ -77,22 +77,22 @@ struct AlbumCard: View {
                         )
                 }
             }
-            .skeuoRaised(cornerRadius: 16)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
-                    .font(.system(size: 14, weight: .black))
+                    .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .lineLimit(1)
                 
                 Text(album.artist)
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
                     .lineLimit(1)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, 2)
         }
-        .frame(width: 140)
+        .frame(width: 155)
     }
 }
 
@@ -157,6 +157,30 @@ struct TypewriterText: View {
     private func stopTypewriter() {
         timer?.invalidate()
         timer = nil
+    }
+}
+
+extension View {
+    func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
+        self.shadow(color: DesignTokens.skeuoShadowDark, radius: 10, x: 6, y: 6)
+            .shadow(color: DesignTokens.skeuoShadowLight, radius: 10, x: -6, y: -6)
+    }
+    
+    func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {
+        self.overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(DesignTokens.skeuoShadowDark, lineWidth: 4)
+                .blur(radius: 4)
+                .offset(x: 2, y: 2)
+                .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(DesignTokens.skeuoShadowLight, lineWidth: 4)
+                .blur(radius: 4)
+                .offset(x: -2, y: -2)
+                .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black]), startPoint: .topLeading, endPoint: .bottomTrailing)))
+        )
     }
 }
 

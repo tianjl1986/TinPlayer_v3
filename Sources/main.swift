@@ -8,6 +8,9 @@ struct SkeuoPlayerApp: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .fullScreenCover(isPresented: $musicPlayer.showNowPlaying) {
+                    NowPlayingView()
+                }
                 .environmentObject(musicPlayer)
                 .environmentObject(libraryService)
                 .environmentObject(localizationManager)
