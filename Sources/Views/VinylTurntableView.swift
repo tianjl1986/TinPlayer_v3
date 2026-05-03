@@ -58,19 +58,28 @@ struct VinylTurntableView: View {
                     // Center Spindle Piece
                     Image("spindle_light")
                         .resizable()
-                        .frame(width: 20, height: 20)
+                        .frame(width: 24, height: 24)
                 }
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm (Placed over the record)
-            Image("tonearm_light")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 180)
-                .rotationEffect(.degrees(player.isPlaying ? -25 : -45), anchor: .topTrailing)
-                .offset(x: 100, y: -60)
-                .animation(.spring(response: 0.8, dampingFraction: 0.7), value: player.isPlaying)
+            // 3. Tonearm Assembly
+            ZStack {
+                // Arm Base (Top Right)
+                Image("arm_base_light")
+                    .resizable()
+                    .frame(width: 80, height: 80)
+                    .offset(x: 120, y: -120)
+                
+                // Tonearm
+                Image("tonearm_light")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 200)
+                    .rotationEffect(.degrees(player.isPlaying ? -25 : -45), anchor: .topTrailing)
+                    .offset(x: 110, y: -80)
+                    .animation(.spring(response: 0.8, dampingFraction: 0.7), value: player.isPlaying)
+            }
         }
         .onAppear {
             if player.isPlaying {

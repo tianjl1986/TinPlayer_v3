@@ -29,27 +29,50 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 40) {
                     
-                    // Section 1: MEDIA LIBRARY - 9904:14864
+                    // Section 0: CLASSIFICATION
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("MEDIA LIBRARY")
-                            .font(.system(size: 12, weight: .black))
+                        Text("CLASSIFICATION")
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(DesignTokens.textSecondary)
                         
-                        VStack(spacing: 12) {
-                            SkeuoSettingsRow(title: "Media Folders", value: "\(libraryService.mediaFolders.count) Folders")
-                            SkeuoSettingsRow(title: "Auto Scan Library", value: "Enabled", isToggle: true)
+                        SkeuoSettingsGroup {
+                            NavigationLink(destination: LibraryShelfView()) {
+                                SkeuoSettingsRow(title: "By Album", value: ">", isLink: true, showBackground: false)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            Divider().padding(.horizontal, 20)
+                            
+                            NavigationLink(destination: ArtistListView()) {
+                                SkeuoSettingsRow(title: "By Artist", value: ">", isLink: true, showBackground: false)
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
-                    // Section 2: AUDIO ENGINE - 9904:14865
+                    // Section 1: MEDIA LIBRARY
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("AUDIO ENGINE")
-                            .font(.system(size: 12, weight: .black))
+                        Text("MEDIA LIBRARY")
+                            .font(.system(size: 12, weight: .bold))
                             .foregroundColor(DesignTokens.textSecondary)
                         
-                        VStack(spacing: 12) {
-                            SkeuoSettingsRow(title: "Graphic Equalizer", value: "Flat >", isLink: true)
-                            SkeuoSettingsRow(title: "Resampling Mode", value: "SoX High", isLink: true)
+                        SkeuoSettingsGroup {
+                            SkeuoSettingsRow(title: "Media Folders", value: "\(libraryService.mediaFolders.count) Folders", showBackground: false)
+                            Divider().padding(.horizontal, 20)
+                            SkeuoSettingsRow(title: "Auto Scan Library", value: "Enabled", isToggle: true, showBackground: false)
+                        }
+                    }
+                    
+                    // Section 2: AUDIO ENGINE
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("AUDIO ENGINE")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(DesignTokens.textSecondary)
+                        
+                        SkeuoSettingsGroup {
+                            SkeuoSettingsRow(title: "Graphic Equalizer", value: "Flat >", isLink: true, showBackground: false)
+                            Divider().padding(.horizontal, 20)
+                            SkeuoSettingsRow(title: "Resampling Mode", value: "SoX High", isLink: true, showBackground: false)
                         }
                     }
                     
@@ -75,11 +98,29 @@ struct SettingsView: View {
     }
 }
 
+struct SkeuoSettingsGroup<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            content
+        }
+        .background(DesignTokens.surfaceMain)
+        .cornerRadius(16)
+        .skeuoRaised(cornerRadius: 16)
+    }
+}
+
 struct SkeuoSettingsRow: View {
     let title: String
     let value: String
     var isToggle: Bool = false
     var isLink: Bool = false
+    var showBackground: Bool = true
     
     var body: some View {
         HStack {
@@ -107,11 +148,15 @@ struct SkeuoSettingsRow: View {
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 18)
+        .padding(.vertical, 14) // 14 + 14 + 20 (approx text height) = 48
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(DesignTokens.surfaceMain)
-                .skeuoRaised(cornerRadius: 16)
+            Group {
+                if showBackground {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(DesignTokens.surfaceMain)
+                        .skeuoRaised(cornerRadius: 16)
+                }
+            }
         )
     }
 }

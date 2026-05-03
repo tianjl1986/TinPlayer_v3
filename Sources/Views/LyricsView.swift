@@ -26,11 +26,11 @@ struct LyricsView: View {
             
             // 2. Typewriter Area
             ZStack(alignment: .top) {
-                // Paper
+                // Paper - 9885:14798
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 28) {
-                            Spacer(minLength: 140)
+                        VStack(alignment: .leading, spacing: 32) {
+                            Spacer(minLength: 120)
                             
                             if player.currentTrackLyrics.isEmpty {
                                 Text("NO LYRICS FOUND")
@@ -47,10 +47,10 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 300)
+                            Spacer(minLength: 240)
                         }
-                        .frame(width: paperWidth - 60, alignment: .leading)
-                        .padding(.horizontal, 30)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 32)
                         .background(Color.white)
                     }
                     .onChange(of: player.currentLyricIndex) { newIndex in
@@ -59,57 +59,57 @@ struct LyricsView: View {
                         }
                     }
                 }
-                .frame(width: paperWidth)
+                .frame(width: 335) // Figma paper width
                 .background(Color.white)
-                .skeuoRaised(cornerRadius: 0)
-                .offset(y: 30)
+                .skeuoRaised(cornerRadius: 4)
+                .offset(y: 20)
                 .zIndex(0)
                 
-                // Roller Assembly
+                // Roller Assembly - Static
                 HStack(spacing: 0) {
                     Image("knob_light")
                         .resizable()
-                        .frame(width: knobSize.width, height: knobSize.height)
-                        .offset(x: -12)
+                        .frame(width: 56, height: 56)
+                        .offset(x: -16)
                     
                     Image("roller_light")
                         .resizable()
-                        .frame(height: rollerHeight)
+                        .frame(height: 48)
                     
                     Image("knob_light")
                         .resizable()
-                        .frame(width: knobSize.width, height: knobSize.height)
-                        .offset(x: 12)
+                        .frame(width: 56, height: 56)
+                        .offset(x: 16)
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 10)
                 .zIndex(1)
             }
             .frame(maxHeight: .infinity)
             
-            // 3. Spacing and Controls
-            VStack(spacing: 36) {
-                // Progress Bar
-                VStack(spacing: 8) {
+            // 3. Spacing and Controls - Standardized Gaps
+            VStack(spacing: 32) {
+                // Progress Bar - Sunken
+                VStack(spacing: 12) {
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: 6)
                                 .fill(Color.black.opacity(0.1))
                                 .frame(height: 8)
-                                .skeuoSunken(cornerRadius: 4)
+                                .skeuoSunken(cornerRadius: 6)
                             
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(DesignTokens.textPrimary.opacity(0.7))
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(DesignTokens.textActive)
                                 .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
                         }
                     }
                     .frame(height: 8)
                 }
-                .padding(.horizontal, 40)
+                .padding(.horizontal, 48)
                 
                 BottomControlsView()
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 32)
             }
-            .padding(.top, 24)
+            .padding(.top, 32)
             .background(DesignTokens.surfaceMain)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
@@ -122,30 +122,38 @@ struct TypewriterText: View {
     @State private var revealedCharacters: Int = 0
     
     var body: some View {
-        Text(isCurrent ? String(text.prefix(revealedCharacters)) : text)
-            .font(.system(size: 16, weight: isCurrent ? .black : .bold, design: .monospaced))
-            .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary.opacity(0.4))
-            .fixedSize(horizontal: false, vertical: true)
-            .multilineTextAlignment(.leading) // Ensure leading alignment
-            .onAppear {
-                if isCurrent {
-                    animate()
-                }
+        HStack {
+            Text(isCurrent ? String(text.prefix(revealedCharacters)) : text)
+                .font(.system(size: 16, weight: isCurrent ? .black : .bold, design: .monospaced))
+                .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary.opacity(0.4))
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onAppear {
+            if isCurrent {
+                revealedCharacters = 0
+                animate()
             }
-            .onChange(of: isCurrent) { current in
-                if current {
-                    revealedCharacters = 0
-                    animate()
-                }
+        }
+        .onChange(of: isCurrent) { current in
+            if current {
+                revealedCharacters = 0
+                animate()
             }
+        }
     }
     
     private func animate() {
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
-            if revealedCharacters < text.count {
-                revealedCharacters += 1
-            } else {
-                timer.invalidate()
+        // Reset timer or just use a task
+        Task {
+            for i in 0...text.count {
+                if !isCurrent { break }
+                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05s
+                await MainActor.run {
+                    revealedCharacters = i
+                }
             }
         }
     }

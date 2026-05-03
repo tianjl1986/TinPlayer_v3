@@ -72,40 +72,49 @@ struct AlbumShelfSpine: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Spine Header - White background as requested
+            // Spine Header - Blurred background as requested
             Button(action: onTap) {
-                HStack(spacing: 16) {
+                ZStack {
+                    // Background: Blurred Cover
                     if let cover = album.coverImage {
                         Image(uiImage: cover)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 48, height: 48)
-                            .cornerRadius(6)
+                            .frame(height: 80)
+                            .blur(radius: 20)
+                            .overlay(Color.black.opacity(0.4))
+                            .clipped()
                     } else {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(DesignTokens.shadowDark.opacity(0.2))
-                            .frame(width: 48, height: 48)
+                        Color.black.opacity(0.8)
                     }
                     
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(album.title.uppercased())
-                            .font(.system(size: 15, weight: .black))
-                            .foregroundColor(DesignTokens.textPrimary)
-                        Text(album.artist.uppercased())
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(DesignTokens.textSecondary)
+                    // Glossy Overlay (Optional, for extra skeuo feel)
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    
+                    HStack(spacing: 16) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(album.title.uppercased())
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                            Text(album.artist.uppercased())
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(DesignTokens.textSecondary)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    .padding(.horizontal, 24)
                 }
-                .padding(.horizontal, 20)
                 .frame(height: 80)
-                .background(Color.white) // Changed to white as requested
                 .cornerRadius(12)
                 .skeuoRaised(cornerRadius: 12)
             }
@@ -115,19 +124,20 @@ struct AlbumShelfSpine: View {
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(album.tracks) { track in
-                        Button(action: { onPlayTrack(track) }) {
+                        NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track, in: album.tracks) }) {
                             HStack {
                                 Text(track.title)
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DesignTokens.textPrimary)
                                 Spacer()
-                                Text(track.duration)
-                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                Text(formatDuration(track.duration))
+                                    .font(.system(size: 12, design: .monospaced))
                                     .foregroundColor(DesignTokens.textSecondary)
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 16)
-                            .background(Color.black.opacity(0.02))
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
+                            .background(DesignTokens.surfaceLight.opacity(0.5))
+                            .cornerRadius(8)
                         }
                         .buttonStyle(PlainButtonStyle())
                         
@@ -149,5 +159,11 @@ struct AlbumShelfSpine: View {
                 .zIndex(0)
             }
         }
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let mins = Int(duration) / 60
+        let secs = Int(duration) % 60
+        return String(format: "%02d:%02d", mins, secs)
     }
 }
