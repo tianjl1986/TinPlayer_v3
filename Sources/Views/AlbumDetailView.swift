@@ -8,7 +8,7 @@ struct AlbumDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar
+            // 1. Top Bar - Standardized (Internal padding is sufficient)
             AppHeader(
                 title: album.title,
                 leftItem: AnyView(
@@ -19,7 +19,6 @@ struct AlbumDetailView: View {
                     }
                 )
             )
-            .padding(.horizontal, 24)
             
             // Hidden NavigationLink for programmatic navigation
             NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
@@ -55,11 +54,13 @@ struct AlbumDetailView: View {
                                 .font(.system(size: 24, weight: .black))
                                 .foregroundColor(DesignTokens.textPrimary)
                                 .multilineTextAlignment(.center)
+                                .lineLimit(2)
                             
                             Text(album.artist)
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(DesignTokens.textSecondary)
                         }
+                        .padding(.horizontal, 40)
                         
                         // Play Buttons
                         HStack(spacing: 16) {
@@ -116,6 +117,9 @@ struct AlbumDetailView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil // Disable page entrance jitter
+        }
     }
 }
 
@@ -135,6 +139,7 @@ struct AlbumTrackRow: View {
                 Text(track.title)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(isSelected ? DesignTokens.textActive : DesignTokens.textPrimary)
+                    .lineLimit(1)
                 
                 Spacer()
                 

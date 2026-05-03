@@ -10,6 +10,7 @@ struct ArtistListView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            // Standardized Header
             AppHeader(
                 title: "ARTISTS",
                 leftItem: AnyView(
@@ -20,7 +21,6 @@ struct ArtistListView: View {
                     }
                 )
             )
-            .padding(.horizontal, 24)
             
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
@@ -39,6 +39,7 @@ struct ArtistListView: View {
                                 Text(artist.uppercased())
                                     .font(.system(size: 16, weight: .black))
                                     .foregroundColor(DesignTokens.textPrimary)
+                                    .lineLimit(1)
                                 
                                 Spacer()
                                 
@@ -64,6 +65,9 @@ struct ArtistListView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil
+        }
     }
 }
 
@@ -78,6 +82,7 @@ struct ArtistDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
+            // Standardized Header
             AppHeader(
                 title: artist.uppercased(),
                 leftItem: AnyView(
@@ -88,7 +93,6 @@ struct ArtistDetailView: View {
                     }
                 )
             )
-            .padding(.horizontal, 24)
             
             ScrollView(showsIndicators: false) {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
@@ -104,5 +108,8 @@ struct ArtistDetailView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil
+        }
     }
 }

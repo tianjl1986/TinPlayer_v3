@@ -15,7 +15,7 @@ struct SettingsView: View {
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 ),
@@ -122,68 +122,8 @@ struct SettingsView: View {
         }
         .background(DesignTokens.surfaceLight.ignoresSafeArea())
         .navigationBarHidden(true)
-    }
-}
-
-struct SkeuoSettingsGroup<Content: View>: View {
-    let content: Content
-    
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            content
+        .transaction { transaction in
+            transaction.animation = nil
         }
-        .background(DesignTokens.surfaceMain)
-        .cornerRadius(16)
-        .skeuoRaised(cornerRadius: 16)
-    }
-}
-
-struct SkeuoSettingsRow: View {
-    let title: String
-    let value: String
-    var isToggle: Bool = false
-    var isLink: Bool = false
-    var showBackground: Bool = true
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(DesignTokens.textPrimary)
-            
-            Spacer()
-            
-            if isToggle {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(DesignTokens.textActive)
-                    .frame(width: 44, height: 24)
-                    .overlay(
-                        Circle()
-                            .fill(Color.white)
-                            .padding(2)
-                            .offset(x: 10)
-                    )
-                    .skeuoSunken(cornerRadius: 14)
-            } else {
-                Text(value)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(DesignTokens.textSecondary)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14) // 14 + 14 + 20 (approx text height) = 48
-        .background(
-            Group {
-                if showBackground {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(DesignTokens.surfaceMain)
-                        .skeuoRaised(cornerRadius: 16)
-                }
-            }
-        )
     }
 }

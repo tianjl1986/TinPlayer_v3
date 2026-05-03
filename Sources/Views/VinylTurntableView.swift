@@ -5,11 +5,14 @@ struct VinylTurntableView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @State private var rotation: Double = 0
     
-    // Geometry constants based on assets - Adjusted for iPhone 14 Pro (393 width)
-    private let baseSize: CGFloat = 335 // Fits within 393 with 29 padding on each side
+    // Geometry constants based on assets - Adjusted for iPhone 14 Pro
+    private let baseSize: CGFloat = 335
     private let platterSize: CGFloat = 280
     private let recordSize: CGFloat = 260
     private let labelSize: CGFloat = 80
+    
+    // Timer for smooth rotation
+    private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -24,7 +27,6 @@ struct VinylTurntableView: View {
                 .aspectRatio(contentMode: .fill)
                 .frame(width: baseSize, height: baseSize)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
-                .animation(nil, value: rotation) // Prevent base from participating in animation
             
             // 2. Rotating Platter & Record
             ZStack {
@@ -69,36 +71,23 @@ struct VinylTurntableView: View {
                 }
                 .rotationEffect(.degrees(rotation))
             }
-            .animation(nil, value: rotation) // Ensure only rotationEffect uses the animation
             
             // 3. Tonearm Assembly
             ZStack {
                 Image("tonearm_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 200) // Shrunk to fit better
+                    .frame(width: 170) // Further shrunken to match design
                     .rotationEffect(.degrees(player.isPlaying ? -15 : -40), anchor: .init(x: 0.85, y: 0.15))
-                    .offset(x: 90, y: -60)
+                    .offset(x: 85, y: -65)
                     .animation(.spring(response: 0.6, dampingFraction: 0.7), value: player.isPlaying)
             }
         }
         .frame(width: baseSize, height: baseSize)
-        .onAppear {
+        .onReceive(timer) { _ in
             if player.isPlaying {
-                startRotation()
+                rotation += 1.5 // Rotate 1.5 degrees every 0.05s
             }
-        }
-        .onChange(of: player.isPlaying) { isPlaying in
-            if isPlaying {
-                startRotation()
-            }
-        }
-    }
-    
-    private func startRotation() {
-        // Use animation only for the rotation state
-        withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
-            rotation += 360
         }
     }
 }

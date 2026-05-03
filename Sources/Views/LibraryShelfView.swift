@@ -9,7 +9,7 @@ struct LibraryShelfView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar - Fixed padding to avoid "too centered" buttons
+            // 1. Top Bar - Standardized
             AppHeader(
                 title: "MY COLLECTION",
                 leftItem: AnyView(
@@ -22,7 +22,7 @@ struct LibraryShelfView: View {
                 rightItem: AnyView(
                     NavigationLink(destination: LibraryGridView()) {
                         Image(systemName: "square.grid.2x2.fill")
-                            .font(.system(size: 18))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
@@ -60,6 +60,9 @@ struct LibraryShelfView: View {
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil // Disable root entrance jitter
+        }
     }
 }
 
@@ -88,12 +91,12 @@ struct AlbumShelfSpine: View {
                 headerContent
             }
             .frame(height: 80)
-            .contentShape(Rectangle()) // Ensure the whole area is clickable
+            .contentShape(Rectangle())
             .cornerRadius(12)
             .skeuoRaised(cornerRadius: 12)
         }
         .buttonStyle(PlainButtonStyle())
-        .zIndex(10) // Keep header above its own list
+        .zIndex(10)
     }
     
     @ViewBuilder
@@ -125,9 +128,11 @@ struct AlbumShelfSpine: View {
                 Text(album.title.uppercased())
                     .font(.system(size: 16, weight: .black))
                     .foregroundColor(.white)
+                    .lineLimit(1)
                 Text(album.artist.uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
             }
             
             Spacer()
@@ -153,7 +158,7 @@ struct AlbumShelfSpine: View {
         }
         .background(DesignTokens.surfaceLight.opacity(0.8))
         .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-        .padding(.top, -10) // Reduced overlap
+        .padding(.top, -10)
         .transition(.asymmetric(
             insertion: .move(edge: .top).combined(with: .opacity),
             removal: .move(edge: .top).combined(with: .opacity)
@@ -184,6 +189,7 @@ struct TrackRowView: View {
                 Text(track.title)
                     .font(.system(size: 14, weight: isSelected ? .bold : .medium))
                     .foregroundColor(isSelected ? DesignTokens.textActive : DesignTokens.textPrimary)
+                    .lineLimit(1)
                 
                 Spacer()
                 

@@ -12,27 +12,26 @@ struct NowPlayingView: View {
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 ),
                 rightItem: AnyView(
                     Button(action: { /* More */ }) {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
             )
             
-            // 2. Turntable Area - Fixed container to prevent growing animation
+            // 2. Turntable Area
             VStack {
                 Spacer(minLength: 0)
                 VinylTurntableView()
-                    .padding(.horizontal, 24)
                 Spacer(minLength: 0)
             }
-            .frame(height: 380) // Lock height to prevent jitter
+            .frame(height: 380)
             
             // 3. Track Info
             VStack(spacing: 8) {
@@ -51,19 +50,21 @@ struct NowPlayingView: View {
             
             Spacer(minLength: 20)
             
-            // 4. Progress Bar
-            VStack(spacing: 12) {
-                HStack {
-                    Text(formatDuration(player.currentTime))
-                    Spacer()
-                    Text(formatDuration(player.duration))
-                }
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundColor(DesignTokens.textSecondary)
+            // 4. Progress Bar with Times on Sides
+            HStack(spacing: 12) {
+                Text(formatDuration(player.currentTime))
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .frame(width: 40, alignment: .leading)
                 
                 progressBar
+                
+                Text(formatDuration(player.duration))
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    .frame(width: 40, alignment: .trailing)
             }
-            .padding(.horizontal, 48)
+            .padding(.horizontal, 32)
             
             Spacer(minLength: 40)
             
@@ -74,18 +75,19 @@ struct NowPlayingView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil // Disable layout gathering animation
+        }
     }
     
     private var progressBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                // Track: Sunken
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.black.opacity(0.1))
                     .frame(height: 8)
                     .skeuoSunken(cornerRadius: 6)
                 
-                // Fill: Slanted / Vivid
                 RoundedRectangle(cornerRadius: 6)
                     .fill(
                         LinearGradient(

@@ -4,50 +4,42 @@ struct HomeView: View {
     @StateObject private var player = MusicPlayer.shared
     @StateObject private var libraryService = MusicLibraryService.shared
     
+    @AppStorage("app_language") private var appLanguage: String = "English"
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // 1. Top Bar - 9904:14862
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("SKEUOPLAYER")
-                            .font(.system(size: 24, weight: .black))
-                            .foregroundColor(DesignTokens.textPrimary)
-                    }
-                    Spacer()
-                    NavigationLink(destination: SettingsView()) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(DesignTokens.textPrimary)
-                            .padding(12)
-                            .background(DesignTokens.surfaceMain)
-                            .clipShape(Circle())
-                            .skeuoRaised(cornerRadius: 20)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 32)
+                // Standardized Header for consistency with other views
+                AppHeader(
+                    title: "SKEUOPLAYER",
+                    rightItem: AnyView(
+                        NavigationLink(destination: SettingsView()) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(DesignTokens.textPrimary)
+                        }
+                    )
+                )
                 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 40) {
                         
                         // Section 0: CLASSIFICATION
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("CLASSIFICATION")
+                            Text(appLanguage == "English" ? "CLASSIFICATION" : "分类")
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(DesignTokens.textSecondary)
                             
                             SkeuoSettingsGroup {
                                 NavigationLink(destination: LibraryShelfView()) {
-                                    SkeuoSettingsRow(title: "By Album", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: appLanguage == "English" ? "By Album" : "按专辑", value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
                                 Divider().padding(.horizontal, 20)
                                 
                                 NavigationLink(destination: ArtistListView()) {
-                                    SkeuoSettingsRow(title: "By Artist", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: appLanguage == "English" ? "By Artist" : "按歌手", value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
@@ -55,25 +47,26 @@ struct HomeView: View {
                         
                         // Section 1: MEDIA LIBRARY (Quick Access)
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("MEDIA LIBRARY")
+                            Text(appLanguage == "English" ? "MEDIA LIBRARY" : "媒体库")
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(DesignTokens.textSecondary)
                             
                             SkeuoSettingsGroup {
                                 NavigationLink(destination: LibraryShelfView()) {
-                                    SkeuoSettingsRow(title: "Browse All Music", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: appLanguage == "English" ? "Browse All Music" : "浏览所有音乐", value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
                                 Divider().padding(.horizontal, 20)
                                 
-                                SkeuoSettingsRow(title: "Recently Added", value: "12 New", showBackground: false)
+                                SkeuoSettingsRow(title: appLanguage == "English" ? "Recently Added" : "最近添加", value: "12 New", showBackground: false)
                             }
                         }
                         
                         Spacer(minLength: 50)
                     }
                     .padding(.horizontal, 32)
+                    .padding(.top, 24)
                 }
                 
                 // Mini Player
@@ -86,6 +79,9 @@ struct HomeView: View {
             }
             .background(DesignTokens.surfaceLight.ignoresSafeArea())
             .navigationBarHidden(true)
+            .transaction { transaction in
+                transaction.animation = nil
+            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }

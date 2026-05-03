@@ -4,20 +4,20 @@ struct LyricsView: View {
     @StateObject private var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
     
-    // Figma 1:1 几何参数
-    private let rollerHeight: CGFloat = 50
-    private let knobSize: CGSize = CGSize(width: 64, height: 64)
+    // 🚀 Figma 1:1 精确几何参数
+    private let rollerHeight: CGFloat = 54
+    private let knobSize: CGSize = CGSize(width: 72, height: 72)
     private let paperWidth: CGFloat = 340
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header - Standardized
+            // 1. Header - Standardized with Library View
             AppHeader(
                 title: "LYRICS",
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
@@ -25,7 +25,7 @@ struct LyricsView: View {
             
             // 2. Typewriter Area
             ZStack(alignment: .top) {
-                // Paper - 9885:14798
+                // Paper
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 32) {
@@ -46,7 +46,7 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 400) // Ensure enough scroll space at bottom
+                            Spacer(minLength: 400)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
@@ -62,10 +62,10 @@ struct LyricsView: View {
                 .background(Color.white)
                 .cornerRadius(4)
                 .skeuoRaised(cornerRadius: 4)
-                .offset(y: 35) // Align with roller
+                .offset(y: 36)
                 .zIndex(0)
                 
-                // Roller Assembly - Use GeometryReader to avoid squeezing
+                // Roller Assembly - Aspect Ratio Corrected
                 GeometryReader { rollerGeo in
                     HStack(spacing: 0) {
                         Image("knob_light")
@@ -75,8 +75,8 @@ struct LyricsView: View {
                         
                         Image("roller_light")
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: rollerGeo.size.width - 128, height: rollerHeight)
+                            .aspectRatio(contentMode: .fill) // Fill to preserve texture aspect
+                            .frame(width: rollerGeo.size.width - (knobSize.width * 2), height: rollerHeight)
                             .clipped()
                         
                         Image("knob_light")
@@ -84,28 +84,31 @@ struct LyricsView: View {
                             .aspectRatio(contentMode: .fit)
                             .frame(width: knobSize.width, height: knobSize.height)
                     }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(height: 64)
+                .frame(height: knobSize.height)
                 .padding(.horizontal, 10)
                 .zIndex(1)
             }
             .frame(maxHeight: .infinity)
             
-            // 3. Spacing and Controls - Matches NowPlayingView
+            // 3. Spacing and Controls
             VStack(spacing: 24) {
-                // Progress Bar with Times
-                VStack(spacing: 12) {
-                    HStack {
-                        Text(formatDuration(player.currentTime))
-                        Spacer()
-                        Text(formatDuration(player.duration))
-                    }
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
+                // Progress Bar with Times on Sides
+                HStack(spacing: 12) {
+                    Text(formatDuration(player.currentTime))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 40, alignment: .leading)
                     
                     progressBar
+                    
+                    Text(formatDuration(player.duration))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 40, alignment: .trailing)
                 }
-                .padding(.horizontal, 48)
+                .padding(.horizontal, 32)
                 
                 BottomControlsView()
                     .padding(.bottom, 40)
@@ -115,6 +118,9 @@ struct LyricsView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .transaction { transaction in
+            transaction.animation = nil // Disable entrance jitter
+        }
     }
     
     private var progressBar: some View {
@@ -131,47 +137,5 @@ struct LyricsView: View {
             }
         }
         .frame(height: 8)
-    }
-}
-
-struct TypewriterText: View {
-    let text: String
-    let isCurrent: Bool
-    @State private var revealedCharacters: Int = 0
-    
-    var body: some View {
-        HStack {
-            Text(isCurrent ? String(text.prefix(revealedCharacters)) : text)
-                .font(.system(size: 16, weight: isCurrent ? .black : .bold, design: .monospaced))
-                .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary.opacity(0.4))
-                .multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .onAppear {
-            if isCurrent {
-                revealedCharacters = 0
-                animate()
-            }
-        }
-        .onChange(of: isCurrent) { current in
-            if current {
-                revealedCharacters = 0
-                animate()
-            }
-        }
-    }
-    
-    private func animate() {
-        Task {
-            for i in 0...text.count {
-                if !isCurrent { break }
-                try? await Task.sleep(nanoseconds: 50_000_000) // 0.05s
-                await MainActor.run {
-                    revealedCharacters = i
-                }
-            }
-        }
     }
 }
