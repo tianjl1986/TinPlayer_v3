@@ -3,6 +3,7 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var player = MusicPlayer.shared
     @ObservedObject var theme = ThemeManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @Binding var showLyrics: Bool
     @State private var knobRotation: Double = 0
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
@@ -17,7 +18,7 @@ struct LyricsView: View {
             VStack(spacing: 0) {
                 // 1. Header - Standardized with Dropdown Arrow
                 AppHeader(
-                    title: "LYRICS",
+                    title: loc.t("LYRICS"),
                     leftItem: AnyView(
                         Button(action: { showLyrics = false }) {
                             Image(systemName: "chevron.down")
@@ -57,7 +58,7 @@ struct LyricsView: View {
                                     }
                                 }
                                 
-                                Spacer(minLength: 120) // Reduced to avoid too much scrolling at bottom
+                                Spacer(minLength: 200) // 🚀 Extra bottom padding to avoid clipping
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 28)
@@ -83,24 +84,27 @@ struct LyricsView: View {
                     .padding(.bottom, 20) // Ensure bottom is not clipped
                     .zIndex(1)
                     
-                    // Roller Assembly - Fixed geometry 1:1
-                    HStack(spacing: -8) { // Overlap for tight mechanical look
-                        knobView
-                        
+                    // Roller Assembly - Fully Responsive 1:1
+                    ZStack {
+                        // The Roller Bar (Metallic Cylinder)
                         ZStack {
                             Image(theme.isDark ? "roller_dark" : "roller_light")
                                 .resizable()
-                                .frame(width: paperWidth, height: rollerHeight)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                                .skeuoRaised(cornerRadius: 4)
+                                .frame(width: fullGeo.size.width, height: knobSize)
                             
                             DesignTokens.rollerGradient
-                                .frame(width: paperWidth, height: rollerHeight)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                .frame(width: fullGeo.size.width, height: knobSize)
                                 .opacity(0.4)
                         }
+                        .skeuoRaised(cornerRadius: 4)
                         
-                        knobView
+                        // Left Knob
+                        HStack {
+                            knobView
+                            Spacer()
+                            knobView
+                        }
+                        .padding(.horizontal, 0)
                     }
                     .frame(width: fullGeo.size.width)
                     .offset(y: 10)
@@ -141,7 +145,6 @@ struct LyricsView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: knobSize, height: knobSize)
-            .skeuoRaised(cornerRadius: knobSize/2)
     }
     
     private var progressBar: some View {

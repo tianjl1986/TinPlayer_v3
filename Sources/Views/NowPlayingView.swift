@@ -3,6 +3,7 @@ import SwiftUI
 struct NowPlayingView: View {
     @ObservedObject var player = MusicPlayer.shared
     @ObservedObject var theme = ThemeManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @Environment(\.presentationMode) var presentationMode
     @State private var showLyrics = false
     
@@ -13,7 +14,7 @@ struct NowPlayingView: View {
             VStack(spacing: 0) {
                 // 1. Header - Standardized
                 AppHeader(
-                    title: player.currentTrack?.title ?? "NOW PLAYING",
+                    title: loc.t("NOW PLAYING"),
                     leftItem: AnyView(
                         Button(action: { presentationMode.wrappedValue.dismiss() }) {
                             Image(systemName: "chevron.left")

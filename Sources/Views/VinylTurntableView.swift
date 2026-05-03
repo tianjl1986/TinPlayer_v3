@@ -12,7 +12,8 @@ struct VinylTurntableView: View {
     private let platterSize: CGFloat = 310
     private let recordSize: CGFloat = 290
     private let labelSize: CGFloat = 64
-    private let tonearmWidth: CGFloat = 90
+    private let tonearmWidth: CGFloat = 140
+    private let tonearmPivotOffset: CGFloat = 32
     
     // Timer for smooth rotation
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -86,11 +87,11 @@ struct VinylTurntableView: View {
             
             // 3. Tonearm Assembly (Coaxial Alignment)
             ZStack {
-                // Metallic Base
-                Circle()
-                    .fill(DesignTokens.spindleGradient)
-                    .frame(width: 44, height: 44)
-                    .skeuoRaised(cornerRadius: 22)
+                // Tonearm Base Image
+                Image(theme.isDark ? "arm_base_dark" : "arm_base_light")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 64, height: 64)
                 
                 // Tonearm Image (Aligned Pivot)
                 Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
@@ -99,10 +100,10 @@ struct VinylTurntableView: View {
                     .frame(width: tonearmWidth)
                     // 🚀 精确对准：通过 anchor 和 offset 确保图片中的圆心与底座圆心重合
                     .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.22))
-                    .offset(y: 36) // 将图片中的圆心位置下移到组件中心
+                    .offset(y: tonearmPivotOffset) // 将图片中的圆心位置下移到组件中心
                     .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
             }
-            .offset(x: 135, y: -135)
+            .offset(x: 130, y: -130) // 🚀 45-degree diagonal placement
         }
         .frame(width: baseSize, height: baseSize)
         .onReceive(timer) { _ in

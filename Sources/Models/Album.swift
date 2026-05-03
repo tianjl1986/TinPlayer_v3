@@ -2,15 +2,15 @@ import Foundation
 import UIKit
 
 struct Track: Identifiable, Equatable {
-    let id: UUID
+    let id: String
     let title: String
     let artist: String
     let fileName: String
     let duration: String
     var coverUrl: String = ""
     
-    init(id: UUID = UUID(), title: String, artist: String, fileName: String, duration: String, coverUrl: String = "") {
-        self.id = id
+    init(id: String? = nil, title: String, artist: String, fileName: String, duration: String, coverUrl: String = "") {
+        self.id = id ?? fileName
         self.title = title
         self.artist = artist
         self.fileName = fileName
@@ -24,7 +24,7 @@ struct Track: Identifiable, Equatable {
 }
 
 struct Album: Identifiable {
-    let id: UUID
+    let id: String
     let title: String
     let artist: String
     var coverImage: UIImage?
@@ -33,8 +33,8 @@ struct Album: Identifiable {
     let releaseYear: String
     var tracks: [Track]
     
-    init(id: UUID = UUID(), title: String, artist: String, coverImage: UIImage? = nil, coverUrl: String = "", trackCount: Int, releaseYear: String, tracks: [Track]) {
-        self.id = id
+    init(id: String? = nil, title: String, artist: String, coverImage: UIImage? = nil, coverUrl: String = "", trackCount: Int, releaseYear: String, tracks: [Track]) {
+        self.id = id ?? "\(artist)-\(title)"
         self.title = title
         self.artist = artist
         self.coverImage = coverImage

@@ -78,6 +78,7 @@ class MusicLibraryService: ObservableObject {
                     )
                     tracks.append(track)
                 }
+                tracks.sort { $0.title < $1.title } // 🚀 Ensure consistent order
                 
                 await MainActor.run {
                     if let existingIdx = self.albums.firstIndex(where: { $0.title == albumTitle && $0.artist == artist }) {
@@ -154,6 +155,7 @@ class MusicLibraryService: ObservableObject {
         
         if let idx = albumsList.firstIndex(where: { $0.title == albumName && $0.artist == artist }) {
             albumsList[idx].tracks.append(track)
+            albumsList[idx].tracks.sort { $0.title < $1.title } // 🚀 Ensure consistent order
             if albumsList[idx].coverImage == nil { albumsList[idx].coverImage = artwork }
         } else {
             albumsList.append(Album(title: albumName, artist: artist, coverImage: artwork, trackCount: 1, releaseYear: "2024", tracks: [track]))
