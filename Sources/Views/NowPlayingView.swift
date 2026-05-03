@@ -32,7 +32,7 @@ struct NowPlayingView: View {
                     VinylTurntableView(showLyrics: $showLyrics)
                 }
                 .frame(height: 360)
-                .padding(.top, 70)
+                .padding(.top, 10) // Shifted up by 60px (70 -> 10)
                 
                 // 3. Track Info (Left Aligned as per Image 6)
                 VStack(alignment: .leading, spacing: 8) {

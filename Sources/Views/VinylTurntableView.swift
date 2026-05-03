@@ -32,11 +32,19 @@ struct VinylTurntableView: View {
                 // Album Art Center
                 Group {
                     if let cover = player.currentAlbum?.coverImage {
-                        Image(uiImage: cover)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 95, height: 95)
-                            .clipShape(Circle())
+                        ZStack {
+                            Image(uiImage: cover)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 115, height: 115) // Increased by 20px
+                                .clipShape(Circle())
+                            
+                            // 2.5 Center Spindle (Missing slice added)
+                            Image(theme.isDark ? "spindle_dark" : "spindle_light")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 32, height: 32)
+                        }
                     }
                 }
             }
@@ -44,7 +52,7 @@ struct VinylTurntableView: View {
             
             // 3. Tonearm Assembly (Position shifted per user request)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 110, y: -90) // Shifted 30px left and 50px down
+                .offset(x: 110, y: -90) 
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
@@ -63,8 +71,8 @@ struct TonearmView: View {
         Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 110, height: 290) // Middle value between 260 and 320
-            .rotationEffect(.degrees(isMoving ? 4 : -2), anchor: .top) // More vertical angle
+            .frame(width: 110, height: 290) 
+            .rotationEffect(.degrees(isMoving ? -6 : 0), anchor: .top) // Playing: -6, Paused: 0 (Vertical)
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }
