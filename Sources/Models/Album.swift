@@ -2,12 +2,21 @@ import Foundation
 import UIKit
 
 struct Track: Identifiable, Equatable {
-    var id: String { fileName }
+    let id: UUID
     let title: String
     let artist: String
     let fileName: String
     let duration: String
-    var coverUrl: String = "" // Added for 1:1 compatibility
+    var coverUrl: String = ""
+    
+    init(id: UUID = UUID(), title: String, artist: String, fileName: String, duration: String, coverUrl: String = "") {
+        self.id = id
+        self.title = title
+        self.artist = artist
+        self.fileName = fileName
+        self.duration = duration
+        self.coverUrl = coverUrl
+    }
     
     static func == (lhs: Track, rhs: Track) -> Bool {
         lhs.id == rhs.id
@@ -15,14 +24,25 @@ struct Track: Identifiable, Equatable {
 }
 
 struct Album: Identifiable {
-    var id: String { title + artist }
+    let id: UUID
     let title: String
     let artist: String
     var coverImage: UIImage?
-    var coverUrl: String = "" // Added for 1:1 compatibility
+    var coverUrl: String = ""
     let trackCount: Int
     let releaseYear: String
     var tracks: [Track]
+    
+    init(id: UUID = UUID(), title: String, artist: String, coverImage: UIImage? = nil, coverUrl: String = "", trackCount: Int, releaseYear: String, tracks: [Track]) {
+        self.id = id
+        self.title = title
+        self.artist = artist
+        self.coverImage = coverImage
+        self.coverUrl = coverUrl
+        self.trackCount = trackCount
+        self.releaseYear = releaseYear
+        self.tracks = tracks
+    }
 }
 
 extension Album {

@@ -30,7 +30,7 @@ struct LyricsView: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 32) {
-                            Spacer(minLength: 120)
+                            Spacer(minLength: 140) // Increased for roller clearance
                             
                             if player.currentTrackLyrics.isEmpty {
                                 Text("NO LYRICS FOUND")
@@ -47,7 +47,7 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 240)
+                            Spacer(minLength: 300) // Ensure enough scroll space at bottom
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
@@ -59,27 +59,32 @@ struct LyricsView: View {
                         }
                     }
                 }
-                .frame(width: 335) // Figma paper width
+                .frame(width: paperWidth)
                 .background(Color.white)
+                .cornerRadius(4)
                 .skeuoRaised(cornerRadius: 4)
-                .offset(y: 20)
+                .offset(y: 30) // Align with roller
                 .zIndex(0)
                 
                 // Roller Assembly - Static
                 HStack(spacing: 0) {
                     Image("knob_light")
                         .resizable()
+                        .aspectRatio(contentMode: .fit)
                         .frame(width: 56, height: 56)
-                        .offset(x: -16)
+                        .offset(x: -8)
                     
                     Image("roller_light")
                         .resizable()
-                        .frame(height: 48)
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 260, height: 48)
+                        .clipped()
                     
                     Image("knob_light")
                         .resizable()
+                        .aspectRatio(contentMode: .fit)
                         .frame(width: 56, height: 56)
-                        .offset(x: 16)
+                        .offset(x: 8)
                 }
                 .padding(.horizontal, 10)
                 .zIndex(1)

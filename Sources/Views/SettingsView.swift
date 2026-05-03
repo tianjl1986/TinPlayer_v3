@@ -62,6 +62,19 @@ struct SettingsView: View {
                             SkeuoSettingsRow(title: "Auto Scan Library", value: "Enabled", isToggle: true, showBackground: false)
                         }
                     }
+
+                    // Section 1.5: APPEARANCE
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("APPEARANCE")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(DesignTokens.textSecondary)
+                        
+                        SkeuoSettingsGroup {
+                            SkeuoSettingsRow(title: "Language", value: "English", isLink: true, showBackground: false)
+                            Divider().padding(.horizontal, 20)
+                            SkeuoSettingsRow(title: "Theme", value: "Light", isLink: true, showBackground: false)
+                        }
+                    }
                     
                     // Section 2: AUDIO ENGINE
                     VStack(alignment: .leading, spacing: 16) {

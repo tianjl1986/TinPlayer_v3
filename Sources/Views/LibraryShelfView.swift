@@ -4,7 +4,7 @@ import UIKit
 struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @Environment(\.presentationMode) var presentationMode
-    @State private var expandedAlbumID: String?
+    @State private var expandedAlbumID: UUID?
     @State private var navigateToNowPlaying = false
     
     var body: some View {

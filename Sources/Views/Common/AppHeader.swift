@@ -45,6 +45,5 @@ struct AppHeader: View {
         }
         .padding(.horizontal, horizontalPadding)
         .frame(height: headerHeight)
-        .padding(.top, 10) 
     }
 }

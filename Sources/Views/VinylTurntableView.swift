@@ -14,25 +14,33 @@ struct VinylTurntableView: View {
     var body: some View {
         ZStack {
             // 1. Turntable Base (Static Background)
+            RoundedRectangle(cornerRadius: 24)
+                .fill(DesignTokens.surfaceMain)
+                .frame(width: baseSize, height: baseSize)
+                .skeuoRaised(cornerRadius: 24)
+            
             Image("turntable_base_light")
                 .resizable()
-                .aspectRatio(contentMode: .fit)
+                .aspectRatio(contentMode: .fill)
                 .frame(width: baseSize, height: baseSize)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
             
             // 2. Rotating Platter & Record
             ZStack {
                 // Platter
                 Image("platter_light")
                     .resizable()
+                    .aspectRatio(contentMode: .fit)
                     .frame(width: platterSize, height: platterSize)
                 
                 // Vinyl Record
-                Image("vinyl_record_light")
-                    .resizable()
-                    .frame(width: recordSize, height: recordSize)
-                
-                // Album Cover (Label)
                 ZStack {
+                    Image("vinyl_record_light")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: recordSize, height: recordSize)
+                    
+                    // Album Cover (Label)
                     if let track = player.currentTrack {
                         let album = libraryService.albums.first(where: { $0.tracks.contains(track) })
                         if let cover = album?.coverImage {
@@ -45,9 +53,6 @@ struct VinylTurntableView: View {
                             Circle()
                                 .fill(DesignTokens.surfaceLight)
                                 .frame(width: labelSize, height: labelSize)
-                            Image(systemName: "music.note")
-                                .font(.system(size: 30))
-                                .foregroundColor(DesignTokens.textSecondary.opacity(0.2))
                         }
                     } else {
                         Circle()
@@ -58,29 +63,24 @@ struct VinylTurntableView: View {
                     // Center Spindle Piece
                     Image("spindle_light")
                         .resizable()
-                        .frame(width: 24, height: 24)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 32, height: 32)
                 }
+                .rotationEffect(.degrees(rotation))
             }
-            .rotationEffect(.degrees(rotation))
             
             // 3. Tonearm Assembly
             ZStack {
-                // Arm Base (Top Right)
-                Image("arm_base_light")
-                    .resizable()
-                    .frame(width: 80, height: 80)
-                    .offset(x: 120, y: -120)
-                
-                // Tonearm
                 Image("tonearm_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 200)
-                    .rotationEffect(.degrees(player.isPlaying ? -25 : -45), anchor: .topTrailing)
-                    .offset(x: 110, y: -80)
-                    .animation(.spring(response: 0.8, dampingFraction: 0.7), value: player.isPlaying)
+                    .frame(width: 260)
+                    .rotationEffect(.degrees(player.isPlaying ? -22 : -45), anchor: .init(x: 0.82, y: 0.18))
+                    .offset(x: 110, y: -70)
             }
         }
+        .frame(width: baseSize, height: baseSize)
+        .onAppear {
         .onAppear {
             if player.isPlaying {
                 startRotation()
