@@ -73,7 +73,6 @@ struct SettingsView: View {
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 18)
                                 .skeuoGradientBackground(cornerRadius: 12)
-                                .skeuoRaised(cornerRadius: 12)
                             }
                         }
                     }
@@ -152,7 +151,6 @@ struct SettingsView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
                                     .skeuoGradientBackground(cornerRadius: 12)
-                                    .skeuoRaised(cornerRadius: 12)
                             }
                             
                             Button(action: { libraryService.clearLibrary() }) {
@@ -162,7 +160,6 @@ struct SettingsView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
                                     .skeuoGradientBackground(cornerRadius: 12)
-                                    .skeuoRaised(cornerRadius: 12)
                             }
                         }
                     }

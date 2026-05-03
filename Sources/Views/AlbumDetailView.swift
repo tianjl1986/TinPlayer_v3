@@ -80,7 +80,6 @@ struct AlbumDetailView: View {
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
                     .skeuoGradientBackground(cornerRadius: 26)
-                    .skeuoRaised(cornerRadius: 26)
             }
             
             Button(action: { /* Shuffle Action */ }) {
@@ -89,7 +88,6 @@ struct AlbumDetailView: View {
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
                     .skeuoGradientBackground(cornerRadius: 26)
-                    .skeuoRaised(cornerRadius: 26)
             }
         }
         .padding(.top, 8)
