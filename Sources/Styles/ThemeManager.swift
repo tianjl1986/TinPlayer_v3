@@ -12,4 +12,8 @@ class ThemeManager: ObservableObject {
     var isDark: Bool {
         currentTheme == "Dark"
     }
+    
+    func toggleTheme() {
+        currentTheme = (currentTheme == "Dark" ? "Light" : "Dark")
+    }
 }
