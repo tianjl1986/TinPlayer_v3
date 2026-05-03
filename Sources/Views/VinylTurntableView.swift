@@ -10,7 +10,7 @@ struct VinylTurntableView: View {
     // Geometry constants based on assets - Adjusted for 1:1 fidelity
     private let baseSize: CGFloat = 335
     private let platterSize: CGFloat = 310
-    private let recordSize: CGFloat = 260 // 🚀 Even smaller to show platter clearly
+    private let recordSize: CGFloat = 290 // 🚀 Restored to 290 as requested
     private let labelSize: CGFloat = 135 // 🚀 Large artwork label
     private let tonearmWidth: CGFloat = 100
     private let tonearmPivotOffset: CGFloat = 20
@@ -37,13 +37,6 @@ struct VinylTurntableView: View {
             // 2. Rotating Platter & Record
             Button(action: { showLyrics = true }) {
                 ZStack {
-                    // Platter Shadow (1:1 with design angle)
-                    Circle()
-                        .fill(Color.black.opacity(0.3))
-                        .frame(width: platterSize - 10, height: platterSize - 10)
-                        .blur(radius: 12)
-                        .offset(x: 10, y: 10) // Specific shadow angle
-                    
                     // Platter
                     Image(theme.isDark ? "platter_dark" : "platter_light")
                         .resizable()
@@ -85,24 +78,27 @@ struct VinylTurntableView: View {
             }
             .buttonStyle(PlainButtonStyle())
             
-            // 3. Tonearm Assembly (Coaxial Alignment)
-            ZStack {
-                // Tonearm Base Image
-                Image(theme.isDark ? "arm_base_dark" : "arm_base_light")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 44, height: 44) // 🚀 Reduced base size
-                
-                // Tonearm Image (Aligned Pivot)
-                Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: tonearmWidth)
-                    // 🚀 精确同轴对齐：调整 anchor 确保旋转中心在圆形配件正中
-                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
-                    .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
-            }
-            .offset(x: 130, y: -130) // 🚀 45-degree diagonal placement
+                // 3. Tonearm Assembly (Fixed Coaxial Alignment)
+                ZStack {
+                    // Tonearm Base Image
+                    Image(theme.isDark ? "arm_base_dark" : "arm_base_light")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 44, height: 44)
+                    
+                    // Tonearm Image (Precision Coaxial)
+                    Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: tonearmWidth)
+                        // 🚀 核心修正：
+                        // 1. offset(y: 45) 将唱臂图片中 21.5% 位置的圆心零件平移到底座中心
+                        // 2. rotationEffect 使用相同的 21.5% 锚点，确保同轴旋转
+                        .offset(y: 45) 
+                        .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
+                        .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
+                }
+                .offset(x: 130, y: -130)
         }
         .frame(width: baseSize, height: baseSize)
         .onReceive(timer) { _ in

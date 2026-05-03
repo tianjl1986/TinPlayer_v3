@@ -90,7 +90,7 @@ class MusicLibraryService: ObservableObject {
                         }
                     } else {
                         let newAlbum = Album(
-                            id: "sys-alb-\(representativeItem.albumPersistentID)",
+                            id: "sys-alb-\(representativeItem.albumPersistentID)-\(artist)",
                             title: albumTitle,
                             artist: artist,
                             coverImage: artwork,

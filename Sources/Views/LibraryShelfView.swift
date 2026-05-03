@@ -53,8 +53,10 @@ struct LibraryShelfView: View {
                         onTap: { toggleExpansion(for: album) },
                         onPlayTrack: { playTrack($0, in: album) }
                     )
+                    .id(album.id)
                 }
             }
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: expandedAlbumKey)
             .padding(.horizontal, 24)
             .padding(.vertical, 24)
         }
