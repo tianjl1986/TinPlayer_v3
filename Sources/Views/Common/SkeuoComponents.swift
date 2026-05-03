@@ -171,20 +171,26 @@ extension View {
     
     func skeuoGradientBackground(cornerRadius: CGFloat = 16) -> some View {
         self.background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    DesignTokens.surfaceMain.opacity(0.1),
-                    DesignTokens.surfaceMain.opacity(0.3)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(DesignTokens.surfaceMain)
+                
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                DesignTokens.skeuoShadowLight.opacity(0.2),
+                                DesignTokens.skeuoShadowDark.opacity(0.1)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
         )
-        .background(DesignTokens.surfaceMain)
-        .cornerRadius(cornerRadius)
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(DesignTokens.skeuoShadowLight.opacity(0.2), lineWidth: 0.5)
+                .stroke(DesignTokens.skeuoShadowLight.opacity(0.4), lineWidth: 0.5)
                 .offset(x: -0.5, y: -0.5)
                 .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
         )

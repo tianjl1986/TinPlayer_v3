@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ArtistListView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
+    @ObservedObject private var metadata = MetadataService.shared
     @Environment(\.presentationMode) var presentationMode
     
     var artists: [String] {
@@ -27,14 +28,29 @@ struct ArtistListView: View {
                     ForEach(artists, id: \.self) { artist in
                         NavigationLink(destination: ArtistDetailView(artist: artist)) {
                             HStack {
-                                Circle()
-                                    .fill(DesignTokens.surfaceSecondary)
-                                    .frame(width: 48, height: 48)
-                                    .overlay(
-                                        Image(systemName: "person.fill")
-                                            .foregroundColor(DesignTokens.textSecondary)
-                                    )
-                                    .skeuoSunken(cornerRadius: 24)
+                                ZStack {
+                                    if let image = MetadataService.shared.artistImages[artist] {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 48, height: 48)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Circle()
+                                            .fill(DesignTokens.surfaceSecondary)
+                                            .frame(width: 48, height: 48)
+                                            .overlay(
+                                                Image(systemName: "person.fill")
+                                                    .foregroundColor(DesignTokens.textSecondary)
+                                            )
+                                            .onAppear {
+                                                Task {
+                                                    await MetadataService.shared.fetchArtistImage(name: artist)
+                                                }
+                                            }
+                                    }
+                                }
+                                .skeuoSunken(cornerRadius: 24)
                                 
                                 Text(artist.uppercased())
                                     .font(.system(size: 16, weight: .black))
