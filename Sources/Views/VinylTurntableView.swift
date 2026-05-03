@@ -81,7 +81,6 @@ struct VinylTurntableView: View {
         }
         .frame(width: baseSize, height: baseSize)
         .onAppear {
-        .onAppear {
             if player.isPlaying {
                 startRotation()
             }
