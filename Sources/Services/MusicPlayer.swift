@@ -63,14 +63,12 @@ class MusicPlayer: ObservableObject {
         }
         
         self.currentTrack = track
-        self.currentTrackLyrics = [] // 重置歌词
+        self.currentTrackLyrics = []
         
-        // 🚀 触发在线歌词搜索
         Task {
             isSearchingLyrics = true
             let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
             await MainActor.run {
-                // 仅当当前播放轨道未改变时更新
                 if self.currentTrack?.id == track.id {
                     self.currentTrackLyrics = lyrics
                     self.isSearchingLyrics = false
@@ -79,7 +77,6 @@ class MusicPlayer: ObservableObject {
         }
         
         let url: URL?
-        // ... (保持原有的 URL 解析逻辑)
         if track.fileName.hasPrefix("ipod-library://") {
             url = URL(string: track.fileName)
         } else if track.fileName.isEmpty {
@@ -88,12 +85,8 @@ class MusicPlayer: ObservableObject {
             url = URL(fileURLWithPath: track.fileName)
         }
         
-        guard let validURL = url else {
-            print("❌ Invalid URL for track: \(track.title)")
-            return
-        }
+        guard let validURL = url else { return }
         
-        // 清理旧的通知和观察者
         stopObserver()
         if let observer = playerObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -107,19 +100,14 @@ class MusicPlayer: ObservableObject {
         Task {
             do {
                 let duration = try await playerItem.asset.load(.duration)
-                await MainActor.run {
-                    self.duration = duration.seconds
-                }
-            } catch {
-                print("❌ Failed to load duration: \(error)")
-            }
+                await MainActor.run { self.duration = duration.seconds }
+            } catch { print("❌ Error loading duration: \(error)") }
         }
         
         newPlayer.play()
         self.isPlaying = true
         startObserver()
         
-        // 监听播放结束，严格遵守播放模式
         playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
@@ -128,7 +116,6 @@ class MusicPlayer: ObservableObject {
                     self.seek(to: 0)
                     self.resume()
                 case .list:
-                    // 如果是最后首则停止，否则下一首
                     if let current = self.currentTrack,
                        let idx = self.playlist.firstIndex(where: { $0.id == current.id }),
                        idx < self.playlist.count - 1 {
@@ -142,6 +129,11 @@ class MusicPlayer: ObservableObject {
                 }
             }
         }
+    }
+    
+    func playAlbum(_ album: Album) {
+        guard !album.tracks.isEmpty else { return }
+        playTrack(album.tracks[0], in: album.tracks)
     }
     
     func togglePlayPause() {

@@ -68,7 +68,7 @@ struct HomeView: View {
                     .padding(.top, 24)
                 }
             }
-            .background(DesignTokens.surfaceLight.ignoresSafeArea())
+            .background(DesignTokens.surfaceMain.ignoresSafeArea())
             .navigationBarHidden(true)
         }
         .navigationViewStyle(StackNavigationViewStyle())

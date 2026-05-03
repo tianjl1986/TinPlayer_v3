@@ -16,7 +16,10 @@ struct NowPlayingView: View {
                 AppHeader(
                     title: loc.t("NOW PLAYING"),
                     leftItem: AnyView(
-                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Button(action: { 
+                            player.showNowPlaying = false
+                            presentationMode.wrappedValue.dismiss() 
+                        }) {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(DesignTokens.textPrimary)

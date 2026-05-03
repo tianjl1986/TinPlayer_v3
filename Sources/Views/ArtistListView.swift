@@ -53,7 +53,7 @@ struct ArtistListView: View {
                             }
                             .padding(.horizontal, 20)
                             .frame(height: 80)
-                            .background(Color.white)
+                            .background(DesignTokens.surfaceMain)
                             .cornerRadius(16)
                             .skeuoRaised(cornerRadius: 16)
                         }
@@ -65,9 +65,6 @@ struct ArtistListView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
     }
 }
 
@@ -108,8 +105,5 @@ struct ArtistDetailView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
     }
 }

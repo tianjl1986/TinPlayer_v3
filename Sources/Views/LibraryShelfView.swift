@@ -200,7 +200,7 @@ struct AlbumShelfPill: View {
                         .padding(16)
                     }
                 }
-                .background(Color(hexString: "#121212"))
+                .background(DesignTokens.surfaceMain)
                 .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
                 .padding(.top, 4)
             }

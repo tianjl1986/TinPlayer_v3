@@ -50,7 +50,7 @@ struct MiniPlayerView: View {
                                 .font(.system(size: 16))
                                 .foregroundColor(DesignTokens.textPrimary)
                                 .frame(width: 44, height: 44)
-                                .background(DesignTokens.background)
+                                .background(DesignTokens.surfaceMain)
                                 .skeuoRaised(cornerRadius: 22)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -60,7 +60,7 @@ struct MiniPlayerView: View {
                                 .font(.system(size: 14))
                                 .foregroundColor(DesignTokens.textPrimary)
                                 .frame(width: 44, height: 44)
-                                .background(DesignTokens.background)
+                                .background(DesignTokens.surfaceMain)
                                 .skeuoRaised(cornerRadius: 22)
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -68,7 +68,7 @@ struct MiniPlayerView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 14)
-                .background(DesignTokens.background)
+                .background(DesignTokens.surfaceMain)
                 .skeuoSunken(cornerRadius: 16)
             }
             .buttonStyle(PlainButtonStyle())

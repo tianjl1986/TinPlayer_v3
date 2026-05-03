@@ -76,7 +76,7 @@ struct LyricsView: View {
                         RoundedRectangle(cornerRadius: 10)
                             .fill(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color(hexString: "#E0E0E0"), Color(hexString: "#F5F5F5"), Color(hexString: "#BDBDBD")]),
+                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#E0E0E0")), Color(UIColor(hexString: "#F5F5F5")), Color(UIColor(hexString: "#BDBDBD"))]),
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
@@ -88,7 +88,7 @@ struct LyricsView: View {
                         Rectangle()
                             .fill(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color(hexString: "#1A1A1A"), Color(hexString: "#333333"), Color(hexString: "#111111")]),
+                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#1A1A1A")), Color(UIColor(hexString: "#333333")), Color(UIColor(hexString: "#111111"))]),
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )
@@ -99,7 +99,7 @@ struct LyricsView: View {
                         RoundedRectangle(cornerRadius: 10)
                             .fill(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color(hexString: "#E0E0E0"), Color(hexString: "#F5F5F5"), Color(hexString: "#BDBDBD")]),
+                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#E0E0E0")), Color(UIColor(hexString: "#F5F5F5")), Color(UIColor(hexString: "#BDBDBD"))]),
                                     startPoint: .top,
                                     endPoint: .bottom
                                 )

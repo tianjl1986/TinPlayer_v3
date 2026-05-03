@@ -12,7 +12,7 @@ struct SkeuoSettingsGroup<Content: View>: View {
         VStack(spacing: 0) {
             content
         }
-        .background(DesignTokens.surfaceLight)
+        .background(DesignTokens.surfaceMain)
         .cornerRadius(16)
         .skeuoSunken(cornerRadius: 16)
     }
@@ -48,7 +48,7 @@ struct SkeuoSettingsRow: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        .background(showBackground ? DesignTokens.surfaceLight : Color.clear)
+        .background(showBackground ? DesignTokens.surfaceMain : Color.clear)
         .contentShape(Rectangle())
     }
 }

@@ -56,8 +56,5 @@ struct LibraryGridView: View {
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
     }
 }

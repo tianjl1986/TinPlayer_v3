@@ -29,6 +29,17 @@ struct DesignTokens {
     static let skeuoShadowDark = Color(UIColor { traitCollection in
         traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.8) : UIColor(hexString: "#D1D9E6")
     })
+    
+    // 4. Backward Compatibility Aliases
+    static var surfaceLight: Color { surfaceMain }
+    static var background: Color { surfaceMain }
+}
+
+// Helper for Hex Colors
+extension Color {
+    init(hexString: String) {
+        self.init(UIColor(hexString: hexString))
+    }
 }
 
 // Helper for Hex Colors
