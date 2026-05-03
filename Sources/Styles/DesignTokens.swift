@@ -27,13 +27,12 @@ struct DesignTokens {
     })
     
     static let skeuoShadowDark = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.9) : UIColor(hexString: "#BEBEBE")
+        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.9) : UIColor(hexString: "#B3B3B3")
     })
     
     static let surfaceFlat = Color(UIColor { traitCollection in
         traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#1C1C1E") : UIColor(hexString: "#F2F2F7")
     })
-    
     // 4. Backward Compatibility Aliases
     static var surfaceLight: Color { surfaceMain }
     static var background: Color { surfaceMain }
