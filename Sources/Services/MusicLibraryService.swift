@@ -90,7 +90,7 @@ class MusicLibraryService: ObservableObject {
                         }
                     } else {
                         let newAlbum = Album(
-                            id: "sys-alb-\(albumTitle)-\(artist)-\(representativeItem.albumPersistentID)", // 🚀 Triple composite ID
+                            id: "alb-\(representativeItem.albumPersistentID)-\(albumTitle.hashValue)", // 🚀 Robust unique ID
                             title: albumTitle,
                             artist: artist,
                             coverImage: artwork,

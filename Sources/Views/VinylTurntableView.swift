@@ -78,30 +78,27 @@ struct VinylTurntableView: View {
             }
             .buttonStyle(PlainButtonStyle())
             
-                // 3. Tonearm Assembly (Precision Coaxial Alignment)
-                ZStack {
-                    // Base: Using a drawn Circle for 100% geometric center accuracy
-                    Circle()
-                        .fill(DesignTokens.surfaceMain)
-                        .frame(width: 44, height: 44)
-                        .skeuoRaised(cornerRadius: 22)
-                    
-                    Circle()
-                        .fill(LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: 40, height: 40)
-                    
-                    // Tonearm Image (Precision Pivot)
+                // 3. Tonearm Assembly (Top-Alignment Reconstruction)
+                ZStack(alignment: .top) {
+                    // Tonearm Image (Fixed Height for Precision)
                     Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: tonearmWidth)
-                        // 🚀 核心数学计算：
-                        // 假设图片高宽比为 2.5 (100x250)，中心点在 125。
-                        // 锚点 0.215 在 53.75。位移补偿 = 125 - 53.75 = 71.25。
-                        // 经过多轮验证，offset 86pt 是最契合该资产圆心位置的参数。
-                        .offset(y: 86) 
                         .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
                         .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
+                        .zIndex(1)
+                    
+                    // Base: Calculated to sit exactly under the pivot
+                    // 🚀 Mathematical Alignment:
+                    // Height of arm image is ~350 (at 100 width). Pivot is at 350 * 0.215 = 75.25.
+                    // We offset the base by (75.25 - 22) to center it under the pivot.
+                    Circle()
+                        .fill(DesignTokens.surfaceMain)
+                        .frame(width: 44, height: 44)
+                        .skeuoRaised(cornerRadius: 22)
+                        .offset(y: 53) // 🚀 Precision calculated offset
+                        .zIndex(0)
                 }
                 .offset(x: 130, y: -130)
         }
