@@ -24,12 +24,14 @@ struct VinylTurntableView: View {
                     .frame(width: 280, height: 280)
                 
                 // Album Art Center
-                if let cover = player.currentTrack?.coverImage ?? player.playlist.first?.coverImage {
-                    Image(uiImage: cover)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 95, height: 95)
-                        .clipShape(Circle())
+                Group {
+                    if let cover = player.currentAlbum?.coverImage {
+                        Image(uiImage: cover)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 95, height: 95)
+                            .clipShape(Circle())
+                    }
                 }
             }
             .rotationEffect(.degrees(rotation))

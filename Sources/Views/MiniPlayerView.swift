@@ -15,8 +15,7 @@ struct MiniPlayerView: View {
                             .frame(width: 48, height: 48)
                             .skeuoRaised(cornerRadius: 24)
                         
-                        if let album = MusicLibraryService.shared.albums.first(where: { $0.tracks.contains(track) }),
-                           let cover = album.coverImage {
+                        if let cover = player.currentAlbum?.coverImage {
                             Image(uiImage: cover)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)

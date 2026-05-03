@@ -158,6 +158,7 @@ struct AlbumShelfPill: View {
                     ForEach(Array(album.tracks.indices), id: \.self) { index in
                         let track = album.tracks[index]
                         Button(action: {
+                            player.currentAlbum = album
                             player.playTrack(track, in: album.tracks)
                             player.showNowPlaying = true
                         }) {

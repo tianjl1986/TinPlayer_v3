@@ -31,6 +31,7 @@ class MusicPlayer: ObservableObject {
     @Published var currentLyricIndex: Int = 0
     @Published var isSearchingLyrics: Bool = false
     @Published var showNowPlaying: Bool = false
+    @Published var currentAlbum: Album? = nil
     
     init() {
         setupAudioSession()
@@ -133,6 +134,7 @@ class MusicPlayer: ObservableObject {
     
     func playAlbum(_ album: Album) {
         guard !album.tracks.isEmpty else { return }
+        self.currentAlbum = album
         playTrack(album.tracks[0], in: album.tracks)
     }
     
