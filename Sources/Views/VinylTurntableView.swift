@@ -15,6 +15,7 @@ struct VinylTurntableView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: baseSize, height: baseSize)
+                .skeuoRaised(cornerRadius: 40) // Added skeuomorphic shadow to base
             
             // 1.5 Platter (Using PNG Assets)
             Image(theme.isDark ? "platter_dark" : "platter_light")

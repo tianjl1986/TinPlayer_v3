@@ -79,8 +79,7 @@ struct AlbumDetailView: View {
                     .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
-                    .background(DesignTokens.surfaceMain)
-                    .cornerRadius(26)
+                    .skeuoGradientBackground(cornerRadius: 26)
                     .skeuoRaised(cornerRadius: 26)
             }
             
@@ -89,8 +88,7 @@ struct AlbumDetailView: View {
                     .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
-                    .background(DesignTokens.surfaceMain)
-                    .cornerRadius(26)
+                    .skeuoGradientBackground(cornerRadius: 26)
                     .skeuoRaised(cornerRadius: 26)
             }
         }

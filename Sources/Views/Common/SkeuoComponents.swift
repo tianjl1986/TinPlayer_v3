@@ -165,8 +165,29 @@ struct TypewriterText: View {
 
 extension View {
     func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
-        self.shadow(color: DesignTokens.skeuoShadowDark.opacity(0.7), radius: 6, x: 4, y: 4)
-            .shadow(color: DesignTokens.skeuoShadowLight.opacity(0.7), radius: 6, x: -4, y: -4)
+        self.shadow(color: DesignTokens.skeuoShadowDark.opacity(0.8), radius: 8, x: 6, y: 6)
+            .shadow(color: DesignTokens.skeuoShadowLight.opacity(0.9), radius: 8, x: -6, y: -6)
+    }
+    
+    func skeuoGradientBackground(cornerRadius: CGFloat = 16) -> some View {
+        self.background(
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    DesignTokens.surfaceMain.opacity(0.1),
+                    DesignTokens.surfaceMain.opacity(0.3)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .background(DesignTokens.surfaceMain)
+        .cornerRadius(cornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(DesignTokens.skeuoShadowLight.opacity(0.2), lineWidth: 0.5)
+                .offset(x: -0.5, y: -0.5)
+                .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
+        )
     }
     
     func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {

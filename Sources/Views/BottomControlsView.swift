@@ -78,12 +78,20 @@ struct SkeuoCircleButtonStyle: ButtonStyle {
                             .skeuoSunken(cornerRadius: size/2)
                     } else {
                         Circle()
-                            .fill(DesignTokens.surfaceMain)
-                            .shadow(color: DesignTokens.skeuoShadowDark, radius: 10, x: 5, y: 5)
-                            .shadow(color: DesignTokens.skeuoShadowLight, radius: 10, x: -5, y: -5)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [DesignTokens.skeuoShadowLight.opacity(0.15), DesignTokens.skeuoShadowDark.opacity(0.1)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .background(Circle().fill(DesignTokens.surfaceMain))
+                            .shadow(color: DesignTokens.skeuoShadowDark.opacity(0.8), radius: 8, x: 5, y: 5)
+                            .shadow(color: DesignTokens.skeuoShadowLight.opacity(0.9), radius: 8, x: -5, y: -5)
                             .overlay(
                                 Circle()
-                                    .stroke(DesignTokens.skeuoShadowLight.opacity(0.5), lineWidth: 1)
+                                    .stroke(DesignTokens.skeuoShadowLight.opacity(0.3), lineWidth: 1)
+                                    .offset(x: -0.5, y: -0.5)
                             )
                     }
                 }
