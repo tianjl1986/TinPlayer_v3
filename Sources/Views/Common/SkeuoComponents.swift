@@ -190,6 +190,7 @@ extension View {
 // MARK: - Button Styles
 
 struct SkeuoRectButtonStyle: ButtonStyle {
+    @ObservedObject var theme = ThemeManager.shared
     var cornerRadius: CGFloat = 16
     
     func makeBody(configuration: Configuration) -> some View {
@@ -204,7 +205,7 @@ struct SkeuoRectButtonStyle: ButtonStyle {
                         RoundedRectangle(cornerRadius: cornerRadius)
                             .fill(DesignTokens.surfaceMain)
                             .shadow(color: DesignTokens.skeuoShadowDark, radius: 4, x: 4, y: 4)
-                            .shadow(color: DesignTokens.skeuoShadowLight, radius: 4, x: -4, y: -4)
+                            .shadow(color: DesignTokens.skeuoShadowLight.opacity(theme.isDark ? 1.0 : 0.9), radius: 4, x: -4, y: -4)
                     }
                 }
             )

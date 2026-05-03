@@ -168,7 +168,7 @@ struct LyricsView: View {
             }
             .padding(.top, 50) // Shifted down by 30px from 20px
         }
-        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
+        .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }

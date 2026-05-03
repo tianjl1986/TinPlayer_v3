@@ -7,7 +7,7 @@ struct DesignTokens {
     }
     
     static var surfaceSecondary: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#000000") : Color(hexString: "#FFFFFF")
+        ThemeManager.shared.isDark ? Color(hexString: "#1A1A1A") : Color(hexString: "#FFFFFF")
     }
     
     // 2. Text Colors
@@ -23,16 +23,16 @@ struct DesignTokens {
     
     // 3. Specialized Colors for Skeuomorphism
     static var skeuoShadowLight: Color {
-        ThemeManager.shared.isDark ? Color(hexString: "#222222") : Color.white
+        ThemeManager.shared.isDark ? Color(hexString: "#2C2C2C") : Color.white
     }
     
     static var skeuoShadowDark: Color {
         ThemeManager.shared.isDark ? Color.black : Color(hexString: "#B3B3B3")
     }
     
-    static let surfaceFlat = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#1C1C1E") : UIColor(hexString: "#F2F2F7")
-    })
+    static var surfaceFlat: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#1C1C1E") : Color(hexString: "#F2F2F7")
+    }
     // 4. Backward Compatibility Aliases
     static var surfaceLight: Color { surfaceMain }
     static var background: Color { surfaceMain }

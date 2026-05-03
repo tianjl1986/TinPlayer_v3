@@ -173,7 +173,7 @@ struct SettingsView: View {
                 .padding(.top, 24)
             }
         }
-        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
+        .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
     }
 }

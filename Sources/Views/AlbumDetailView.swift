@@ -37,7 +37,7 @@ struct AlbumDetailView: View {
                 }
             }
         }
-        .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
+        .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
     }
     
