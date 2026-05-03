@@ -90,7 +90,6 @@ struct LyricsView: View {
                         ZStack {
                             Image(theme.isDark ? "roller_dark" : "roller_light")
                                 .resizable()
-                                .aspectRatio(contentMode: .stretch)
                                 .frame(width: paperWidth, height: rollerHeight)
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
                                 .skeuoRaised(cornerRadius: 4)

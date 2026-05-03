@@ -9,59 +9,71 @@ struct LibraryShelfView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar - Standardized to design specs
-            AppHeader(
-                title: "MY COLLECTION",
-                leftItem: AnyView(
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(DesignTokens.textPrimary)
-                    }
-                ),
-                rightItem: AnyView(
-                    NavigationLink(destination: LibraryGridView()) {
-                        Image(systemName: "square.grid.2x2.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(DesignTokens.textPrimary)
-                    }
-                )
-            )
-            
-            // Hidden NavigationLink for programmatic navigation
-            NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
-                EmptyView()
-            }
-            
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    ForEach(libraryService.albums) { album in
-                        AlbumShelfSpine(
-                            album: album,
-                            isExpanded: expandedAlbumKey == album.id,
-                            onTap: {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                    if expandedAlbumKey == album.id {
-                                        expandedAlbumKey = nil
-                                    } else {
-                                        expandedAlbumKey = album.id
-                                    }
-                                }
-                            },
-                            onPlayTrack: { track in
-                                MusicPlayer.shared.playTrack(track, in: album.tracks)
-                                navigateToNowPlaying = true
-                            }
-                        )
-                        .id(album.id)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 24)
-            }
+            headerSection
+            hiddenNavSection
+            albumListSection
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
+    }
+    
+    private var headerSection: some View {
+        AppHeader(
+            title: "MY COLLECTION",
+            leftItem: AnyView(
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(DesignTokens.textPrimary)
+                }
+            ),
+            rightItem: AnyView(
+                NavigationLink(destination: LibraryGridView()) {
+                    Image(systemName: "square.grid.2x2.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(DesignTokens.textPrimary)
+                }
+            )
+        )
+    }
+    
+    private var hiddenNavSection: some View {
+        NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
+            EmptyView()
+        }
+    }
+    
+    private var albumListSection: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 16) {
+                ForEach(libraryService.albums) { album in
+                    AlbumShelfSpine(
+                        album: album,
+                        isExpanded: expandedAlbumKey == album.id,
+                        onTap: { toggleExpansion(for: album) },
+                        onPlayTrack: { playTrack($0, in: album) }
+                    )
+                    .id(album.id)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 24)
+        }
+    }
+    
+    private func toggleExpansion(for album: Album) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            if expandedAlbumKey == album.id {
+                expandedAlbumKey = nil
+            } else {
+                expandedAlbumKey = album.id
+            }
+        }
+    }
+    
+    private func playTrack(_ track: Track, in album: Album) {
+        MusicPlayer.shared.playTrack(track, in: album.tracks)
+        navigateToNowPlaying = true
     }
 }
 
@@ -73,85 +85,107 @@ struct AlbumShelfSpine: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Spine Header
-            Button(action: onTap) {
-                ZStack {
-                    // Album Art Background (Blurred)
-                    if let cover = album.coverImage {
-                        Image(uiImage: cover)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(height: 80)
-                            .blur(radius: 20)
-                            .overlay(Color.black.opacity(0.4))
-                            .clipped()
-                    } else {
-                        Color.black.opacity(0.8)
-                    }
-                    
-                    // Metallic Reflection Overlay
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    
-                    // Text Content
-                    HStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(album.title.uppercased())
-                                .font(.system(size: 16, weight: .black))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            Text(album.artist.uppercased())
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white.opacity(0.7))
-                                .lineLimit(1)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                    }
-                    .padding(.horizontal, 24)
-                }
-                .frame(height: 80)
-                .cornerRadius(12)
-                .skeuoRaised(cornerRadius: 12)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .zIndex(10)
+            SpineHeaderView(album: album, isExpanded: isExpanded, onTap: onTap)
+                .zIndex(10)
             
-            // Track List (Expanded)
             if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(album.tracks) { track in
-                        TrackRowView(track: track, onPlay: { onPlayTrack(track) })
-                        
-                        Divider()
-                            .padding(.horizontal, 24)
-                    }
-                    
-                    NavigationLink(destination: AlbumDetailView(album: album)) {
-                        Text("VIEW FULL ALBUM")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(DesignTokens.textActive)
-                            .padding(.vertical, 18)
-                    }
-                }
-                .background(DesignTokens.surfaceLight.opacity(0.8))
-                .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-                .padding(.top, -8) // Slight overlap for visual continuity
-                .transition(.asymmetric(
-                    insertion: .move(edge: .top).combined(with: .opacity),
-                    removal: .move(edge: .top).combined(with: .opacity)
-                ))
-                .zIndex(0)
+                TrackListView(album: album, onPlayTrack: onPlayTrack)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .top).combined(with: .opacity),
+                        removal: .move(edge: .top).combined(with: .opacity)
+                    ))
+                    .zIndex(0)
             }
         }
+    }
+}
+
+struct SpineHeaderView: View {
+    let album: Album
+    let isExpanded: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                backgroundImage
+                metallicOverlay
+                textContent
+            }
+            .frame(height: 80)
+            .cornerRadius(12)
+            .skeuoRaised(cornerRadius: 12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var backgroundImage: some View {
+        Group {
+            if let cover = album.coverImage {
+                Image(uiImage: cover)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 80)
+                    .blur(radius: 20)
+                    .overlay(Color.black.opacity(0.4))
+                    .clipped()
+            } else {
+                Color.black.opacity(0.8)
+            }
+        }
+    }
+    
+    private var metallicOverlay: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+    
+    private var textContent: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(album.title.uppercased())
+                    .font(.system(size: 16, weight: .black))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                Text(album.artist.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+        }
+        .padding(.horizontal, 24)
+    }
+}
+
+struct TrackListView: View {
+    let album: Album
+    let onPlayTrack: (Track) -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(album.tracks) { track in
+                TrackRowView(track: track, onPlay: { onPlayTrack(track) })
+                Divider().padding(.horizontal, 24)
+            }
+            
+            NavigationLink(destination: AlbumDetailView(album: album)) {
+                Text("VIEW FULL ALBUM")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundColor(DesignTokens.textActive)
+                    .padding(.vertical, 18)
+            }
+        }
+        .background(DesignTokens.surfaceLight.opacity(0.8))
+        .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
+        .padding(.top, -8)
     }
 }
 
