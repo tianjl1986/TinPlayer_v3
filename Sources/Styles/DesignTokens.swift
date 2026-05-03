@@ -23,11 +23,15 @@ struct DesignTokens {
     
     // 3. Specialized Colors for Skeuomorphism
     static let skeuoShadowLight = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.05) : UIColor.white
+        traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.08) : UIColor.white
     })
     
     static let skeuoShadowDark = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.8) : UIColor(hexString: "#B8B8B8")
+        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.9) : UIColor(hexString: "#BEBEBE")
+    })
+    
+    static let surfaceFlat = Color(UIColor { traitCollection in
+        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#1C1C1E") : UIColor(hexString: "#F2F2F7")
     })
     
     // 4. Backward Compatibility Aliases

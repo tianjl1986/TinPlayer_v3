@@ -66,7 +66,7 @@ struct LyricsView: View {
                 .frame(width: paperWidth)
                 .background(DesignTokens.surfaceMain) // Use surfaceMain which is dark in Dark Mode
                 .cornerRadius(4)
-                .shadow(color: Color.black.opacity(0.4), radius: 20, x: 0, y: 30) // Heavier shadow for dark mode
+                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 8)
                 .offset(y: 35)
                 
                 // 3. The Roller Assembly (1:1 Design)

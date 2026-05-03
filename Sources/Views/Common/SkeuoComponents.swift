@@ -12,9 +12,12 @@ struct SkeuoSettingsGroup<Content: View>: View {
         VStack(spacing: 0) {
             content
         }
-        .background(DesignTokens.surfaceMain)
-        .cornerRadius(16)
-        .skeuoSunken(cornerRadius: 16)
+        .background(DesignTokens.surfaceSecondary)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(DesignTokens.textSecondary.opacity(0.1), lineWidth: 1)
+        )
     }
 }
 

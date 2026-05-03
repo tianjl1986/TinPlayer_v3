@@ -48,11 +48,15 @@ struct BottomControlsView: View {
             }
             .buttonStyle(SkeuoCircleButtonStyle(size: navButtonSize))
             
-            // 5. Search / Queue (Q)
-            Button(action: { /* Action */ }) {
-                Text("Q")
-                    .font(.system(size: 13, weight: .black))
-                    .foregroundColor(DesignTokens.textSecondary)
+            // 5. Playback Mode (Repeat/Shuffle)
+            Button(action: { 
+                withAnimation(.spring()) {
+                    player.togglePlaybackMode()
+                }
+            }) {
+                Image(systemName: player.playbackMode.iconName)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(player.playbackMode == .list ? DesignTokens.textSecondary : DesignTokens.textActive)
             }
             .buttonStyle(SkeuoCircleButtonStyle(size: sideButtonSize))
         }

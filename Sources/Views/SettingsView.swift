@@ -55,9 +55,12 @@ struct SettingsView: View {
                                 }
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 18)
-                                .background(DesignTokens.surfaceMain)
+                                .background(DesignTokens.surfaceSecondary)
                                 .cornerRadius(12)
-                                .skeuoRaised(cornerRadius: 12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(DesignTokens.textSecondary.opacity(0.1), lineWidth: 1)
+                                )
                             }
                             
                             Button(action: { /* Add folder logic */ }) {

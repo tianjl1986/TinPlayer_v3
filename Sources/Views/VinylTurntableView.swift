@@ -36,9 +36,9 @@ struct VinylTurntableView: View {
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm Assembly (Pivot fixed at top-right, using slice)
+            // 3. Tonearm Assembly (Pivot fixed at top-right diagonal, using slice)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 90, y: -120)
+                .offset(x: 130, y: -90)
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
@@ -58,7 +58,7 @@ struct TonearmView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 90, height: 240) // Reduced size
-            .rotationEffect(.degrees(isMoving ? 20 : 0), anchor: .top)
+            .rotationEffect(.degrees(isMoving ? 25 : 5), anchor: .top)
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }

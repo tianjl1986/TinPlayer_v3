@@ -127,8 +127,8 @@ struct AlbumShelfPill: View {
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(height: 72)
-                        .blur(radius: 25)
-                        .overlay(Color.black.opacity(0.6))
+                        .blur(radius: 12)
+                        .overlay(Color.black.opacity(0.4))
                         .clipped()
                 } else {
                     Color.black.opacity(0.8)
@@ -192,7 +192,7 @@ struct AlbumShelfPill: View {
                                 .padding(8)
                                 .background(Color.white.opacity(0.1))
                                 .cornerRadius(6)
-                                .foregroundColor(.white)
+                                .foregroundColor(DesignTokens.textPrimary)
                         }
                         .padding(16)
                     }
