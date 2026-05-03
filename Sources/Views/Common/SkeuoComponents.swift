@@ -165,23 +165,23 @@ struct TypewriterText: View {
 
 extension View {
     func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
-        self.shadow(color: DesignTokens.skeuoShadowDark, radius: 10, x: 6, y: 6)
-            .shadow(color: DesignTokens.skeuoShadowLight, radius: 10, x: -6, y: -6)
+        self.shadow(color: DesignTokens.skeuoShadowDark.opacity(0.7), radius: 6, x: 4, y: 4)
+            .shadow(color: DesignTokens.skeuoShadowLight.opacity(0.7), radius: 6, x: -4, y: -4)
     }
     
     func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {
         self.overlay(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(DesignTokens.skeuoShadowDark, lineWidth: 4)
-                .blur(radius: 4)
-                .offset(x: 2, y: 2)
+                .stroke(DesignTokens.skeuoShadowDark.opacity(0.4), lineWidth: 2)
+                .blur(radius: 2)
+                .offset(x: 1, y: 1)
                 .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.black, Color.clear]), startPoint: .topLeading, endPoint: .bottomTrailing)))
         )
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(DesignTokens.skeuoShadowLight, lineWidth: 4)
-                .blur(radius: 4)
-                .offset(x: -2, y: -2)
+                .stroke(DesignTokens.skeuoShadowLight.opacity(0.4), lineWidth: 2)
+                .blur(radius: 2)
+                .offset(x: -1, y: -1)
                 .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black]), startPoint: .topLeading, endPoint: .bottomTrailing)))
         )
     }

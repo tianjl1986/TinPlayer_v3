@@ -32,7 +32,7 @@ struct NowPlayingView: View {
                     VinylTurntableView(showLyrics: $showLyrics)
                 }
                 .frame(height: 360)
-                .padding(.top, 20)
+                .padding(.top, 70)
                 
                 // 3. Track Info (Left Aligned as per Image 6)
                 VStack(alignment: .leading, spacing: 8) {
@@ -75,7 +75,7 @@ struct NowPlayingView: View {
                 // 5. Controls
                 BottomControlsView(showLyrics: $showLyrics)
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 64)
+                    .padding(.bottom, 34)
             }
             .blur(radius: showLyrics ? 20 : 0)
             .animation(.easeInOut, value: showLyrics)

@@ -138,9 +138,9 @@ struct LyricsView: View {
                 .padding(.horizontal, 32)
                 
                 BottomControlsView(showLyrics: $showLyrics)
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 30) // Adjusted bottom padding
             }
-            .padding(.top, 20)
+            .padding(.top, 50) // Shifted down by 30px from 20px
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)

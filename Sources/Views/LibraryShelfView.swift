@@ -126,7 +126,7 @@ struct AlbumShelfPill: View {
                     Image(uiImage: cover)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: 72)
+                        .frame(height: 52) // Unified height reduction
                         .blur(radius: 12)
                         .overlay(Color.black.opacity(0.4))
                         .clipped()
@@ -146,12 +146,12 @@ struct AlbumShelfPill: View {
                 }
                 .padding(.horizontal, 24)
             }
-            .frame(height: 72)
+            .frame(height: 52) // Unified height reduction
             .background(Color.black)
             .cornerRadius(12)
             .contentShape(Rectangle())
             .onTapGesture { onToggle() }
-            .skeuoRaised(cornerRadius: 12)
+            // Removed skeuoRaised for shelf cards per user request to clean up shadows
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 0) {
