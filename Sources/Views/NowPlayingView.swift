@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NowPlayingView: View {
-    @StateObject private var player = MusicPlayer.shared
+    @ObservedObject var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -17,7 +17,7 @@ struct NowPlayingView: View {
                     }
                 ),
                 rightItem: AnyView(
-                    Button(action: { /* More */ }) {
+                    Button(action: { /* More options if needed */ }) {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
@@ -25,13 +25,12 @@ struct NowPlayingView: View {
                 )
             )
             
-            // 2. Turntable Area
-            VStack {
-                Spacer(minLength: 0)
+            // 2. Turntable Area - Fixed Height to prevent "growing" animation
+            ZStack {
                 VinylTurntableView()
-                Spacer(minLength: 0)
             }
-            .frame(height: 380)
+            .frame(height: 360)
+            .padding(.top, 20)
             
             // 3. Track Info
             VStack(spacing: 8) {
@@ -39,30 +38,34 @@ struct NowPlayingView: View {
                     .font(.system(size: 24, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
                 
                 Text(player.currentTrack?.artist ?? "THE VINYL ORCHESTRA")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
             }
             .padding(.horizontal, 40)
-            .padding(.top, 20)
+            .padding(.top, 32)
             
             Spacer(minLength: 20)
             
-            // 4. Progress Bar with Times on Sides
-            HStack(spacing: 12) {
-                Text(formatDuration(player.currentTime))
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
-                    .frame(width: 40, alignment: .leading)
-                
-                progressBar
-                
-                Text(formatDuration(player.duration))
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(DesignTokens.textSecondary)
-                    .frame(width: 40, alignment: .trailing)
+            // 4. Progress Bar with Times on Sides (1:1 Design Layout)
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    Text(formatDuration(player.currentTime))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 45, alignment: .leading)
+                    
+                    progressBar
+                    
+                    Text(formatDuration(player.duration))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 45, alignment: .trailing)
+                }
             }
             .padding(.horizontal, 32)
             
@@ -71,13 +74,10 @@ struct NowPlayingView: View {
             // 5. Controls
             BottomControlsView()
                 .padding(.horizontal, 24)
-                .padding(.bottom, 40)
+                .padding(.bottom, 48)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil // Disable layout gathering animation
-        }
     }
     
     private var progressBar: some View {
@@ -97,9 +97,9 @@ struct NowPlayingView: View {
                         )
                     )
                     .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
-                    .shadow(color: DesignTokens.textActive.opacity(0.3), radius: 4, x: 0, y: 2)
             }
         }
         .frame(height: 8)
     }
 }
+

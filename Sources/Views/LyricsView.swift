@@ -1,17 +1,19 @@
 import SwiftUI
 
 struct LyricsView: View {
-    @StateObject private var player = MusicPlayer.shared
+    @ObservedObject var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
+    @State private var knobRotation: Double = 0
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     // 🚀 Figma 1:1 精确几何参数
-    private let rollerHeight: CGFloat = 54
-    private let knobSize: CGSize = CGSize(width: 72, height: 72)
+    private let rollerHeight: CGFloat = 60
+    private let knobSize: CGFloat = 64
     private let paperWidth: CGFloat = 340
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header - Standardized with Library View
+            // 1. Header - Standardized
             AppHeader(
                 title: "LYRICS",
                 leftItem: AnyView(
@@ -20,10 +22,17 @@ struct LyricsView: View {
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
+                ),
+                rightItem: AnyView(
+                    Button(action: { /* More */ }) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DesignTokens.textPrimary)
+                    }
                 )
             )
             
-            // 2. Typewriter Area
+            // 2. Paper & Roller Area
             ZStack(alignment: .top) {
                 // Paper
                 ScrollViewReader { proxy in
@@ -35,7 +44,8 @@ struct LyricsView: View {
                                 Text("NO LYRICS FOUND")
                                     .font(.system(size: 14, weight: .black))
                                     .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
-                                    .frame(maxWidth: .infinity)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.top, 100)
                             } else {
                                 ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
                                     TypewriterText(
@@ -46,11 +56,10 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 400)
+                            Spacer(minLength: 300) // Extra bottom padding for "paper bottom clipped" fix
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
-                        .background(Color.white)
                     }
                     .onChange(of: player.currentLyricIndex) { newIndex in
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
@@ -59,54 +68,63 @@ struct LyricsView: View {
                     }
                 }
                 .frame(width: paperWidth)
-                .background(Color.white)
+                .background(
+                    ZStack {
+                        Color.white
+                        Image("paper_texture_light") // Subtle texture if available
+                            .resizable()
+                            .opacity(0.05)
+                    }
+                )
                 .cornerRadius(4)
                 .skeuoRaised(cornerRadius: 4)
-                .offset(y: 36)
+                .offset(y: 40)
                 .zIndex(0)
                 
-                // Roller Assembly - Aspect Ratio Corrected
-                GeometryReader { rollerGeo in
-                    HStack(spacing: 0) {
-                        Image("knob_light")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: knobSize.width, height: knobSize.height)
-                        
+                // Roller Assembly
+                HStack(spacing: -15) {
+                    knobView
+                    
+                    ZStack {
                         Image("roller_light")
                             .resizable()
-                            .aspectRatio(contentMode: .fill) // Fill to preserve texture aspect
-                            .frame(width: rollerGeo.size.width - (knobSize.width * 2), height: rollerHeight)
-                            .clipped()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: rollerHeight)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .skeuoRaised(cornerRadius: 12)
                         
-                        Image("knob_light")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: knobSize.width, height: knobSize.height)
+                        // Mechanical shadow overlay
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.black.opacity(0.1), Color.clear, Color.black.opacity(0.15)]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: rollerHeight)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                     .frame(maxWidth: .infinity)
+                    
+                    knobView
                 }
-                .frame(height: knobSize.height)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 16)
                 .zIndex(1)
             }
             .frame(maxHeight: .infinity)
             
-            // 3. Spacing and Controls
+            // 3. Progress & Controls - Visual Consistency
             VStack(spacing: 24) {
-                // Progress Bar with Times on Sides
                 HStack(spacing: 12) {
                     Text(formatDuration(player.currentTime))
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                         .foregroundColor(DesignTokens.textSecondary)
-                        .frame(width: 40, alignment: .leading)
+                        .frame(width: 45, alignment: .leading)
                     
                     progressBar
                     
                     Text(formatDuration(player.duration))
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                         .foregroundColor(DesignTokens.textSecondary)
-                        .frame(width: 40, alignment: .trailing)
+                        .frame(width: 45, alignment: .trailing)
                 }
                 .padding(.horizontal, 32)
                 
@@ -118,9 +136,22 @@ struct LyricsView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil // Disable entrance jitter
+        .onReceive(timer) { _ in
+            if player.isPlaying {
+                withAnimation(.linear(duration: 0.1)) {
+                    knobRotation += 12
+                }
+            }
         }
+    }
+    
+    private var knobView: some View {
+        Image("knob_light")
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: knobSize, height: knobSize)
+            .rotationEffect(.degrees(knobRotation))
+            .skeuoRaised(cornerRadius: 32)
     }
     
     private var progressBar: some View {
@@ -139,3 +170,6 @@ struct LyricsView: View {
         .frame(height: 8)
     }
 }
+
+}
+

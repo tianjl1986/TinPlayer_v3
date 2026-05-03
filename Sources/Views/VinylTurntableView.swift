@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct VinylTurntableView: View {
-    @StateObject private var player = MusicPlayer.shared
+    @ObservedObject var player = MusicPlayer.shared
     @StateObject private var libraryService = MusicLibraryService.shared
     @State private var rotation: Double = 0
     
@@ -16,17 +16,19 @@ struct VinylTurntableView: View {
     
     var body: some View {
         ZStack {
-            // 1. Turntable Base (Static Background)
-            RoundedRectangle(cornerRadius: 24)
-                .fill(DesignTokens.surfaceMain)
-                .frame(width: baseSize, height: baseSize)
-                .skeuoRaised(cornerRadius: 24)
-            
-            Image("turntable_base_light")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: baseSize, height: baseSize)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
+            // 1. Turntable Base
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(DesignTokens.surfaceMain)
+                    .frame(width: baseSize, height: baseSize)
+                    .skeuoRaised(cornerRadius: 24)
+                
+                Image("turntable_base_light")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: baseSize, height: baseSize)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+            }
             
             // 2. Rotating Platter & Record
             ZStack {
@@ -35,6 +37,7 @@ struct VinylTurntableView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: platterSize, height: platterSize)
+                    .rotationEffect(.degrees(rotation))
                 
                 // Vinyl Record
                 ZStack {
@@ -72,22 +75,23 @@ struct VinylTurntableView: View {
                 .rotationEffect(.degrees(rotation))
             }
             
-            // 3. Tonearm Assembly
+            // 3. Tonearm Assembly - High Precision Alignment
             ZStack {
                 Image("tonearm_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 170) // Further shrunken to match design
-                    .rotationEffect(.degrees(player.isPlaying ? -15 : -40), anchor: .init(x: 0.85, y: 0.15))
-                    .offset(x: 85, y: -65)
-                    .animation(.spring(response: 0.6, dampingFraction: 0.7), value: player.isPlaying)
+                    .frame(width: 140) // Reduced size
+                    .rotationEffect(.degrees(player.isPlaying ? -8 : -35), anchor: .init(x: 0.85, y: 0.15))
+                    .offset(x: 95, y: -65)
+                    .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
             }
         }
         .frame(width: baseSize, height: baseSize)
         .onReceive(timer) { _ in
             if player.isPlaying {
-                rotation += 1.5 // Rotate 1.5 degrees every 0.05s
+                rotation += 1.2 // Smoother rotation
             }
         }
     }
 }
+

@@ -9,7 +9,7 @@ struct LibraryShelfView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Top Bar - Standardized
+            // 1. Top Bar - Standardized to design specs
             AppHeader(
                 title: "MY COLLECTION",
                 leftItem: AnyView(
@@ -53,6 +53,7 @@ struct LibraryShelfView: View {
                                 navigateToNowPlaying = true
                             }
                         )
+                        .id(album.id)
                     }
                 }
                 .padding(24)
@@ -60,9 +61,6 @@ struct LibraryShelfView: View {
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil // Disable root entrance jitter
-        }
     }
 }
 
@@ -71,110 +69,91 @@ struct AlbumShelfSpine: View {
     let isExpanded: Bool
     let onTap: () -> Void
     let onPlayTrack: (Track) -> Void
-    @StateObject private var player = MusicPlayer.shared
     
     var body: some View {
         VStack(spacing: 0) {
-            spineHeader
-            
-            if isExpanded {
-                trackList
-            }
-        }
-    }
-    
-    private var spineHeader: some View {
-        Button(action: onTap) {
-            ZStack {
-                albumBackground
-                
-                headerContent
-            }
-            .frame(height: 80)
-            .contentShape(Rectangle())
-            .cornerRadius(12)
-            .skeuoRaised(cornerRadius: 12)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .zIndex(10)
-    }
-    
-    @ViewBuilder
-    private var albumBackground: some View {
-        Group {
-            if let cover = album.coverImage {
-                Image(uiImage: cover)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 80)
-                    .blur(radius: 20)
-                    .overlay(Color.black.opacity(0.4))
-                    .clipped()
-            } else {
-                Color.black.opacity(0.8)
-            }
-            
-            LinearGradient(
-                gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        }
-    }
-    
-    private var headerContent: some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(album.title.uppercased())
-                    .font(.system(size: 16, weight: .black))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                Text(album.artist.uppercased())
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white.opacity(0.7))
-                    .lineLimit(1)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-                .rotationEffect(.degrees(isExpanded ? 90 : 0))
-        }
-        .padding(.horizontal, 24)
-    }
-    
-    private var trackList: some View {
-        VStack(spacing: 0) {
-            ForEach(album.tracks) { track in
-                TrackRowView(track: track, onPlay: { onPlayTrack(track) })
-                
-                Divider()
+            // Spine Header
+            Button(action: onTap) {
+                ZStack {
+                    // Album Art Background (Blurred)
+                    if let cover = album.coverImage {
+                        Image(uiImage: cover)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 80)
+                            .blur(radius: 20)
+                            .overlay(Color.black.opacity(0.4))
+                            .clipped()
+                    } else {
+                        Color.black.opacity(0.8)
+                    }
+                    
+                    // Metallic Reflection Overlay
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    
+                    // Text Content
+                    HStack(spacing: 16) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(album.title.uppercased())
+                                .font(.system(size: 16, weight: .black))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            Text(album.artist.uppercased())
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white.opacity(0.7))
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                    }
                     .padding(.horizontal, 24)
+                }
+                .frame(height: 80)
+                .cornerRadius(12)
+                .skeuoRaised(cornerRadius: 12)
             }
+            .buttonStyle(PlainButtonStyle())
+            .zIndex(10)
             
-            fullAlbumLink
-        }
-        .background(DesignTokens.surfaceLight.opacity(0.8))
-        .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-        .padding(.top, -10)
-        .transition(.asymmetric(
-            insertion: .move(edge: .top).combined(with: .opacity),
-            removal: .move(edge: .top).combined(with: .opacity)
-        ))
-        .zIndex(0)
-    }
-    
-    private var fullAlbumLink: some View {
-        NavigationLink(destination: AlbumDetailView(album: album)) {
-            Text("VIEW FULL ALBUM")
-                .font(.system(size: 11, weight: .black))
-                .foregroundColor(DesignTokens.textActive)
-                .padding(.vertical, 18)
+            // Track List (Expanded)
+            if isExpanded {
+                VStack(spacing: 0) {
+                    ForEach(album.tracks) { track in
+                        TrackRowView(track: track, onPlay: { onPlayTrack(track) })
+                        
+                        Divider()
+                            .padding(.horizontal, 24)
+                    }
+                    
+                    NavigationLink(destination: AlbumDetailView(album: album)) {
+                        Text("VIEW FULL ALBUM")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundColor(DesignTokens.textActive)
+                            .padding(.vertical, 18)
+                    }
+                }
+                .background(DesignTokens.surfaceLight.opacity(0.8))
+                .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
+                .padding(.top, -8) // Slight overlap for visual continuity
+                .transition(.asymmetric(
+                    insertion: .move(edge: .top).combined(with: .opacity),
+                    removal: .move(edge: .top).combined(with: .opacity)
+                ))
+                .zIndex(0)
+            }
         }
     }
 }
+
 
 struct TrackRowView: View {
     let track: Track

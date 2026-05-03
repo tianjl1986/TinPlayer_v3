@@ -3,8 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var player = MusicPlayer.shared
     @StateObject private var libraryService = MusicLibraryService.shared
-    
-    @AppStorage("app_language") private var appLanguage: String = "English"
+    @ObservedObject private var loc = LocalizationManager.shared
     
     var body: some View {
         NavigationView {
@@ -24,42 +23,42 @@ struct HomeView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 40) {
                         
-                        // Section 0: CLASSIFICATION
+                        // Section: CLASSIFICATION
                         VStack(alignment: .leading, spacing: 16) {
-                            Text(appLanguage == "English" ? "CLASSIFICATION" : "分类")
+                            Text(loc.t("CLASSIFICATION"))
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(DesignTokens.textSecondary)
                             
                             SkeuoSettingsGroup {
                                 NavigationLink(destination: LibraryShelfView()) {
-                                    SkeuoSettingsRow(title: appLanguage == "English" ? "By Album" : "按专辑", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: loc.t("By Album"), value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
                                 Divider().padding(.horizontal, 20)
                                 
                                 NavigationLink(destination: ArtistListView()) {
-                                    SkeuoSettingsRow(title: appLanguage == "English" ? "By Artist" : "按歌手", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: loc.t("By Artist"), value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                             }
                         }
                         
-                        // Section 1: MEDIA LIBRARY (Quick Access)
+                        // Section: MEDIA LIBRARY (Quick Access)
                         VStack(alignment: .leading, spacing: 16) {
-                            Text(appLanguage == "English" ? "MEDIA LIBRARY" : "媒体库")
+                            Text(loc.t("MEDIA LIBRARY"))
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(DesignTokens.textSecondary)
                             
                             SkeuoSettingsGroup {
                                 NavigationLink(destination: LibraryShelfView()) {
-                                    SkeuoSettingsRow(title: appLanguage == "English" ? "Browse All Music" : "浏览所有音乐", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: loc.language == "en" ? "Browse All Music" : "浏览所有音乐", value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
                                 Divider().padding(.horizontal, 20)
                                 
-                                SkeuoSettingsRow(title: appLanguage == "English" ? "Recently Added" : "最近添加", value: "12 New", showBackground: false)
+                                SkeuoSettingsRow(title: loc.language == "en" ? "Recently Added" : "最近添加", value: "12 New", showBackground: false)
                             }
                         }
                         
@@ -79,10 +78,8 @@ struct HomeView: View {
             }
             .background(DesignTokens.surfaceLight.ignoresSafeArea())
             .navigationBarHidden(true)
-            .transaction { transaction in
-                transaction.animation = nil
-            }
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
 }
+

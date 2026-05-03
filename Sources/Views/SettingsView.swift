@@ -2,16 +2,16 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @Environment(\.presentationMode) var presentationMode
     
-    @AppStorage("app_language") private var appLanguage: String = "English"
     @AppStorage("app_theme") private var appTheme: String = "Light"
     
     var body: some View {
         VStack(spacing: 0) {
             // 1. Header - Standardized
             AppHeader(
-                title: appLanguage == "English" ? "SETTINGS" : "设置",
+                title: loc.t("SETTINGS"),
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -21,7 +21,7 @@ struct SettingsView: View {
                 ),
                 rightItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Text(appLanguage == "English" ? "DONE" : "完成")
+                        Text(loc.language == "en" ? "DONE" : "完成")
                             .font(.system(size: 14, weight: .black))
                             .foregroundColor(DesignTokens.textActive)
                     }
@@ -31,51 +31,51 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
                     
-                    // Section 0: CLASSIFICATION
+                    // Section: CLASSIFICATION
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(appLanguage == "English" ? "CLASSIFICATION" : "分类")
+                        Text(loc.t("CLASSIFICATION"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                         
                         SkeuoSettingsGroup {
                             NavigationLink(destination: LibraryShelfView()) {
-                                SkeuoSettingsRow(title: appLanguage == "English" ? "By Album" : "按专辑", value: ">", isLink: true, showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("By Album"), value: ">", isLink: true, showBackground: false)
                             }
                             .buttonStyle(PlainButtonStyle())
                             
                             Divider().padding(.horizontal, 20)
                             
                             NavigationLink(destination: ArtistListView()) {
-                                SkeuoSettingsRow(title: appLanguage == "English" ? "By Artist" : "按歌手", value: ">", isLink: true, showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("By Artist"), value: ">", isLink: true, showBackground: false)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
-                    // Section 1: MEDIA LIBRARY
+                    // Section: MEDIA LIBRARY
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(appLanguage == "English" ? "MEDIA LIBRARY" : "媒体库")
+                        Text(loc.t("MEDIA LIBRARY"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                         
                         SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: appLanguage == "English" ? "Media Folders" : "媒体文件夹", value: "\(libraryService.mediaFolders.count) \(appLanguage == "English" ? "Folders" : "个文件夹")", showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Media Folders"), value: "\(libraryService.mediaFolders.count) \(loc.language == "en" ? "Folders" : "个文件夹")", showBackground: false)
                             Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: appLanguage == "English" ? "Auto Scan Library" : "自动扫描媒体库", value: "Enabled", isToggle: true, showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Auto-scan on startup"), value: "Enabled", isToggle: true, showBackground: false)
                         }
                     }
 
-                    // Section 1.5: APPEARANCE
+                    // Section: APPEARANCE
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(appLanguage == "English" ? "APPEARANCE" : "外观")
+                        Text(loc.t("GENERAL SETTINGS"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                         
                         SkeuoSettingsGroup {
                             Button(action: {
-                                appLanguage = (appLanguage == "English" ? "中文" : "English")
+                                loc.language = (loc.language == "en" ? "zh" : "en")
                             }) {
-                                SkeuoSettingsRow(title: appLanguage == "English" ? "Language" : "语言", value: appLanguage, isLink: true, showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("Interface Language"), value: loc.language == "en" ? "English" : "中文", isLink: true, showBackground: false)
                             }
                             .buttonStyle(PlainButtonStyle())
                             
@@ -84,28 +84,15 @@ struct SettingsView: View {
                             Button(action: {
                                 appTheme = (appTheme == "Light" ? "Dark" : "Light")
                             }) {
-                                SkeuoSettingsRow(title: appLanguage == "English" ? "Theme" : "主题", value: appTheme, isLink: true, showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("Theme"), value: loc.t(appTheme), isLink: true, showBackground: false)
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
-                    // Section 2: AUDIO ENGINE
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(appLanguage == "English" ? "AUDIO ENGINE" : "音频引擎")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(DesignTokens.textSecondary)
-                        
-                        SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: appLanguage == "English" ? "Graphic Equalizer" : "图形均衡器", value: "Flat >", isLink: true, showBackground: false)
-                            Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: appLanguage == "English" ? "Resampling Mode" : "重采样模式", value: "SoX High", isLink: true, showBackground: false)
-                        }
-                    }
-                    
                     // Danger Zone
                     Button(action: { /* Reset */ }) {
-                        Text(appLanguage == "English" ? "RESET APPLICATION DATA" : "重置应用程序数据")
+                        Text(loc.language == "en" ? "RESET APPLICATION DATA" : "重置应用程序数据")
                             .font(.system(size: 12, weight: .black))
                             .foregroundColor(.red)
                             .frame(maxWidth: .infinity)
@@ -122,8 +109,7 @@ struct SettingsView: View {
         }
         .background(DesignTokens.surfaceLight.ignoresSafeArea())
         .navigationBarHidden(true)
-        .transaction { transaction in
-            transaction.animation = nil
-        }
     }
 }
+
+
