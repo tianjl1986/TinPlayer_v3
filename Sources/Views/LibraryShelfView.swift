@@ -72,93 +72,109 @@ struct AlbumShelfSpine: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Spine Header - Blurred background as requested
-            Button(action: onTap) {
-                ZStack {
-                    // Background: Blurred Cover
-                    if let cover = album.coverImage {
-                        Image(uiImage: cover)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(height: 80)
-                            .blur(radius: 20)
-                            .overlay(Color.black.opacity(0.4))
-                            .clipped()
-                    } else {
-                        Color.black.opacity(0.8)
-                    }
-                    
-                    // Glossy Overlay (Optional, for extra skeuo feel)
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    
-                    HStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(album.title.uppercased())
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white)
-                            Text(album.artist.uppercased())
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white.opacity(0.7))
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
-                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                    }
-                    .padding(.horizontal, 24)
-                }
-                .frame(height: 80)
-                .cornerRadius(12)
-                .skeuoRaised(cornerRadius: 12)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .zIndex(1)
+            spineHeader
             
             if isExpanded {
-                VStack(spacing: 0) {
-                    ForEach(album.tracks) { track in
-                        NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track, in: album.tracks) }) {
-                            HStack {
-                                Text(track.title)
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(DesignTokens.textPrimary)
-                                Spacer()
-                                Text(formatDuration(track.duration))
-                                    .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(DesignTokens.textSecondary)
-                            }
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 16)
-                            .background(DesignTokens.surfaceLight.opacity(0.5))
-                            .cornerRadius(8)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Divider()
-                            .padding(.horizontal, 24)
-                    }
-                    
-                    NavigationLink(destination: AlbumDetailView(album: album)) {
-                        Text("VIEW FULL ALBUM")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(DesignTokens.textActive)
-                            .padding(.vertical, 18)
-                    }
-                }
-                .background(DesignTokens.surfaceLight.opacity(0.8))
-                .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-                .padding(.top, -12) // Overlap with spine
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .zIndex(0)
+                trackList
             }
         }
+    }
+    
+    private var spineHeader: some View {
+        Button(action: onTap) {
+            ZStack {
+                albumBackground
+                
+                headerContent
+            }
+            .frame(height: 80)
+            .cornerRadius(12)
+            .skeuoRaised(cornerRadius: 12)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .zIndex(1)
+    }
+    
+    @ViewBuilder
+    private var albumBackground: some View {
+        Group {
+            if let cover = album.coverImage {
+                Image(uiImage: cover)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 80)
+                    .blur(radius: 20)
+                    .overlay(Color.black.opacity(0.4))
+                    .clipped()
+            } else {
+                Color.black.opacity(0.8)
+            }
+            
+            LinearGradient(
+                gradient: Gradient(colors: [Color.white.opacity(0.15), Color.clear, Color.black.opacity(0.2)]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+    
+    private var headerContent: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(album.title.uppercased())
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                Text(album.artist.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .rotationEffect(.degrees(isExpanded ? 90 : 0))
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    private var trackList: some View {
+        VStack(spacing: 0) {
+            ForEach(album.tracks) { track in
+                Button(action: { onPlayTrack(track) }) {
+                    HStack {
+                        Text(track.title)
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(DesignTokens.textPrimary)
+                        Spacer()
+                        Text(formatDuration(track.duration))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(DesignTokens.textSecondary)
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    .background(DesignTokens.surfaceLight.opacity(0.5))
+                    .cornerRadius(8)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Divider()
+                    .padding(.horizontal, 24)
+            }
+            
+            NavigationLink(destination: AlbumDetailView(album: album)) {
+                Text("VIEW FULL ALBUM")
+                    .font(.system(size: 11, weight: .black))
+                    .foregroundColor(DesignTokens.textActive)
+                    .padding(.vertical, 18)
+            }
+        }
+        .background(DesignTokens.surfaceLight.opacity(0.8))
+        .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
+        .padding(.top, -12) // Overlap with spine
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .zIndex(0)
     }
     
     private func formatDuration(_ duration: TimeInterval) -> String {

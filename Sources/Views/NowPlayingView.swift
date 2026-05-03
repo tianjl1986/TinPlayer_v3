@@ -61,28 +61,7 @@ struct NowPlayingView: View {
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundColor(DesignTokens.textSecondary)
                 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        // Track: Sunken
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.black.opacity(0.1))
-                            .frame(height: 8)
-                            .skeuoSunken(cornerRadius: 6)
-                        
-                        // Fill: Slanted / Vivid
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [DesignTokens.textActive, DesignTokens.textActive.opacity(0.8)]),
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
-                            .shadow(color: DesignTokens.textActive.opacity(0.3), radius: 4, x: 0, y: 2)
-                    }
-                }
-                .frame(height: 8)
+                progressBar
             }
             .padding(.horizontal, 48)
             
@@ -95,5 +74,30 @@ struct NowPlayingView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+    }
+    
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                // Track: Sunken
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black.opacity(0.1))
+                    .frame(height: 8)
+                    .skeuoSunken(cornerRadius: 6)
+                
+                // Fill: Slanted / Vivid
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [DesignTokens.textActive, DesignTokens.textActive.opacity(0.8)]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
+                    .shadow(color: DesignTokens.textActive.opacity(0.3), radius: 4, x: 0, y: 2)
+            }
+        }
+        .frame(height: 8)
     }
 }
