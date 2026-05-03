@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var libraryService = MusicLibraryService.shared
     @ObservedObject private var loc = LocalizationManager.shared
+    @State private var isAddingFolder = false
     
     var body: some View {
         VStack(spacing: 0) {

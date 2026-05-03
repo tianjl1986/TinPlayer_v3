@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 
+@MainActor
 class MetadataService: ObservableObject {
     static let shared = MetadataService()
     @Published var artistImages: [String: UIImage] = [:]
@@ -38,9 +39,7 @@ class MetadataService: ObservableObject {
                 if let highResUrl = URL(string: highResUrlString) {
                     let (imgData, _) = try await session.data(from: highResUrl)
                     if let image = UIImage(data: imgData) {
-                        DispatchQueue.main.async {
-                            self.artistImages[name] = image
-                        }
+                        self.artistImages[name] = image
                         return image
                     }
                 }
