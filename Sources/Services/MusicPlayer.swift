@@ -54,6 +54,35 @@ class MusicPlayer: ObservableObject {
             Task { @MainActor in self?.pause() }
             return .success
         }
+        commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.skipNext() }
+            return .success
+        }
+        commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.skipPrevious() }
+            return .success
+        }
+    }
+    
+    func updateNowPlaying() {
+        guard let track = currentTrack else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            return
+        }
+        
+        var nowPlayingInfo = [String: Any]()
+        nowPlayingInfo[MPMediaItemPropertyTitle] = track.title
+        nowPlayingInfo[MPMediaItemPropertyArtist] = track.artist
+        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        
+        // Try to load artwork from album or track metadata
+        if let album = currentAlbum, let image = album.coverImage {
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = MPMediaItemArtwork(boundsSize: CGSize(width: 600, height: 600)) { _ in image }
+        }
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
     
     func playTrack(_ track: Track, in list: [Track] = []) {
@@ -107,6 +136,7 @@ class MusicPlayer: ObservableObject {
         
         newPlayer.play()
         self.isPlaying = true
+        updateNowPlaying()
         startObserver()
         
         playerObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { [weak self] _ in
@@ -152,8 +182,16 @@ class MusicPlayer: ObservableObject {
         }
     }
     
-    func pause() { player?.pause(); isPlaying = false }
-    func resume() { player?.play(); isPlaying = true }
+    func pause() { 
+        player?.pause()
+        isPlaying = false 
+        updateNowPlaying()
+    }
+    func resume() { 
+        player?.play()
+        isPlaying = true 
+        updateNowPlaying()
+    }
     
     func skipNext() {
         guard !playlist.isEmpty, let current = currentTrack, 
@@ -184,6 +222,8 @@ class MusicPlayer: ObservableObject {
     func seek(to time: TimeInterval) {
         let cmTime = CMTime(seconds: time, preferredTimescale: 600)
         player?.seek(to: cmTime)
+        currentTime = time
+        updateNowPlaying()
     }
     
     func togglePlaybackMode() {
@@ -212,6 +252,11 @@ class MusicPlayer: ObservableObject {
                 // 🚀 同步歌词索引
                 if let index = self.currentTrackLyrics.lastIndex(where: { $0.startTime <= time.seconds }) {
                     self.currentLyricIndex = index
+                }
+                
+                // 🚀 每隔 5 秒强制同步一次系统元数据，防止漂移
+                if Int(time.seconds) % 5 == 0 {
+                    self.updateNowPlaying()
                 }
             }
         }

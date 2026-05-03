@@ -79,16 +79,16 @@ struct AlbumDetailView: View {
                     .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
-                    .skeuoGradientBackground(cornerRadius: 26)
             }
+            .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 26))
             
             Button(action: { /* Shuffle Action */ }) {
                 Text("Shuffle")
                     .font(.system(size: 15, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .frame(width: 140, height: 52)
-                    .skeuoGradientBackground(cornerRadius: 26)
             }
+            .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 26))
         }
         .padding(.top, 8)
     }

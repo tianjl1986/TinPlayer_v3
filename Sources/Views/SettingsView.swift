@@ -63,17 +63,18 @@ struct SettingsView: View {
                                 )
                             }
                             
-                            Button(action: { /* Add folder logic */ }) {
+                            Button(action: { isAddingFolder = true }) {
                                 HStack {
-                                    Text("+ Add Folder")
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 14, weight: .bold))
+                                    Text("Add Music Folder")
                                         .font(.system(size: 14, weight: .heavy))
-                                        .foregroundColor(DesignTokens.textPrimary)
-                                    Spacer()
                                 }
-                                .padding(.horizontal, 20)
+                                .foregroundColor(DesignTokens.textPrimary)
+                                .frame(maxWidth: .infinity)
                                 .padding(.vertical, 18)
-                                .skeuoGradientBackground(cornerRadius: 12)
                             }
+                            .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 12))
                         }
                     }
                     
@@ -150,8 +151,8 @@ struct SettingsView: View {
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
-                                    .skeuoGradientBackground(cornerRadius: 12)
                             }
+                            .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 12))
                             
                             Button(action: { libraryService.clearLibrary() }) {
                                 Text("Clear Library")
@@ -159,8 +160,8 @@ struct SettingsView: View {
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
-                                    .skeuoGradientBackground(cornerRadius: 12)
                             }
+                            .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 12))
                         }
                     }
                     

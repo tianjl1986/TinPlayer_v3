@@ -169,25 +169,6 @@ extension View {
             .shadow(color: Color.white, radius: 4, x: -4, y: -4)
     }
     
-    func skeuoGradientBackground(cornerRadius: CGFloat = 16) -> some View {
-        self.background(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .fill(DesignTokens.surfaceMain)
-                .skeuoRaised(cornerRadius: cornerRadius)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius)
-                .stroke(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color.white.opacity(0.4), Color.clear]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 0.5
-                )
-        )
-    }
-    
     func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {
         self.overlay(
             RoundedRectangle(cornerRadius: cornerRadius)
@@ -203,6 +184,30 @@ extension View {
                 .offset(x: -1, y: -1)
                 .mask(RoundedRectangle(cornerRadius: cornerRadius).fill(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black]), startPoint: .topLeading, endPoint: .bottomTrailing)))
         )
+    }
+}
+
+// MARK: - Button Styles
+
+struct SkeuoRectButtonStyle: ButtonStyle {
+    var cornerRadius: CGFloat = 16
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(
+                ZStack {
+                    if configuration.isPressed {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(DesignTokens.surfaceMain)
+                            .skeuoSunken(cornerRadius: cornerRadius)
+                    } else {
+                        RoundedRectangle(cornerRadius: cornerRadius)
+                            .fill(DesignTokens.surfaceMain)
+                            .shadow(color: DesignTokens.skeuoShadowDark, radius: 4, x: 4, y: 4)
+                            .shadow(color: Color.white, radius: 4, x: -4, y: -4)
+                    }
+                }
+            )
     }
 }
 
