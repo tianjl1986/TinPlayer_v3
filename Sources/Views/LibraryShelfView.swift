@@ -4,6 +4,7 @@ struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @Environment(\.presentationMode) var presentationMode
     @State private var expandedAlbumID: String?
+    @State private var navigateToNowPlaying = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -27,6 +28,11 @@ struct LibraryShelfView: View {
             )
             .padding(.horizontal, 24)
             
+            // Hidden NavigationLink for programmatic navigation
+            NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
+                EmptyView()
+            }
+            
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 12) {
                     ForEach(libraryService.albums) { album in
@@ -41,6 +47,10 @@ struct LibraryShelfView: View {
                                         expandedAlbumID = album.id
                                     }
                                 }
+                            },
+                            onPlayTrack: { track in
+                                MusicPlayer.shared.playTrack(track, in: album.tracks)
+                                navigateToNowPlaying = true
                             }
                         )
                     }
@@ -57,11 +67,12 @@ struct AlbumShelfSpine: View {
     let album: Album
     let isExpanded: Bool
     let onTap: () -> Void
+    let onPlayTrack: (Track) -> Void
     @StateObject private var player = MusicPlayer.shared
     
     var body: some View {
         VStack(spacing: 0) {
-            // Spine Header (Collapsed state)
+            // Spine Header
             Button(action: onTap) {
                 HStack(spacing: 16) {
                     if let cover = album.coverImage {
@@ -102,7 +113,7 @@ struct AlbumShelfSpine: View {
             if isExpanded {
                 VStack(spacing: 0) {
                     ForEach(album.tracks) { track in
-                        NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track, in: album.tracks) }) {
+                        Button(action: { onPlayTrack(track) }) {
                             HStack {
                                 Text(track.title)
                                     .font(.system(size: 14, weight: .bold))
@@ -134,22 +145,5 @@ struct AlbumShelfSpine: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-    }
-}
-
-// Helper for specific corner radius
-extension View {
-    func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
-        clipShape(RoundedCorner(radius: radius, corners: corners))
-    }
-}
-
-struct RoundedCorner: Shape {
-    var radius: CGFloat = .infinity
-    var corners: UIRectCorner = .allCorners
-
-    func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
-        return Path(path.cgPath)
     }
 }

@@ -12,24 +12,17 @@ struct LyricsView: View {
     var body: some View {
         VStack(spacing: 0) {
             // 1. Header (60px)
-            HStack {
-                Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(DesignTokens.textSecondary)
-                }
-                Spacer()
-                Text("LYRICS")
-                    .font(.system(size: 14, weight: .black))
-                    .tracking(2)
-                Spacer()
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(DesignTokens.textSecondary)
-            }
-            .frame(height: 60)
+            AppHeader(
+                title: "LYRICS",
+                leftItem: AnyView(
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DesignTokens.textSecondary)
+                    }
+                )
+            )
             .padding(.horizontal, 24)
-            .background(DesignTokens.surfaceMain)
             
             // 2. 机械打字机区域
             ZStack(alignment: .top) {
@@ -85,6 +78,7 @@ struct LyricsView: View {
                         Image(systemName: "line.3.horizontal")
                             .font(.system(size: 12, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
+                            .frame(width: 24, height: 24) // Fixed frame for rotation center
                             .rotationEffect(.degrees(player.currentTime * 90))
                     }
                     .offset(x: -10)
@@ -108,6 +102,7 @@ struct LyricsView: View {
                         Image(systemName: "line.3.horizontal")
                             .font(.system(size: 12, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
+                            .frame(width: 24, height: 24) // Fixed frame for rotation center
                             .rotationEffect(.degrees(player.currentTime * 90))
                     }
                     .offset(x: 10)
@@ -159,6 +154,7 @@ struct TypewriterText: View {
                 .font(.custom("AmericanTypewriter-Bold", size: 22))
                 .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary)
                 .opacity(isPast ? 0.3 : (isCurrent ? 1.0 : 0.6))
+                .multilineTextAlignment(.leading)
             
             if isCurrent && visibleCount < text.count {
                 Rectangle()
@@ -169,6 +165,7 @@ struct TypewriterText: View {
             
             Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading) // Ensure leading alignment
         .padding(.horizontal, 40)
         .onAppear {
             if isCurrent { startTyping() }
@@ -177,9 +174,6 @@ struct TypewriterText: View {
         .onChange(of: isCurrent) { newValue in
             if newValue { startTyping() }
             else { visibleCount = text.count }
-        }
-        .onChange(of: text) { _ in
-            if isCurrent { startTyping() }
         }
     }
     

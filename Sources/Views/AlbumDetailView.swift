@@ -4,10 +4,11 @@ struct AlbumDetailView: View {
     let album: Album
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var player = MusicPlayer.shared
+    @State private var navigateToNowPlaying = false
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. 顶部栏 (Raised)
+            // 1. Top Bar
             AppHeader(
                 title: album.title,
                 leftItem: AnyView(
@@ -20,9 +21,14 @@ struct AlbumDetailView: View {
             )
             .padding(.horizontal, 24)
             
+            // Hidden NavigationLink for programmatic navigation
+            NavigationLink(destination: NowPlayingView(), isActive: $navigateToNowPlaying) {
+                EmptyView()
+            }
+            
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 40) {
-                    // 2. 专辑封面卡片 (拟物悬浮)
+                    // 2. Album Cover
                     VStack(spacing: 24) {
                         ZStack {
                             if let image = album.coverImage {
@@ -55,9 +61,14 @@ struct AlbumDetailView: View {
                                 .foregroundColor(DesignTokens.textSecondary)
                         }
                         
-                        // 播放控制按钮
+                        // Play Buttons
                         HStack(spacing: 16) {
-                            NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(album.tracks.first!, in: album.tracks) }) {
+                            Button(action: {
+                                if let first = album.tracks.first {
+                                    player.playTrack(first, in: album.tracks)
+                                    navigateToNowPlaying = true
+                                }
+                            }) {
                                 Text("Play All")
                                     .font(.system(size: 14, weight: .black))
                                     .foregroundColor(DesignTokens.textPrimary)
@@ -66,7 +77,13 @@ struct AlbumDetailView: View {
                                     .skeuoRaised(cornerRadius: 24)
                             }
                             
-                            Button(action: { /* Shuffle Action */ }) {
+                            Button(action: {
+                                let shuffled = album.tracks.shuffled()
+                                if let first = shuffled.first {
+                                    player.playTrack(first, in: shuffled)
+                                    navigateToNowPlaying = true
+                                }
+                            }) {
                                 Text("Shuffle")
                                     .font(.system(size: 14, weight: .black))
                                     .foregroundColor(DesignTokens.textPrimary)
@@ -80,8 +97,12 @@ struct AlbumDetailView: View {
                     
                     // 3. Track List
                     VStack(spacing: 0) {
-                        ForEach(Array(album.tracks.enumerated()), id: \.offset) { index, track in
-                            NavigationLink(destination: NowPlayingView().onAppear { player.playTrack(track, in: album.tracks) }) {
+                        ForEach(0..<album.tracks.count, id: \.self) { index in
+                            let track = album.tracks[index]
+                            Button(action: {
+                                player.playTrack(track, in: album.tracks)
+                                navigateToNowPlaying = true
+                            }) {
                                 HStack(spacing: 16) {
                                     Text(String(format: "%02d", index + 1))
                                         .font(.system(size: 12, weight: .black, design: .monospaced))

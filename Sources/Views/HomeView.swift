@@ -159,7 +159,7 @@ struct HomeView: View {
     private func performInitialScan() {
         isScanning = true
         Task {
-            await libraryService.scanLibrary()
+            libraryService.scanLibrary()
             await MainActor.run {
                 isScanning = false
             }
