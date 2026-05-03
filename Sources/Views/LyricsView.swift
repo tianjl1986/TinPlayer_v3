@@ -5,24 +5,23 @@ struct LyricsView: View {
     @Environment(\.presentationMode) var presentationMode
     
     // Figma 1:1 几何参数
-    private let rollerHeight: CGFloat = 40
-    private let knobSize: CGSize = CGSize(width: 48, height: 48)
+    private let rollerHeight: CGFloat = 50
+    private let knobSize: CGSize = CGSize(width: 64, height: 64)
     private let paperWidth: CGFloat = 340
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header
+            // 1. Header - Standardized
             AppHeader(
                 title: "LYRICS",
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(DesignTokens.textSecondary)
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
             )
-            .padding(.horizontal, 24)
             
             // 2. Typewriter Area
             ZStack(alignment: .top) {
@@ -30,7 +29,7 @@ struct LyricsView: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 32) {
-                            Spacer(minLength: 140) // Increased for roller clearance
+                            Spacer(minLength: 120) // Spacing for roller
                             
                             if player.currentTrackLyrics.isEmpty {
                                 Text("NO LYRICS FOUND")
@@ -47,7 +46,7 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 300) // Ensure enough scroll space at bottom
+                            Spacer(minLength: 400) // Ensure enough scroll space at bottom
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
@@ -63,61 +62,75 @@ struct LyricsView: View {
                 .background(Color.white)
                 .cornerRadius(4)
                 .skeuoRaised(cornerRadius: 4)
-                .offset(y: 30) // Align with roller
+                .offset(y: 35) // Align with roller
                 .zIndex(0)
                 
-                // Roller Assembly - Static
-                HStack(spacing: 0) {
-                    Image("knob_light")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 56, height: 56)
-                        .offset(x: -8)
-                    
-                    Image("roller_light")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 260, height: 48)
-                        .clipped()
-                    
-                    Image("knob_light")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 56, height: 56)
-                        .offset(x: 8)
+                // Roller Assembly - Use GeometryReader to avoid squeezing
+                GeometryReader { rollerGeo in
+                    HStack(spacing: 0) {
+                        Image("knob_light")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: knobSize.width, height: knobSize.height)
+                        
+                        Image("roller_light")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: rollerGeo.size.width - 128, height: rollerHeight)
+                            .clipped()
+                        
+                        Image("knob_light")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: knobSize.width, height: knobSize.height)
+                    }
                 }
+                .frame(height: 64)
                 .padding(.horizontal, 10)
                 .zIndex(1)
             }
             .frame(maxHeight: .infinity)
             
-            // 3. Spacing and Controls - Standardized Gaps
-            VStack(spacing: 32) {
-                // Progress Bar - Sunken
+            // 3. Spacing and Controls - Matches NowPlayingView
+            VStack(spacing: 24) {
+                // Progress Bar with Times
                 VStack(spacing: 12) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.black.opacity(0.1))
-                                .frame(height: 8)
-                                .skeuoSunken(cornerRadius: 6)
-                            
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(DesignTokens.textActive)
-                                .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
-                        }
+                    HStack {
+                        Text(formatDuration(player.currentTime))
+                        Spacer()
+                        Text(formatDuration(player.duration))
                     }
-                    .frame(height: 8)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(DesignTokens.textSecondary)
+                    
+                    progressBar
                 }
                 .padding(.horizontal, 48)
                 
                 BottomControlsView()
-                    .padding(.bottom, 32)
+                    .padding(.bottom, 40)
             }
-            .padding(.top, 32)
+            .padding(.top, 24)
             .background(DesignTokens.surfaceMain)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
+        .navigationBarHidden(true)
+    }
+    
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black.opacity(0.1))
+                    .frame(height: 8)
+                    .skeuoSunken(cornerRadius: 6)
+                
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(DesignTokens.textActive)
+                    .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
+            }
+        }
+        .frame(height: 8)
     }
 }
 
@@ -151,7 +164,6 @@ struct TypewriterText: View {
     }
     
     private func animate() {
-        // Reset timer or just use a task
         Task {
             for i in 0...text.count {
                 if !isCurrent { break }

@@ -88,11 +88,12 @@ struct AlbumShelfSpine: View {
                 headerContent
             }
             .frame(height: 80)
+            .contentShape(Rectangle()) // Ensure the whole area is clickable
             .cornerRadius(12)
             .skeuoRaised(cornerRadius: 12)
         }
         .buttonStyle(PlainButtonStyle())
-        .zIndex(1)
+        .zIndex(10) // Keep header above its own list
     }
     
     @ViewBuilder
@@ -122,7 +123,7 @@ struct AlbumShelfSpine: View {
         HStack(spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title.uppercased())
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 16, weight: .black))
                     .foregroundColor(.white)
                 Text(album.artist.uppercased())
                     .font(.system(size: 11, weight: .bold))
@@ -152,8 +153,11 @@ struct AlbumShelfSpine: View {
         }
         .background(DesignTokens.surfaceLight.opacity(0.8))
         .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-        .padding(.top, -12) // Overlap with spine
-        .transition(.move(edge: .top).combined(with: .opacity))
+        .padding(.top, -10) // Reduced overlap
+        .transition(.asymmetric(
+            insertion: .move(edge: .top).combined(with: .opacity),
+            removal: .move(edge: .top).combined(with: .opacity)
+        ))
         .zIndex(0)
     }
     

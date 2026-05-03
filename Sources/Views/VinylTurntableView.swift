@@ -5,11 +5,11 @@ struct VinylTurntableView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @State private var rotation: Double = 0
     
-    // Geometry constants based on assets
-    private let baseSize: CGFloat = 360
-    private let platterSize: CGFloat = 300
-    private let recordSize: CGFloat = 280
-    private let labelSize: CGFloat = 90
+    // Geometry constants based on assets - Adjusted for iPhone 14 Pro (393 width)
+    private let baseSize: CGFloat = 335 // Fits within 393 with 29 padding on each side
+    private let platterSize: CGFloat = 280
+    private let recordSize: CGFloat = 260
+    private let labelSize: CGFloat = 80
     
     var body: some View {
         ZStack {
@@ -24,6 +24,7 @@ struct VinylTurntableView: View {
                 .aspectRatio(contentMode: .fill)
                 .frame(width: baseSize, height: baseSize)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
+                .animation(nil, value: rotation) // Prevent base from participating in animation
             
             // 2. Rotating Platter & Record
             ZStack {
@@ -64,19 +65,21 @@ struct VinylTurntableView: View {
                     Image("spindle_light")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 24, height: 24)
                 }
                 .rotationEffect(.degrees(rotation))
             }
+            .animation(nil, value: rotation) // Ensure only rotationEffect uses the animation
             
             // 3. Tonearm Assembly
             ZStack {
                 Image("tonearm_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 260)
-                    .rotationEffect(.degrees(player.isPlaying ? -22 : -45), anchor: .init(x: 0.82, y: 0.18))
-                    .offset(x: 110, y: -70)
+                    .frame(width: 200) // Shrunk to fit better
+                    .rotationEffect(.degrees(player.isPlaying ? -15 : -40), anchor: .init(x: 0.85, y: 0.15))
+                    .offset(x: 90, y: -60)
+                    .animation(.spring(response: 0.6, dampingFraction: 0.7), value: player.isPlaying)
             }
         }
         .frame(width: baseSize, height: baseSize)
@@ -93,6 +96,7 @@ struct VinylTurntableView: View {
     }
     
     private func startRotation() {
+        // Use animation only for the rotation state
         withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
             rotation += 360
         }

@@ -6,7 +6,7 @@ struct NowPlayingView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header (Using AppHeader for consistency)
+            // 1. Header - Standardized
             AppHeader(
                 title: "NOW PLAYING",
                 leftItem: AnyView(
@@ -19,28 +19,27 @@ struct NowPlayingView: View {
                 rightItem: AnyView(
                     Button(action: { /* More */ }) {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 20, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
                     }
                 )
             )
             
-            Spacer().frame(height: 20)
-            
-            // 2. Turntable Area
-            VinylTurntableView()
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-            
-            Spacer().frame(height: 40)
+            // 2. Turntable Area - Fixed container to prevent growing animation
+            VStack {
+                Spacer(minLength: 0)
+                VinylTurntableView()
+                    .padding(.horizontal, 24)
+                Spacer(minLength: 0)
+            }
+            .frame(height: 380) // Lock height to prevent jitter
             
             // 3. Track Info
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 Text(player.currentTrack?.title ?? "SKEUOMORPHIC DREAMS")
-                    .font(.system(size: 22, weight: .black))
+                    .font(.system(size: 24, weight: .black))
                     .foregroundColor(DesignTokens.textPrimary)
                     .lineLimit(1)
-                    .multilineTextAlignment(.center)
                 
                 Text(player.currentTrack?.artist ?? "THE VINYL ORCHESTRA")
                     .font(.system(size: 16, weight: .bold))
@@ -48,10 +47,11 @@ struct NowPlayingView: View {
                     .lineLimit(1)
             }
             .padding(.horizontal, 40)
+            .padding(.top, 20)
             
-            Spacer().frame(height: 40)
+            Spacer(minLength: 20)
             
-            // 4. Progress Bar (Figma Style: Sunken and Slanted)
+            // 4. Progress Bar
             VStack(spacing: 12) {
                 HStack {
                     Text(formatDuration(player.currentTime))
@@ -65,7 +65,7 @@ struct NowPlayingView: View {
             }
             .padding(.horizontal, 48)
             
-            Spacer().frame(height: 50)
+            Spacer(minLength: 40)
             
             // 5. Controls
             BottomControlsView()
