@@ -170,6 +170,3 @@ struct LyricsView: View {
         .frame(height: 8)
     }
 }
-
-}
-
