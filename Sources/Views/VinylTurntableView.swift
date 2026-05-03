@@ -78,28 +78,25 @@ struct VinylTurntableView: View {
             }
             .buttonStyle(PlainButtonStyle())
             
-                // 3. Tonearm Assembly (Top-Alignment Reconstruction)
+                // 3. Tonearm Assembly (Rigid Combined Rotation)
+                // 🚀 采用“焊死”方案：将底座和唱臂作为一个整体旋转，确保圆心永不走位
                 ZStack(alignment: .top) {
-                    // Tonearm Image (Fixed Height for Precision)
-                    Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: tonearmWidth)
-                        .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
-                        .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
-                        .zIndex(1)
-                    
-                    // Base: Calculated to sit exactly under the pivot
-                    // 🚀 Mathematical Alignment:
-                    // Height of arm image is ~350 (at 100 width). Pivot is at 350 * 0.215 = 75.25.
-                    // We offset the base by (75.25 - 22) to center it under the pivot.
+                    // Base Circle (The center of rotation)
                     Circle()
                         .fill(DesignTokens.surfaceMain)
                         .frame(width: 44, height: 44)
                         .skeuoRaised(cornerRadius: 22)
-                        .offset(y: 53) // 🚀 Precision calculated offset
-                        .zIndex(0)
+                        .offset(y: 53) // 🚀 固定在旋转轴心下方的偏移量
+                    
+                    // Tonearm Arm
+                    Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: tonearmWidth)
+                        .zIndex(1)
                 }
+                .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
+                .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
                 .offset(x: 130, y: -130)
         }
         .frame(width: baseSize, height: baseSize)
