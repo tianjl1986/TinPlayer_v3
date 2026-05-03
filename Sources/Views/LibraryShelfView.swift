@@ -71,7 +71,7 @@ struct ShelfViewContent: View {
                     )
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 24)
             .padding(.top, 24)
             .padding(.bottom, 100)
         }
@@ -189,12 +189,14 @@ struct AlbumShelfPill: View {
                             Spacer()
                             Text("VIEW FULL ALBUM")
                                 .font(.system(size: 10, weight: .black))
-                                .padding(8)
-                                .background(Color.white.opacity(0.1))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(DesignTokens.surfaceSecondary)
                                 .cornerRadius(6)
                                 .foregroundColor(DesignTokens.textPrimary)
+                            Spacer()
                         }
-                        .padding(16)
+                        .padding(.vertical, 16)
                     }
                 }
                 .background(DesignTokens.surfaceMain)

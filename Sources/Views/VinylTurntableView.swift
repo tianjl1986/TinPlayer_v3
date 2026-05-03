@@ -16,17 +16,10 @@ struct VinylTurntableView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: baseSize, height: baseSize)
             
-            // 1.5 Platter (Theme-aware and no shadow)
-            Circle()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: theme.isDark ? 
-                            [Color(white: 0.1), Color(white: 0.2), Color(white: 0.05)] : 
-                            [Color(white: 0.85), Color(white: 0.95), Color(white: 0.8)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            // 1.5 Platter (Using PNG Assets)
+            Image(theme.isDark ? "platter_dark" : "platter_light")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
                 .frame(width: 300, height: 300)
             
             // 2. Spinning Vinyl (Image Asset)
@@ -49,9 +42,9 @@ struct VinylTurntableView: View {
             }
             .rotationEffect(.degrees(rotation))
             
-            // 3. Tonearm Assembly (Pivot fixed at top-right 45-degree diagonal)
+            // 3. Tonearm Assembly (Pivot moved inward, inside base)
             TonearmView(isMoving: player.isPlaying)
-                .offset(x: 150, y: -150) // Moved pivot to 45-degree diagonal
+                .offset(x: 110, y: -110) // Moved inward to be inside the base
         }
         .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
             if player.isPlaying {
@@ -70,8 +63,8 @@ struct TonearmView: View {
         Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
             .resizable()
             .aspectRatio(contentMode: .fit)
-            .frame(width: 100, height: 260) // Slightly larger
-            .rotationEffect(.degrees(isMoving ? 8 : -2), anchor: .top) // More vertical angle
+            .frame(width: 120, height: 320) // Increased size
+            .rotationEffect(.degrees(isMoving ? 4 : -2), anchor: .top) // More vertical angle
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }
