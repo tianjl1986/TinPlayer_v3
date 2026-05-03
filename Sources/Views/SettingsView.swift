@@ -72,8 +72,7 @@ struct SettingsView: View {
                                 }
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 18)
-                                .background(DesignTokens.surfaceMain)
-                                .cornerRadius(12)
+                                .skeuoGradientBackground(cornerRadius: 12)
                                 .skeuoRaised(cornerRadius: 12)
                             }
                         }
@@ -152,8 +151,7 @@ struct SettingsView: View {
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
-                                    .background(DesignTokens.surfaceMain)
-                                    .cornerRadius(12)
+                                    .skeuoGradientBackground(cornerRadius: 12)
                                     .skeuoRaised(cornerRadius: 12)
                             }
                             
@@ -163,8 +161,7 @@ struct SettingsView: View {
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 18)
-                                    .background(DesignTokens.surfaceMain)
-                                    .cornerRadius(12)
+                                    .skeuoGradientBackground(cornerRadius: 12)
                                     .skeuoRaised(cornerRadius: 12)
                             }
                         }

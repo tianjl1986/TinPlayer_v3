@@ -165,8 +165,8 @@ struct TypewriterText: View {
 
 extension View {
     func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
-        self.shadow(color: DesignTokens.skeuoShadowDark.opacity(0.8), radius: 8, x: 6, y: 6)
-            .shadow(color: DesignTokens.skeuoShadowLight.opacity(0.9), radius: 8, x: -6, y: -6)
+        self.shadow(color: DesignTokens.skeuoShadowDark.opacity(0.9), radius: 10, x: 8, y: 8)
+            .shadow(color: Color.white.opacity(1.0), radius: 10, x: -8, y: -8) // Explicit pure white high-light
     }
     
     func skeuoGradientBackground(cornerRadius: CGFloat = 16) -> some View {
