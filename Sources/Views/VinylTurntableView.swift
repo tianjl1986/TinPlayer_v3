@@ -10,9 +10,9 @@ struct VinylTurntableView: View {
     // Geometry constants based on assets - Adjusted for 1:1 fidelity
     private let baseSize: CGFloat = 335
     private let platterSize: CGFloat = 310
-    private let recordSize: CGFloat = 320 // 🚀 Larger record
-    private let labelSize: CGFloat = 140 // 🚀 2x Larger artwork label
-    private let tonearmWidth: CGFloat = 100 // 🚀 Further reduced to match draft
+    private let recordSize: CGFloat = 260 // 🚀 Even smaller to show platter clearly
+    private let labelSize: CGFloat = 135 // 🚀 Large artwork label
+    private let tonearmWidth: CGFloat = 100
     private let tonearmPivotOffset: CGFloat = 20
     
     // Timer for smooth rotation
@@ -98,9 +98,8 @@ struct VinylTurntableView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: tonearmWidth)
-                    // 🚀 精确对准：通过 anchor 和 offset 确保图片中的圆心与底座圆心重合
-                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.22))
-                    .offset(y: tonearmPivotOffset) // 将图片中的圆心位置下移到组件中心
+                    // 🚀 精确同轴对齐：调整 anchor 确保旋转中心在圆形配件正中
+                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.215))
                     .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
             }
             .offset(x: 130, y: -130) // 🚀 45-degree diagonal placement

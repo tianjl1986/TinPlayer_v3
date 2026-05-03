@@ -9,7 +9,7 @@ struct LyricsView: View {
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     // 🚀 Figma 1:1 精确几何参数
-    private let knobSize: CGFloat = 32
+    private let knobSize: CGFloat = 48
     private let paperWidth: CGFloat = 320
     
     var body: some View {
@@ -79,7 +79,7 @@ struct LyricsView: View {
                     )
                     .cornerRadius(4)
                     .skeuoRaised(cornerRadius: 4)
-                    .offset(y: 30)
+                    .offset(y: 24) // 🚀 Shortened offset to avoid clipping
                     .padding(.bottom, 20) // Ensure bottom is not clipped
                     .zIndex(1)
                     
@@ -89,10 +89,10 @@ struct LyricsView: View {
                         ZStack {
                             Image(theme.isDark ? "roller_dark" : "roller_light")
                                 .resizable()
-                                .frame(width: fullGeo.size.width, height: knobSize)
+                                .frame(width: fullGeo.size.width, height: 32)
                             
                             DesignTokens.rollerGradient
-                                .frame(width: fullGeo.size.width, height: knobSize)
+                                .frame(width: fullGeo.size.width, height: 32)
                                 .opacity(0.4)
                         }
                         .skeuoRaised(cornerRadius: 4)
@@ -113,7 +113,7 @@ struct LyricsView: View {
                 
                 // 3. Progress & Controls
                 VStack(spacing: 24) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 6) {
                         Text(formatDuration(player.currentTime))
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(DesignTokens.textSecondary)
@@ -126,7 +126,7 @@ struct LyricsView: View {
                             .foregroundColor(DesignTokens.textSecondary)
                             .frame(width: 45, alignment: .trailing)
                     }
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, 24)
                     
                     BottomControlsView(showLyrics: $showLyrics)
                         .padding(.bottom, 32)

@@ -46,14 +46,13 @@ struct LibraryShelfView: View {
     private var albumListSection: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
-                ForEach(libraryService.albums) { album in
+                ForEach(libraryService.albums, id: \.id) { album in
                     AlbumShelfSpine(
                         album: album,
                         isExpanded: expandedAlbumKey == album.id,
                         onTap: { toggleExpansion(for: album) },
                         onPlayTrack: { playTrack($0, in: album) }
                     )
-                    .id(album.id)
                 }
             }
             .padding(.horizontal, 24)

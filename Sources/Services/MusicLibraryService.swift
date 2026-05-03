@@ -160,7 +160,8 @@ class MusicLibraryService: ObservableObject {
             albumsList[idx].tracks.sort { $0.title < $1.title } // 🚀 Ensure consistent order
             if albumsList[idx].coverImage == nil { albumsList[idx].coverImage = artwork }
         } else {
-            albumsList.append(Album(title: albumName, artist: artist, coverImage: artwork, trackCount: 1, releaseYear: "2024", tracks: [track]))
+            let stableId = "local-\(albumName)-\(artist)".lowercased()
+            albumsList.append(Album(id: stableId, title: albumName, artist: artist, coverImage: artwork, trackCount: 1, releaseYear: "2024", tracks: [track]))
         }
     }
 }

@@ -10,7 +10,7 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 // Standardized Header for consistency with other views
                 AppHeader(
-                    title: "SKEUOPLAYER",
+                    title: "TIN PLAYER",
                     rightItem: AnyView(
                         NavigationLink(destination: SettingsView()) {
                             Image(systemName: "gearshape.fill")
@@ -66,14 +66,6 @@ struct HomeView: View {
                     }
                     .padding(.horizontal, 32)
                     .padding(.top, 24)
-                }
-                
-                // Mini Player
-                if player.currentTrack != nil {
-                    NavigationLink(destination: NowPlayingView()) {
-                        MiniPlayerView()
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .background(DesignTokens.surfaceLight.ignoresSafeArea())

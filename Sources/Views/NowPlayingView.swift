@@ -52,7 +52,7 @@ struct NowPlayingView: View {
                 
                 // 4. Progress Bar
                 VStack(spacing: 12) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 6) {
                         Text(formatDuration(player.currentTime))
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(DesignTokens.textSecondary)

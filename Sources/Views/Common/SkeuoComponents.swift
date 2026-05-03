@@ -47,6 +47,7 @@ struct SkeuoSettingsRow: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
+        .frame(maxWidth: .infinity)
         .background(showBackground ? DesignTokens.surfaceLight : Color.clear)
         .contentShape(Rectangle())
     }
