@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
