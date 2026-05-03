@@ -14,7 +14,42 @@ struct DesignTokens {
     
     // Skeuomorphic Shadows
     static let shadowDark = Color(hexString: "#b3b3b3")       // For Raised/Sunken effect
-    static let shadowLight = Color.white                // For Highlights
+    static let shadowLight = Color.white                      // For Highlights
+    
+    // Gradients - 1:1 Figma Angular
+    static let vinylGradient = AngularGradient(
+        gradient: Gradient(stops: [
+            .init(color: Color(hexString: "#1A1A1A"), location: 0),
+            .init(color: Color(hexString: "#4D4D4D"), location: 0.25),
+            .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
+            .init(color: Color(hexString: "#4D4D4D"), location: 0.75),
+            .init(color: Color(hexString: "#1A1A1A"), location: 1)
+        ]),
+        center: .center
+    )
+    
+    static let spindleGradient = AngularGradient(
+        gradient: Gradient(stops: [
+            .init(color: Color(hexString: "#999999"), location: 0),
+            .init(color: Color(hexString: "#E5E5E5"), location: 0.25),
+            .init(color: Color(hexString: "#999999"), location: 0.5),
+            .init(color: Color(hexString: "#E5E5E5"), location: 0.75),
+            .init(color: Color(hexString: "#999999"), location: 1)
+        ]),
+        center: .center
+    )
+
+    static let rollerGradient = LinearGradient(
+        gradient: Gradient(stops: [
+            .init(color: Color(hexString: "#0D0D0D"), location: 0),
+            .init(color: Color(hexString: "#333333"), location: 0.2),
+            .init(color: Color(hexString: "#1A1A1A"), location: 0.5),
+            .init(color: Color(hexString: "#333333"), location: 0.8),
+            .init(color: Color(hexString: "#0D0D0D"), location: 1)
+        ]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
 
 extension View {
@@ -33,16 +68,16 @@ extension View {
                 .fill(DesignTokens.surfaceMain)
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowDark, lineWidth: 4)
+                        .stroke(DesignTokens.shadowDark, lineWidth: 2)
                         .blur(radius: 4)
-                        .offset(x: 4, y: 4)
+                        .offset(x: 2, y: 2)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(DesignTokens.shadowLight, lineWidth: 4)
+                        .stroke(DesignTokens.shadowLight, lineWidth: 2)
                         .blur(radius: 4)
-                        .offset(x: -4, y: -4)
+                        .offset(x: -2, y: -2)
                         .mask(RoundedRectangle(cornerRadius: cornerRadius))
                 )
         )

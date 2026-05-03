@@ -6,113 +6,236 @@ struct LyricsView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            // Background Surface - 9893:14777
+            // 1. Background Surface
             DesignTokens.surfaceMain.ignoresSafeArea()
             
-            // 2. Paper Sheet (Scrolling Content) - 9893:14779
+            // 2. Paper Sheet (Scrolling Content)
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 40) {
-                        Spacer(minLength: 120) // Buffer for roller
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 140) // Buffer for roller
                         
-                        // Paper Container
-                        Spacer(minLength: 120) // 滚轴缓冲间距
-                        
-                        // 纸张容器
+                        // Paper Sheet
                         VStack(spacing: 32) {
                             ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    if index == player.currentLyricIndex {
-                                        TypewriterText(text: line.text)
-                                            .font(.custom("AmericanTypewriter-Bold", size: 24))
-                                            .foregroundColor(DesignTokens.textPrimary)
-                                            .id(index)
-                                    } else {
-                                        Text(line.text)
-                                            .font(.custom("AmericanTypewriter", size: 18))
-                                            .foregroundColor(DesignTokens.textSecondary.opacity(0.4))
-                                            .id(index)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 40)
+                                LyricRow(
+                                    text: line.text,
+                                    isCurrent: index == player.currentLyricIndex,
+                                    isPast: index < player.currentLyricIndex
+                                )
+                                .id(index)
                             }
                         }
-                        .padding(.vertical, 40)
+                        .padding(.vertical, 60)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             Color.white
-                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 10)
                         )
                         .padding(.horizontal, 24)
                         
-                        Spacer(minLength: 300)
+                        Spacer(minLength: 400)
                     }
                 }
                 .onChange(of: player.currentLyricIndex) { newIndex in
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    withAnimation(.spring(response: 0.8, dampingFraction: 0.8)) {
                         proxy.scrollTo(newIndex, anchor: .center)
                     }
                 }
             }
             
-            // 1. 打印机滚轴 (顶部固定)
-            Image("roller_light")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(height: 100)
-                .skeuoRaised(cornerRadius: 0)
-                .overlay(
+            // 3. Printer Roller (Top Fixed) - 10491:8476
+            VStack(spacing: 0) {
+                ZStack {
+                    Image("roller_light")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 120)
+                        .clipped()
+                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    
                     HStack {
-                        // 左旋钮
-                        Circle()
-                            .fill(DesignTokens.surfaceMain)
-                            .skeuoRaised(cornerRadius: 30)
-                            .frame(width: 60, height: 60)
-                            .overlay(Image(systemName: "gear").foregroundColor(DesignTokens.textSecondary))
-                            .offset(x: -30)
+                        // Left Knob
+                        Image("knob_light")
+                            .resizable()
+                            .frame(width: 56, height: 56)
+                            .skeuoRaised(cornerRadius: 28)
+                            .rotationEffect(.degrees(player.currentTime * 30))
+                            .offset(x: -20)
                         
                         Spacer()
                         
-                        // 右旋钮
-                        Circle()
-                            .fill(DesignTokens.surfaceMain)
-                            .skeuoRaised(cornerRadius: 30)
-                            .frame(width: 60, height: 60)
-                            .overlay(Image(systemName: "gear").foregroundColor(DesignTokens.textSecondary))
-                            .offset(x: 30)
+                        // Right Knob
+                        Image("knob_light")
+                            .resizable()
+                            .frame(width: 56, height: 56)
+                            .skeuoRaised(cornerRadius: 28)
+                            .rotationEffect(.degrees(player.currentTime * 30))
+                            .offset(x: 20)
                     }
-                )
-                .zIndex(10)
-            
-            // 3. 顶部栏
+                }
+                
+    // Figma 1:1 几何参数
+    private let rollerHeight: CGFloat = 40
+    private let knobSize: CGSize = CGSize(width: 30, height: 60)
+    private let paperWidth: CGFloat = 342
+    private let lineSpacing: CGFloat = 52
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 1. Header (60px) - 9893:14778
             HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                    Text("<").font(.system(size: 20, weight: .bold))
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(DesignTokens.textSecondary)
                 }
                 Spacer()
                 Text("LYRICS")
-                    .font(.system(size: 16, weight: .black))
+                    .font(.system(size: 14, weight: .black))
+                    .tracking(2)
                 Spacer()
-                Image(systemName: "printer.fill")
-                    .font(.system(size: 18))
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(DesignTokens.textSecondary)
             }
-            .foregroundColor(DesignTokens.textPrimary)
+            .frame(height: 60)
             .padding(.horizontal, 24)
-            .padding(.top, 16)
-            .zIndex(20)
+            
+            // 2. 机械打字机滚轴区域 (Platen Roller Area)
+            ZStack(alignment: .top) {
+                // 纸张 (Paper Sheet) - 9893:14779
+                // Figma: y:100, w:342
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: lineSpacing) {
+                            Spacer().frame(height: 140) // 初始偏移
+                            
+                            ForEach(0..<player.lyrics.count, id: \.self) { index in
+                                let isCurrent = player.currentLyricIndex == index
+                                let isPast = index < player.currentLyricIndex
+                                
+                                TypewriterText(
+                                    text: player.lyrics[index].text,
+                                    isAnimating: isCurrent
+                                )
+                                .font(.system(size: 20, weight: .bold, design: .monospaced))
+                                .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary)
+                                .opacity(isCurrent ? 1.0 : (isPast ? 0.3 : 0.6))
+                                .scaleEffect(isCurrent ? 1.05 : 1.0)
+                                .multilineTextAlignment(.center)
+                                .id(index)
+                                .animation(.spring(), value: player.currentLyricIndex)
+                            }
+                            
+                            Spacer().frame(height: 300)
+                        }
+                    }
+                    .onChange(of: player.currentLyricIndex) { index in
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                            proxy.scrollTo(index, anchor: .center)
+                        }
+                    }
+                }
+                .frame(width: paperWidth)
+                .background(Color(hexString: "#FAFAFA"))
+                .skeuoRaised(cornerRadius: 12)
+                .offset(y: 40) // 从滚轴下方穿出
+                
+                // 滚轴组件 (Roller Assembly) - 9893:14780
+                HStack(spacing: 0) {
+                    // 左旋钮 (Knob Left) - 9960:15442
+                    Image("knob_light")
+                        .resizable()
+                        .frame(width: knobSize.width, height: knobSize.height)
+                        .rotationEffect(.degrees(player.currentTime * 30))
+                        .offset(y: -10)
+                    
+                    // 滚轴主体 (Roller)
+                    Rectangle()
+                        .fill(DesignTokens.rollerGradient)
+                        .frame(height: rollerHeight)
+                        .overlay(
+                            Rectangle()
+                                .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                        )
+                        .skeuoRaised(cornerRadius: 4)
+                    
+                    // 右旋钮 (Knob Right) - 9960:15443
+                    Image("knob_light")
+                        .resizable()
+                        .frame(width: knobSize.width, height: knobSize.height)
+                        .rotationEffect(.degrees(player.currentTime * 30))
+                        .offset(y: -10)
+                }
+                .padding(.horizontal, 4)
+                .zIndex(1)
+            }
+            
+            Spacer()
+            
+            // 3. 底部进度与控制 (对齐 NowPlayingView)
+            VStack(spacing: 24) {
+                // 进度条
+                VStack(spacing: 8) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(DesignTokens.surfaceMain)
+                                .skeuoSunken(cornerRadius: 4)
+                                .frame(height: 8)
+                            
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color(hexString: "#404040"))
+                                .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+                }
+                .padding(.horizontal, 32)
+                
+                BottomControlsView()
+                    .padding(.bottom, 48)
+            }
+            .background(DesignTokens.surfaceMain)
         }
-        .navigationBarHidden(true)
+        .background(DesignTokens.surfaceMain.ignoresSafeArea())
+    }
+}
+
+struct LyricRow: View {
+    let text: String
+    let isCurrent: Bool
+    let isPast: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if isCurrent {
+                TypewriterText(text: text, isAnimating: true)
+                    .font(.custom("AmericanTypewriter-Bold", size: 24))
+                    .foregroundColor(DesignTokens.textPrimary)
+            } else {
+                Text(text)
+                    .font(.custom("AmericanTypewriter", size: isPast ? 16 : 20))
+                    .foregroundColor(DesignTokens.textPrimary.opacity(isPast ? 0.3 : 0.1))
+                    .scaleEffect(isPast ? 0.95 : 1.0)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 40)
+        .animation(.spring(), value: isCurrent)
     }
 }
 
 struct TypewriterText: View {
     let text: String
+    let isAnimating: Bool
     @State private var displayedText: String = ""
     @State private var timer: Timer?
     
     var body: some View {
         Text(displayedText)
-            .onAppear { startTyping() }
+            .onAppear { if isAnimating { startTyping() } else { displayedText = text } }
             .onChange(of: text) { _ in startTyping() }
             .onDisappear { timer?.invalidate() }
     }
@@ -120,13 +243,17 @@ struct TypewriterText: View {
     private func startTyping() {
         displayedText = ""
         timer?.invalidate()
-        var index = 0
         let characters = Array(text)
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { t in
+        var index = 0
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 0.06, repeats: true) { t in
             if index < characters.count {
                 displayedText.append(characters[index])
                 index += 1
-            } else { t.invalidate() }
+                // 模拟机械打字机的微小抖动或随机延迟 (可选)
+            } else {
+                t.invalidate()
+            }
         }
     }
 }

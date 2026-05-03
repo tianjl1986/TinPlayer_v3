@@ -4,88 +4,90 @@ struct VinylTurntableView: View {
     @StateObject private var player = MusicPlayer.shared
     @State private var rotation: Double = 0
     
-    // 🚀 Figma 1:1 物理尺寸与坐标 (基于 390x844 标准稿)
-    private let screenWidth = UIScreen.main.bounds.width
-    private let baseSize: CGFloat = 342
+    // Figma 1:1 精确几何参数 (基于 390x844 标准稿)
+    private let baseWidth: CGFloat = 342
+    private let baseHeight: CGFloat = 400
     private let platterSize: CGFloat = 310
     private let recordSize: CGFloat = 290
-    @State private var tonearmRotation: Double = -135 // Initial rotation from audit
+    private let spindleSize: CGFloat = 14
     
     var body: some View {
-        ZStack {
-            // Turntable Base - 9880:14740
+        ZStack(alignment: .topLeading) {
+            // 1. 底座 (Turntable Base) - 9880:14740
+            // Figma: x:24, y:92, w:342, h:400
+            Image("turntable_base_light")
+                .resizable()
+                .frame(width: baseWidth, height: baseHeight)
+                .skeuoRaised(cornerRadius: 32)
+            
+            // 2. 托盘 (Platter) - 9880:14763
+            // Figma: relX:16, relY:45, w:310, h:310
+            Image("platter_light")
+                .resizable()
+                .frame(width: platterSize, height: platterSize)
+                .skeuoSunken(cornerRadius: platterSize / 2)
+                .position(x: 16 + platterSize / 2, y: 45 + platterSize / 2)
+            
+            // 3. 黑胶唱片 (Vinyl Record Group) - 9970:15678
+            // Figma: relX:26, relY:55, w:290, h:290
             ZStack {
-                // Base
-                RoundedRectangle(cornerRadius: 32)
-                    .fill(DesignTokens.surfaceMain)
-                    .skeuoRaised(cornerRadius: 32)
-                    .frame(width: 350, height: 350)
+                Image("vinyl_record_light")
+                    .resizable()
+                    .frame(width: recordSize, height: recordSize)
+                    .overlay(
+                        DesignTokens.vinylGradient
+                            .opacity(0.3)
+                    )
                 
-                // Platter (Sunken) - 9880:14763
-                Circle()
-                    .fill(DesignTokens.surfaceMain)
-                    .skeuoSunken(cornerRadius: 155)
-                    .frame(width: 310, height: 310)
-                
-                // Vinyl Record Group - 9970:15678
-                ZStack {
-                    Circle() // Record
-                        .fill(Color.black)
-                        .frame(width: 290, height: 290)
-                    
-                    // Grooves (Simulated with Gradient)
-                    Circle()
-                        .fill(AngularGradient(stops: [
-                            .init(color: Color(hexString: "#1a1a1a"), location: 0),
-                            .init(color: Color(hexString: "#4d4d4d"), location: 0.25),
-                            .init(color: Color(hexString: "#1a1a1a"), location: 0.5),
-                            .init(color: Color(hexString: "#4d4d4d"), location: 0.75),
-                            .init(color: Color(hexString: "#1a1a1a"), location: 1)
-                        ], center: .center))
-                        .frame(width: 290, height: 290)
-                    
-                    // Physical Grooves
-                    ForEach(0..<10) { i in
-                        Circle()
-                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                            .frame(width: CGFloat(280 - (i * 25)), height: CGFloat(280 - (i * 25)))
+                // 唱片中心标签 (Daft Punk Cover) - 9927:15066
+                // Figma: w:134.8, h:134.8 (约 135)
+                if let track = player.currentTrack {
+                    AsyncImage(url: URL(string: track.coverUrl)) { image in
+                        image.resizable()
+                    } placeholder: {
+                        Color.gray
                     }
-                    
-                    // Center Label (Cover)
-                    if let track = player.currentTrack {
-                        AsyncImage(url: URL(string: track.coverUrl)) { image in
-                            image.resizable()
-                        } placeholder: {
-                            Color.gray
-                        }
-                        .frame(width: 110, height: 110)
-                        .clipShape(Circle())
-                    }
+                    .frame(width: 135, height: 135)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.black.opacity(0.1), lineWidth: 1))
                 }
-                .rotationEffect(.degrees(rotation))
-                
-                // Spindle - 9889:14767
-                Circle()
-                    .fill(AngularGradient(colors: [Color.gray, Color.white, Color.gray], center: .center))
-                    .frame(width: 20, height: 20)
-                    .shadow(color: .black.opacity(0.3), radius: 2, x: 2, y: 2)
             }
+            .rotationEffect(.degrees(rotation))
+            .position(x: 26 + recordSize / 2, y: 55 + recordSize / 2)
             
-            // Tonearm Base - 10491:8406
-            Image("arm_base_light")
+            // 4. 中心轴 (Spindle) - 9889:14767
+            // Figma: relX:164, relY:193, w:14, h:14
+            Image("spindle_light")
                 .resizable()
-                .frame(width: 80, height: 80)
-                .offset(x: 130, y: -130)
+                .frame(width: spindleSize, height: spindleSize)
+                .background(DesignTokens.spindleGradient.clipShape(Circle()))
+                .shadow(color: Color.black.opacity(0.15), radius: 4, x: 4, y: 4)
+                .position(x: 164 + spindleSize / 2, y: 193 + spindleSize / 2)
             
-            // Tonearm - 10491:8411
-            Image("tonearm_light")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 180)
-                .rotationEffect(.degrees(player.isPlaying ? 25 : 0), anchor: .topTrailing)
-                .offset(x: 85, y: -100)
-                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: player.isPlaying)
+            // 5. 唱臂组件 (Tonearm Assembly) - 9893:14773
+            // Figma: relX:173.7, relY:13.5, w:160.7, h:160.7
+            ZStack(alignment: .topTrailing) {
+                // 唱臂底座 (arm_base_light)
+                Image("arm_base_light")
+                    .resizable()
+                    .frame(width: 80, height: 80)
+                    .skeuoRaised(cornerRadius: 40)
+                    .position(x: 80, y: 40) // 位于组件右上角
+                
+                // 唱臂主体 (tonearm_light)
+                Image("tonearm_light")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 140) // 调整至视觉比例
+                    .rotationEffect(.degrees(player.isPlaying ? 28 : 0), anchor: .topTrailing)
+                    .offset(x: 20, y: 10)
+                    .shadow(color: Color.black.opacity(0.1), radius: 5, x: 5, y: 5)
+                    .animation(.spring(response: 0.8, dampingFraction: 0.7), value: player.isPlaying)
+            }
+            .frame(width: 160, height: 160)
+            .position(x: 173.7 + 80, y: 13.5 + 80)
         }
+        .frame(width: baseWidth, height: baseHeight)
         .onAppear {
             if player.isPlaying { startRotation() }
         }
@@ -99,12 +101,12 @@ struct VinylTurntableView: View {
     }
     
     private func startRotation() {
-        withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+        withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
             rotation += 360
         }
     }
     
     private func stopRotation() {
-        // Animation naturally stops if we reset or use a more controlled approach
+        // 保持当前角度逻辑可后续添加
     }
 }

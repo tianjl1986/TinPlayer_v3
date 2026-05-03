@@ -9,17 +9,20 @@ struct BottomControlsView: View {
     private let sideButtonSize: CGFloat = 40 // Lyrics/Queue
     private let navButtonSize: CGFloat = 56  // Prev/Next
     private let playButtonSize: CGFloat = 72 // Play
-    private let spacing: CGFloat = 20
+    private let spacing: CGFloat = 19.5
     
     var body: some View {
         HStack(spacing: spacing) {
             // 1. Lyrics Toggle - 9880:14749
-            Button(action: { showLyrics.toggle() }) {
+            Button(action: { showLyrics = true }) {
                 Text("LRC")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10, weight: .black))
                     .foregroundColor(DesignTokens.textSecondary)
             }
             .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 20))
+            .fullScreenCover(isPresented: $showLyrics) {
+                LyricsView()
+            }
             
             // 2. Prev - 9880:14751
             Button(action: { player.skipPrevious() }) {
@@ -46,7 +49,7 @@ struct BottomControlsView: View {
             .buttonStyle(SkeuoButtonStyle(size: navButtonSize, cornerRadius: 28))
             
             // 5. Queue - 9880:14757
-            Button(action: { showQueue.toggle() }) {
+            Button(action: { showQueue = true }) {
                 Text("Q")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(DesignTokens.textSecondary)
