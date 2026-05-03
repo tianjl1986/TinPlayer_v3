@@ -107,17 +107,16 @@ struct SpineHeaderView: View {
     let onTap: () -> Void
     
     var body: some View {
-        Button(action: onTap) {
-            ZStack {
-                backgroundImage
-                metallicOverlay
-                textContent
-            }
-            .frame(height: 80)
-            .cornerRadius(12)
-            .skeuoRaised(cornerRadius: 12)
+        ZStack {
+            backgroundImage
+            metallicOverlay
+            textContent
         }
-        .buttonStyle(PlainButtonStyle())
+        .frame(height: 80)
+        .contentShape(Rectangle()) // 🚀 Ensure hit target is exactly 80pt
+        .onTapGesture(perform: onTap) // 🚀 Use gesture to prevent event bubbling/conflict
+        .cornerRadius(12)
+        .skeuoRaised(cornerRadius: 12)
     }
     
     private var backgroundImage: some View {
@@ -186,7 +185,6 @@ struct TrackListView: View {
         }
         .background(DesignTokens.surfaceLight.opacity(0.8))
         .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-        .padding(.top, -8)
     }
 }
 
