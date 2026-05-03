@@ -72,7 +72,7 @@ struct TonearmView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: 110, height: 290) 
-            .rotationEffect(.degrees(isMoving ? -12 : 0), anchor: .top) // Corrected: 0 when paused, tilted when moving
+            .rotationEffect(.degrees(isMoving ? 12 : -5), anchor: .top) // Playing: Right (+12), Paused: Left (-5)
             .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
     }
 }
