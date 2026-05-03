@@ -41,6 +41,7 @@ struct SettingsView: View {
                         SkeuoSettingsGroup {
                             NavigationLink(destination: LibraryShelfView()) {
                                 SkeuoSettingsRow(title: loc.t("By Album"), value: ">", isLink: true, showBackground: false)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(PlainButtonStyle())
                             
@@ -48,6 +49,7 @@ struct SettingsView: View {
                             
                             NavigationLink(destination: ArtistListView()) {
                                 SkeuoSettingsRow(title: loc.t("By Artist"), value: ">", isLink: true, showBackground: false)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -61,8 +63,10 @@ struct SettingsView: View {
                         
                         SkeuoSettingsGroup {
                             SkeuoSettingsRow(title: loc.t("Media Folders"), value: "\(libraryService.mediaFolders.count) \(loc.t("Folders"))", showBackground: false)
+                                .contentShape(Rectangle())
                             Divider().padding(.horizontal, 20)
                             SkeuoSettingsRow(title: loc.t("Auto-scan on startup"), value: "Enabled", isToggle: true, showBackground: false)
+                                .contentShape(Rectangle())
                         }
                     }
 
@@ -77,6 +81,7 @@ struct SettingsView: View {
                                 loc.language = (loc.language == "en" ? "zh" : "en")
                             }) {
                                 SkeuoSettingsRow(title: loc.t("Interface Language"), value: loc.language == "en" ? "English" : "中文", isLink: true, showBackground: false)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(PlainButtonStyle())
                             
@@ -86,6 +91,7 @@ struct SettingsView: View {
                                 theme.currentTheme = (theme.currentTheme == "Light" ? "Dark" : "Light")
                             }) {
                                 SkeuoSettingsRow(title: loc.t("Theme"), value: loc.t(theme.currentTheme), isLink: true, showBackground: false)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(PlainButtonStyle())
                         }

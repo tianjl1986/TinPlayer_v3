@@ -8,9 +8,9 @@ struct LyricsView: View {
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     // 🚀 Figma 1:1 精确几何参数
-    private let rollerHeight: CGFloat = 60
-    private let knobSize: CGFloat = 64
-    private let paperWidth: CGFloat = 340
+    private let rollerHeight: CGFloat = 36
+    private let knobSize: CGFloat = 48
+    private let paperWidth: CGFloat = 320
     
     var body: some View {
         GeometryReader { fullGeo in
@@ -39,7 +39,7 @@ struct LyricsView: View {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical, showsIndicators: false) {
                             VStack(alignment: .leading, spacing: 32) {
-                                Spacer(minLength: 120) // Spacing for roller
+                                Spacer(minLength: 100) // Spacing for roller
                                 
                                 if player.currentTrackLyrics.isEmpty {
                                     Text("NO LYRICS FOUND")
@@ -57,10 +57,10 @@ struct LyricsView: View {
                                     }
                                 }
                                 
-                                Spacer(minLength: 400) // Extra bottom padding to prevent clipping
+                                Spacer(minLength: 120) // Reduced to avoid too much scrolling at bottom
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 32)
+                            .padding(.horizontal, 28)
                         }
                         .onChange(of: player.currentLyricIndex) { newIndex in
                             withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
@@ -79,33 +79,32 @@ struct LyricsView: View {
                     )
                     .cornerRadius(4)
                     .skeuoRaised(cornerRadius: 4)
-                    .offset(y: 40)
+                    .offset(y: 30)
+                    .padding(.bottom, 20) // Ensure bottom is not clipped
                     .zIndex(1)
                     
-                    // Roller Assembly - Fixed geometry
-                    HStack(spacing: -knobSize/2) { // Overlap for tight mechanical look
+                    // Roller Assembly - Fixed geometry 1:1
+                    HStack(spacing: -8) { // Overlap for tight mechanical look
                         knobView
                         
                         ZStack {
                             Image(theme.isDark ? "roller_dark" : "roller_light")
                                 .resizable()
-                                .aspectRatio(contentMode: .fit) // Fit to diameter
-                                .frame(height: 44) // Smaller roller per user request
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .skeuoRaised(cornerRadius: 8)
+                                .aspectRatio(contentMode: .stretch)
+                                .frame(width: paperWidth, height: rollerHeight)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                .skeuoRaised(cornerRadius: 4)
                             
                             DesignTokens.rollerGradient
-                                .frame(height: 44)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .opacity(0.5)
+                                .frame(width: paperWidth, height: rollerHeight)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                .opacity(0.4)
                         }
-                        .frame(maxWidth: .infinity)
                         
                         knobView
                     }
-                    .padding(.horizontal, 10)
                     .frame(width: fullGeo.size.width)
-                    .offset(y: -5) // Alignment
+                    .offset(y: 10)
                     .zIndex(2)
                 }
                 .frame(maxHeight: .infinity)
@@ -128,21 +127,14 @@ struct LyricsView: View {
                     .padding(.horizontal, 32)
                     
                     BottomControlsView(showLyrics: $showLyrics)
-                        .padding(.bottom, 40)
+                        .padding(.bottom, 32)
                 }
-                .padding(.top, 24)
+                .padding(.top, 20)
                 .background(DesignTokens.surfaceMain)
             }
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .onReceive(timer) { _ in
-            if player.isPlaying {
-                withAnimation(.linear(duration: 0.1)) {
-                    knobRotation += 12
-                }
-            }
-        }
     }
     
     private var knobView: some View {
@@ -150,8 +142,7 @@ struct LyricsView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: knobSize, height: knobSize)
-            .rotationEffect(.degrees(knobRotation))
-            .skeuoRaised(cornerRadius: 32)
+            .skeuoRaised(cornerRadius: knobSize/2)
     }
     
     private var progressBar: some View {

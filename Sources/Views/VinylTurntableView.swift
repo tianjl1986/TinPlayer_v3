@@ -9,10 +9,10 @@ struct VinylTurntableView: View {
     
     // Geometry constants based on assets - Adjusted for 1:1 fidelity
     private let baseSize: CGFloat = 335
-    private let platterSize: CGFloat = 280
-    private let recordSize: CGFloat = 260
-    private let labelSize: CGFloat = 80
-    private let tonearmWidth: CGFloat = 110 // Reduced from 140
+    private let platterSize: CGFloat = 310
+    private let recordSize: CGFloat = 290
+    private let labelSize: CGFloat = 64
+    private let tonearmWidth: CGFloat = 90
     
     // Timer for smooth rotation
     private let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
@@ -84,24 +84,25 @@ struct VinylTurntableView: View {
             }
             .buttonStyle(PlainButtonStyle())
             
-            // 3. Tonearm Base (Top Right 45deg)
-            Circle()
-                .fill(DesignTokens.spindleGradient)
-                .frame(width: 56, height: 56) // Refined size
-                .skeuoRaised(cornerRadius: 28)
-                .offset(x: 110, y: -110)
-            
-            // 4. Tonearm Assembly - High Precision Alignment
+            // 3. Tonearm Assembly (Coaxial Alignment)
             ZStack {
+                // Metallic Base
+                Circle()
+                    .fill(DesignTokens.spindleGradient)
+                    .frame(width: 44, height: 44)
+                    .skeuoRaised(cornerRadius: 22)
+                
+                // Tonearm Image (Aligned Pivot)
                 Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: tonearmWidth)
-                    // Anchor at the base of the arm
-                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.85, y: 0.15))
-                    .offset(x: 80, y: -90)
+                    // 🚀 精确对准：通过 anchor 和 offset 确保图片中的圆心与底座圆心重合
+                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.5, y: 0.22))
+                    .offset(y: 36) // 将图片中的圆心位置下移到组件中心
                     .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
             }
+            .offset(x: 135, y: -135)
         }
         .frame(width: baseSize, height: baseSize)
         .onReceive(timer) { _ in

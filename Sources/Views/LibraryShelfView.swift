@@ -36,16 +36,15 @@ struct LibraryShelfView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     ForEach(libraryService.albums) { album in
-                        let albumKey = "\(album.title)_\(album.artist)"
                         AlbumShelfSpine(
                             album: album,
-                            isExpanded: expandedAlbumKey == albumKey,
+                            isExpanded: expandedAlbumKey == album.id,
                             onTap: {
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                    if expandedAlbumKey == albumKey {
+                                    if expandedAlbumKey == album.id {
                                         expandedAlbumKey = nil
                                     } else {
-                                        expandedAlbumKey = albumKey
+                                        expandedAlbumKey = album.id
                                     }
                                 }
                             },
