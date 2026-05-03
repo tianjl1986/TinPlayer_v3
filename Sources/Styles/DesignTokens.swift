@@ -2,33 +2,33 @@ import SwiftUI
 
 struct DesignTokens {
     // 1. Dynamic Backgrounds
-    static let surfaceMain = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#121212") : UIColor(hexString: "#F0F0F0")
-    })
+    static var surfaceMain: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#1A1A1A") : Color(hexString: "#F0F0F0")
+    }
     
-    static let surfaceSecondary = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#000000") : UIColor(hexString: "#FFFFFF")
-    })
+    static var surfaceSecondary: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#000000") : Color(hexString: "#FFFFFF")
+    }
     
     // 2. Text Colors
-    static let textPrimary = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.white : UIColor.black
-    })
+    static var textPrimary: Color {
+        ThemeManager.shared.isDark ? .white : .black
+    }
     
-    static let textSecondary = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#8E8E93") : UIColor(hexString: "#666666")
-    })
+    static var textSecondary: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#8E8E93") : Color(hexString: "#666666")
+    }
     
     static let textActive = Color.blue // Accent color
     
     // 3. Specialized Colors for Skeuomorphism
-    static let skeuoShadowLight = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.white.withAlphaComponent(0.08) : UIColor.white
-    })
+    static var skeuoShadowLight: Color {
+        ThemeManager.shared.isDark ? Color(hexString: "#222222") : Color.white
+    }
     
-    static let skeuoShadowDark = Color(UIColor { traitCollection in
-        traitCollection.userInterfaceStyle == .dark ? UIColor.black.withAlphaComponent(0.9) : UIColor(hexString: "#B3B3B3")
-    })
+    static var skeuoShadowDark: Color {
+        ThemeManager.shared.isDark ? Color.black : Color(hexString: "#B3B3B3")
+    }
     
     static let surfaceFlat = Color(UIColor { traitCollection in
         traitCollection.userInterfaceStyle == .dark ? UIColor(hexString: "#1C1C1E") : UIColor(hexString: "#F2F2F7")

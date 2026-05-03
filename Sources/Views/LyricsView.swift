@@ -90,9 +90,9 @@ struct LyricsView: View {
                     }
                 }
                 .frame(width: paperWidth)
-                .background(DesignTokens.surfaceMain) // Use surfaceMain which is dark in Dark Mode
+                .background(DesignTokens.surfaceMain)
                 .cornerRadius(4)
-                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 8)
+                .skeuoRaised(cornerRadius: 4)
                 .offset(y: 35)
                 
                 // 3. The Roller Assembly (1:1 Design)

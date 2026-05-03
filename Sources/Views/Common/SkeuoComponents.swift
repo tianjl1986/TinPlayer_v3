@@ -165,8 +165,8 @@ struct TypewriterText: View {
 
 extension View {
     func skeuoRaised(cornerRadius: CGFloat = 16) -> some View {
-        self.shadow(color: DesignTokens.skeuoShadowDark, radius: 4, x: 4, y: 4)
-            .shadow(color: Color.white, radius: 4, x: -4, y: -4)
+        self.shadow(color: DesignTokens.skeuoShadowDark, radius: 8, x: 4, y: 4)
+            .shadow(color: DesignTokens.skeuoShadowLight, radius: 8, x: -4, y: -4)
     }
     
     func skeuoSunken(cornerRadius: CGFloat = 16) -> some View {

@@ -4,6 +4,7 @@ struct SettingsView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var libraryService = MusicLibraryService.shared
     @ObservedObject private var loc = LocalizationManager.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var isAddingFolder = false
     
     var body: some View {
@@ -104,13 +105,13 @@ struct SettingsView: View {
                         
                         SkeuoSettingsGroup {
                             HStack {
-                                Text(ThemeManager.shared.isDark ? "Dark Mode" : "Light Mode")
+                                Text("Dark Mode")
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DesignTokens.textPrimary)
                                 Spacer()
                                 Toggle("", isOn: Binding(
-                                    get: { ThemeManager.shared.isDark },
-                                    set: { _ in ThemeManager.shared.toggleTheme() }
+                                    get: { themeManager.isDark },
+                                    set: { _ in themeManager.toggleTheme() }
                                 ))
                                 .labelsHidden()
                                 .toggleStyle(SwitchToggleStyle(tint: DesignTokens.textActive))

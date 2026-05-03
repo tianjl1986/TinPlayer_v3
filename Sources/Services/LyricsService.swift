@@ -10,27 +10,70 @@ class LyricsService {
     }
     
     func searchLyrics(for title: String, artist: String) async -> [LyricLine] {
-        // Use a stricter character set for URL encoding to handle characters like '&' correctly
-        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&+"))
-        let titleEscaped = title.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-        let artistEscaped = artist.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        let cleanTitle = cleanSearchTerm(title)
+        let cleanArtist = cleanSearchTerm(artist)
         
-        // 🚀 Step 1: Try exact match
-        let getUrl = "https://lrclib.net/api/get?artist=\(artistEscaped)&track_name=\(titleEscaped)"
-        if let lyrics = await fetchLyrics(from: getUrl) {
+        // 🚀 Strategy 1: Exact match with original metadata
+        if let lyrics = await tryExactMatch(artist: artist, title: title) {
             return lyrics
         }
         
-        // 🚀 Step 2: Fallback to search if exact match fails
-        let searchUrl = "https://lrclib.net/api/search?q=\(artistEscaped)%20\(titleEscaped)"
+        // 🚀 Strategy 2: Exact match with cleaned metadata (if different)
+        if cleanTitle != title || cleanArtist != artist {
+            if let lyrics = await tryExactMatch(artist: cleanArtist, title: cleanTitle) {
+                return lyrics
+            }
+        }
+        
+        // 🚀 Strategy 3: Search API with cleaned terms
+        let searchUrl = "https://lrclib.net/api/search?q=\(urlEncode(cleanArtist))%20\(urlEncode(cleanTitle))"
         if let lyrics = await fetchLyricsFromSearch(from: searchUrl) {
+            return lyrics
+        }
+        
+        // 🚀 Strategy 4: Search API with only title (Fuzzy fallback)
+        let fuzzyUrl = "https://lrclib.net/api/search?track_name=\(urlEncode(cleanTitle))"
+        if let lyrics = await fetchLyricsFromSearch(from: fuzzyUrl) {
             return lyrics
         }
         
         return [
             LyricLine(text: "Lyrics not found online", startTime: 0),
-            LyricLine(text: "Please check your network connection", startTime: 5)
+            LyricLine(text: "Please try manual search in Settings", startTime: 5)
         ]
+    }
+    
+    private func tryExactMatch(artist: String, title: String) async -> [LyricLine]? {
+        let url = "https://lrclib.net/api/get?artist=\(urlEncode(artist))&track_name=\(urlEncode(title))"
+        return await fetchLyrics(from: url)
+    }
+    
+    private func urlEncode(_ string: String) -> String {
+        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&+"))
+        return string.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+    }
+    
+    private func cleanSearchTerm(_ term: String) -> String {
+        var cleaned = term
+        // Remove common suffixes and parentheticals
+        let patterns = [
+            "\\s*\\(.*?\\)",      // Anything in parentheses
+            "\\s*\\[.*?\\]",      // Anything in brackets
+            "\\s*-\\s*.*$",       // Anything after a dash (e.g., - Remastered)
+            "\\s*feat\\..*$",     // Featured artists
+            "\\s*ft\\..*$",       // Featured artists
+            "\\s+Live\\s*",       // Live tags
+            "\\s+Acoustic\\s*",   // Acoustic tags
+        ]
+        
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) {
+                cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: NSRange(location: 0, length: cleaned.utf16.count), withTemplate: "")
+            }
+        }
+        
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? term : cleaned
     }
     
     private func fetchLyrics(from urlString: String) async -> [LyricLine]? {
