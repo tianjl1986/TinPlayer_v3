@@ -148,7 +148,7 @@ struct HomeView: View {
     private func performInitialScan() {
         isScanning = true
         Task {
-            await libraryService.scanLocalMusic()
+            await libraryService.scanLibrary()
             await MainActor.run {
                 isScanning = false
             }

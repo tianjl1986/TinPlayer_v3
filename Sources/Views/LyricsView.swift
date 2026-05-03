@@ -4,82 +4,11 @@ struct LyricsView: View {
     @StateObject private var player = MusicPlayer.shared
     @Environment(\.presentationMode) var presentationMode
     
-    var body: some View {
-        ZStack(alignment: .top) {
-            // 1. Background Surface
-            DesignTokens.surfaceMain.ignoresSafeArea()
-            
-            // 2. Paper Sheet (Scrolling Content)
-            ScrollViewReader { proxy in
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        Spacer(minLength: 140) // Buffer for roller
-                        
-                        // Paper Sheet
-                        VStack(spacing: 32) {
-                            ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
-                                LyricRow(
-                                    text: line.text,
-                                    isCurrent: index == player.currentLyricIndex,
-                                    isPast: index < player.currentLyricIndex
-                                )
-                                .id(index)
-                            }
-                        }
-                        .padding(.vertical, 60)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            Color.white
-                                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 10)
-                        )
-                        .padding(.horizontal, 24)
-                        
-                        Spacer(minLength: 400)
-                    }
-                }
-                .onChange(of: player.currentLyricIndex) { newIndex in
-                    withAnimation(.spring(response: 0.8, dampingFraction: 0.8)) {
-                        proxy.scrollTo(newIndex, anchor: .center)
-                    }
-                }
-            }
-            
-            // 3. Printer Roller (Top Fixed) - 10491:8476
-            VStack(spacing: 0) {
-                ZStack {
-                    Image("roller_light")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(height: 120)
-                        .clipped()
-                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
-                    
-                    HStack {
-                        // Left Knob
-                        Image("knob_light")
-                            .resizable()
-                            .frame(width: 56, height: 56)
-                            .skeuoRaised(cornerRadius: 28)
-                            .rotationEffect(.degrees(player.currentTime * 30))
-                            .offset(x: -20)
-                        
-                        Spacer()
-                        
-                        // Right Knob
-                        Image("knob_light")
-                            .resizable()
-                            .frame(width: 56, height: 56)
-                            .skeuoRaised(cornerRadius: 28)
-                            .rotationEffect(.degrees(player.currentTime * 30))
-                            .offset(x: 20)
-                    }
-                }
-                
     // Figma 1:1 几何参数
     private let rollerHeight: CGFloat = 40
     private let knobSize: CGSize = CGSize(width: 30, height: 60)
     private let paperWidth: CGFloat = 342
-    private let lineSpacing: CGFloat = 52
+    private let lineSpacing: CGFloat = 32
     
     var body: some View {
         VStack(spacing: 0) {
@@ -105,35 +34,33 @@ struct LyricsView: View {
             // 2. 机械打字机滚轴区域 (Platen Roller Area)
             ZStack(alignment: .top) {
                 // 纸张 (Paper Sheet) - 9893:14779
-                // Figma: y:100, w:342
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: lineSpacing) {
-                            Spacer().frame(height: 140) // 初始偏移
+                            Spacer(minLength: 140) // 初始偏移
                             
-                            ForEach(0..<player.lyrics.count, id: \.self) { index in
-                                let isCurrent = player.currentLyricIndex == index
-                                let isPast = index < player.currentLyricIndex
-                                
-                                TypewriterText(
-                                    text: player.lyrics[index].text,
-                                    isAnimating: isCurrent
-                                )
-                                .font(.system(size: 20, weight: .bold, design: .monospaced))
-                                .foregroundColor(isCurrent ? DesignTokens.textPrimary : DesignTokens.textSecondary)
-                                .opacity(isCurrent ? 1.0 : (isPast ? 0.3 : 0.6))
-                                .scaleEffect(isCurrent ? 1.05 : 1.0)
-                                .multilineTextAlignment(.center)
-                                .id(index)
-                                .animation(.spring(), value: player.currentLyricIndex)
+                            if player.currentTrackLyrics.isEmpty {
+                                Text("NO LYRICS AVAILABLE")
+                                    .font(.system(size: 14, weight: .black))
+                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.3))
+                                    .padding(.top, 100)
+                            } else {
+                                ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
+                                    LyricRow(
+                                        text: line.text,
+                                        isCurrent: index == player.currentLyricIndex,
+                                        isPast: index < player.currentLyricIndex
+                                    )
+                                    .id(index)
+                                }
                             }
                             
-                            Spacer().frame(height: 300)
+                            Spacer(minLength: 300)
                         }
                     }
-                    .onChange(of: player.currentLyricIndex) { index in
+                    .onChange(of: player.currentLyricIndex) { newIndex in
                         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                            proxy.scrollTo(index, anchor: .center)
+                            proxy.scrollTo(newIndex, anchor: .center)
                         }
                     }
                 }
@@ -144,7 +71,7 @@ struct LyricsView: View {
                 
                 // 滚轴组件 (Roller Assembly) - 9893:14780
                 HStack(spacing: 0) {
-                    // 左旋钮 (Knob Left) - 9960:15442
+                    // 左旋钮 (Knob Left)
                     Image("knob_light")
                         .resizable()
                         .frame(width: knobSize.width, height: knobSize.height)
@@ -161,7 +88,7 @@ struct LyricsView: View {
                         )
                         .skeuoRaised(cornerRadius: 4)
                     
-                    // 右旋钮 (Knob Right) - 9960:15443
+                    // 右旋钮 (Knob Right)
                     Image("knob_light")
                         .resizable()
                         .frame(width: knobSize.width, height: knobSize.height)
@@ -174,7 +101,7 @@ struct LyricsView: View {
             
             Spacer()
             
-            // 3. 底部进度与控制 (对齐 NowPlayingView)
+            // 3. 底部进度与控制
             VStack(spacing: 24) {
                 // 进度条
                 VStack(spacing: 8) {
@@ -187,7 +114,7 @@ struct LyricsView: View {
                             
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color(hexString: "#404040"))
-                                .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
+                                .frame(width: max(0, geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1))), height: 8)
                         }
                     }
                     .frame(height: 8)
@@ -217,12 +144,12 @@ struct LyricRow: View {
             } else {
                 Text(text)
                     .font(.custom("AmericanTypewriter", size: isPast ? 16 : 20))
-                    .foregroundColor(DesignTokens.textPrimary.opacity(isPast ? 0.3 : 0.1))
+                    .foregroundColor(DesignTokens.textPrimary.opacity(isPast ? 0.3 : 0.6))
                     .scaleEffect(isPast ? 0.95 : 1.0)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 40)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, 20)
         .animation(.spring(), value: isCurrent)
     }
 }
@@ -236,7 +163,7 @@ struct TypewriterText: View {
     var body: some View {
         Text(displayedText)
             .onAppear { if isAnimating { startTyping() } else { displayedText = text } }
-            .onChange(of: text) { _ in startTyping() }
+            .onChange(of: text) { _ in if isAnimating { startTyping() } else { displayedText = text } }
             .onDisappear { timer?.invalidate() }
     }
     
@@ -250,7 +177,6 @@ struct TypewriterText: View {
             if index < characters.count {
                 displayedText.append(characters[index])
                 index += 1
-                // 模拟机械打字机的微小抖动或随机延迟 (可选)
             } else {
                 t.invalidate()
             }
