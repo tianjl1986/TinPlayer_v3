@@ -2,6 +2,7 @@ import SwiftUI
 
 // MARK: - SkeuoSettingsGroup
 struct SkeuoSettingsGroup<Content: View>: View {
+    @ObservedObject var theme = ThemeManager.shared
     let content: Content
     
     init(@ViewBuilder content: () -> Content) {
@@ -23,6 +24,7 @@ struct SkeuoSettingsGroup<Content: View>: View {
 
 // MARK: - SkeuoSettingsRow
 struct SkeuoSettingsRow: View {
+    @ObservedObject var theme = ThemeManager.shared
     let title: String
     var value: String = ""
     var isLink: Bool = false

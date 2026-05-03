@@ -3,6 +3,7 @@ import SwiftUI
 struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
+    @ObservedObject var theme = ThemeManager.shared
     @State private var expandedAlbumID: String? = nil
     @Environment(\.presentationMode) var presentationMode
     

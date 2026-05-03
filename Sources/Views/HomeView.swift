@@ -4,6 +4,7 @@ struct HomeView: View {
     @StateObject private var player = MusicPlayer.shared
     @StateObject private var libraryService = MusicLibraryService.shared
     @ObservedObject private var loc = LocalizationManager.shared
+    @ObservedObject private var theme = ThemeManager.shared
     
     var body: some View {
         NavigationView {

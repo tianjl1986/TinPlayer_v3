@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MiniPlayerView: View {
     @ObservedObject var player = MusicPlayer.shared
+    @ObservedObject var theme = ThemeManager.shared
     @State private var showPlayer = false
     
     var body: some View {

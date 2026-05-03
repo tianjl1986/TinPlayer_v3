@@ -3,6 +3,8 @@ import SwiftUI
 struct ArtistListView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @ObservedObject private var metadata = MetadataService.shared
+    @ObservedObject var theme = ThemeManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @Environment(\.presentationMode) var presentationMode
     
     var artists: [String] {
