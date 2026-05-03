@@ -37,11 +37,37 @@ struct LyricsView: View {
                         VStack(alignment: .center, spacing: 32) {
                             Spacer(minLength: 80) // Gap for the roller
                             
-                            if player.currentTrackLyrics.isEmpty {
-                                Text("No lyrics available")
-                                    .font(.system(size: 16, weight: .medium, design: .monospaced))
-                                    .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
-                                    .padding(.top, 100)
+                            if player.isSearchingLyrics {
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .tint(DesignTokens.textPrimary)
+                                    Text("Searching lyrics...")
+                                        .font(.system(size: 14, weight: .medium, design: .monospaced))
+                                        .foregroundColor(DesignTokens.textSecondary)
+                                }
+                                .padding(.top, 100)
+                            } else if player.currentTrackLyrics.isEmpty || player.currentTrackLyrics.first?.text == "Lyrics not found online" {
+                                VStack(spacing: 20) {
+                                    Text("Lyrics not found")
+                                        .font(.system(size: 16, weight: .medium, design: .monospaced))
+                                        .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
+                                    
+                                    Button(action: {
+                                        Task {
+                                            await player.manualSearchLyrics()
+                                        }
+                                    }) {
+                                        Text("RETRY SEARCH")
+                                            .font(.system(size: 12, weight: .black))
+                                            .padding(.horizontal, 20)
+                                            .padding(.vertical, 10)
+                                            .background(DesignTokens.surfaceSecondary)
+                                            .cornerRadius(6)
+                                            .foregroundColor(DesignTokens.textPrimary)
+                                            .skeuoRaised(cornerRadius: 6)
+                                    }
+                                }
+                                .padding(.top, 100)
                             } else {
                                 ForEach(Array(player.currentTrackLyrics.enumerated()), id: \.offset) { index, line in
                                     Text(line.text)
