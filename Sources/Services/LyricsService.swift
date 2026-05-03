@@ -10,8 +10,10 @@ class LyricsService {
     }
     
     func searchLyrics(for title: String, artist: String) async -> [LyricLine] {
-        let titleEscaped = title.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let artistEscaped = artist.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        // Use a stricter character set for URL encoding to handle characters like '&' correctly
+        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&+"))
+        let titleEscaped = title.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        let artistEscaped = artist.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
         
         // 🚀 Step 1: Try exact match
         let getUrl = "https://lrclib.net/api/get?artist=\(artistEscaped)&track_name=\(titleEscaped)"
@@ -35,6 +37,7 @@ class LyricsService {
         guard let url = URL(string: urlString) else { return nil }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
+            // Debug: print(String(data: data, encoding: .utf8) ?? "")
             let response = try JSONDecoder().decode(LRCLibResponse.self, from: data)
             if let synced = response.syncedLyrics {
                 return parseLRC(synced)
@@ -54,10 +57,11 @@ class LyricsService {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let responses = try JSONDecoder().decode([LRCLibResponse].self, from: data)
-            if let first = responses.first {
-                if let synced = first.syncedLyrics {
+            // Try to find the first result that has some lyrics
+            for response in responses {
+                if let synced = response.syncedLyrics {
                     return parseLRC(synced)
-                } else if let plain = first.plainLyrics {
+                } else if let plain = response.plainLyrics {
                     return plain.components(separatedBy: "\n").enumerated().map { (index, line) in
                         LyricLine(text: line, startTime: Double(index * 5))
                     }
@@ -71,13 +75,13 @@ class LyricsService {
     
     private func parseLRC(_ lrc: String) -> [LyricLine] {
         var lines: [LyricLine] = []
-        let pattern = "\\[(\\d+):(\\d+\\.\\d+)\\](.*)"
+        // More robust pattern: [mm:ss], [mm:ss.SS], [mm:ss:SS]
+        let pattern = "\\[(\\d+):(\\d+(?:[.:]\\d+)?)\\](.*)"
         
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
             return [LyricLine(text: "Regex Error", startTime: 0)]
         }
         
-        // 修复：增加 String 扩展，支持原有代码中的 .localized 写法
         let nsString = lrc as NSString
         let matches = regex.matches(in: lrc, options: [], range: NSRange(location: 0, length: nsString.length))
         
@@ -90,7 +94,7 @@ class LyricsService {
             
             if minRange.location != NSNotFound && secRange.location != NSNotFound && textRange.location != NSNotFound {
                 let minStr = nsString.substring(with: minRange)
-                let secStr = nsString.substring(with: secRange)
+                let secStr = nsString.substring(with: secRange).replacingOccurrences(of: ":", with: ".")
                 let text = nsString.substring(with: textRange).trimmingCharacters(in: .whitespaces)
                 
                 if let min = Double(minStr), let sec = Double(secStr) {
