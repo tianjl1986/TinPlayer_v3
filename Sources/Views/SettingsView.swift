@@ -22,7 +22,7 @@ struct SettingsView: View {
                 ),
                 rightItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Text(loc.language == "en" ? "DONE" : "完成")
+                        Text(loc.t("DONE"))
                             .font(.system(size: 14, weight: .black))
                             .foregroundColor(DesignTokens.textActive)
                     }
@@ -60,7 +60,7 @@ struct SettingsView: View {
                             .foregroundColor(DesignTokens.textSecondary)
                         
                         SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: loc.t("Media Folders"), value: "\(libraryService.mediaFolders.count) \(loc.language == "en" ? "Folders" : "个文件夹")", showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Media Folders"), value: "\(libraryService.mediaFolders.count) \(loc.t("Folders"))", showBackground: false)
                             Divider().padding(.horizontal, 20)
                             SkeuoSettingsRow(title: loc.t("Auto-scan on startup"), value: "Enabled", isToggle: true, showBackground: false)
                         }
@@ -93,7 +93,7 @@ struct SettingsView: View {
                     
                     // Danger Zone
                     Button(action: { /* Reset */ }) {
-                        Text(loc.language == "en" ? "RESET APPLICATION DATA" : "重置应用程序数据")
+                        Text(loc.t("RESET APPLICATION DATA"))
                             .font(.system(size: 12, weight: .black))
                             .foregroundColor(.red)
                             .frame(maxWidth: .infinity)

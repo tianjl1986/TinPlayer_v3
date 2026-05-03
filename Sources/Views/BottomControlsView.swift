@@ -13,10 +13,10 @@ struct BottomControlsView: View {
     var body: some View {
         HStack(spacing: spacing) {
             // 1. Lyrics Toggle
-            Button(action: { showLyrics = true }) {
+            Button(action: { showLyrics.toggle() }) {
                 Text("LRC")
                     .font(.system(size: 10, weight: .black))
-                    .foregroundColor(DesignTokens.textSecondary)
+                    .foregroundColor(showLyrics ? DesignTokens.textActive : DesignTokens.textSecondary)
             }
             .buttonStyle(SkeuoButtonStyle(size: sideButtonSize, cornerRadius: 22))
             

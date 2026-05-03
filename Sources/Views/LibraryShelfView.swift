@@ -4,7 +4,7 @@ import UIKit
 struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @Environment(\.presentationMode) var presentationMode
-    @State private var expandedAlbumID: UUID?
+    @State private var expandedAlbumKey: String?
     @State private var navigateToNowPlaying = false
     
     var body: some View {
@@ -36,15 +36,16 @@ struct LibraryShelfView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     ForEach(libraryService.albums) { album in
+                        let albumKey = "\(album.title)_\(album.artist)"
                         AlbumShelfSpine(
                             album: album,
-                            isExpanded: expandedAlbumID == album.id,
+                            isExpanded: expandedAlbumKey == albumKey,
                             onTap: {
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                    if expandedAlbumID == album.id {
-                                        expandedAlbumID = nil
+                                    if expandedAlbumKey == albumKey {
+                                        expandedAlbumKey = nil
                                     } else {
-                                        expandedAlbumID = album.id
+                                        expandedAlbumKey = albumKey
                                     }
                                 }
                             },
@@ -56,7 +57,8 @@ struct LibraryShelfView: View {
                         .id(album.id)
                     }
                 }
-                .padding(24)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 24)
             }
         }
         .background(DesignTokens.surfaceSecondary.ignoresSafeArea())

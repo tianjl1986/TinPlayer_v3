@@ -36,6 +36,13 @@ struct VinylTurntableView: View {
             // 2. Rotating Platter & Record
             Button(action: { showLyrics = true }) {
                 ZStack {
+                    // Platter Shadow (1:1 with design angle)
+                    Circle()
+                        .fill(Color.black.opacity(0.3))
+                        .frame(width: platterSize - 10, height: platterSize - 10)
+                        .blur(radius: 12)
+                        .offset(x: 10, y: 10) // Specific shadow angle
+                    
                     // Platter
                     Image(theme.isDark ? "platter_dark" : "platter_light")
                         .resizable()
@@ -77,12 +84,12 @@ struct VinylTurntableView: View {
             }
             .buttonStyle(PlainButtonStyle())
             
-            // 3. Tonearm Base (Missing in previous version)
+            // 3. Tonearm Base (Top Right 45deg)
             Circle()
                 .fill(DesignTokens.spindleGradient)
-                .frame(width: 44, height: 44)
-                .skeuoRaised(cornerRadius: 22)
-                .offset(x: 105, y: -105) // Top Right 45deg
+                .frame(width: 56, height: 56) // Refined size
+                .skeuoRaised(cornerRadius: 28)
+                .offset(x: 110, y: -110)
             
             // 4. Tonearm Assembly - High Precision Alignment
             ZStack {
@@ -90,15 +97,16 @@ struct VinylTurntableView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: tonearmWidth)
-                    .rotationEffect(.degrees(player.isPlaying ? -8 : -35), anchor: .init(x: 0.85, y: 0.15))
-                    .offset(x: 75, y: -85) // Adjusted for smaller size
+                    // Anchor at the base of the arm
+                    .rotationEffect(.degrees(player.isPlaying ? -5 : -35), anchor: .init(x: 0.85, y: 0.15))
+                    .offset(x: 80, y: -90)
                     .animation(.spring(response: 0.8, dampingFraction: 0.6), value: player.isPlaying)
             }
         }
         .frame(width: baseSize, height: baseSize)
         .onReceive(timer) { _ in
             if player.isPlaying {
-                rotation += 1.2
+                rotation += 1.5 // Increased speed slightly for better visual
             }
         }
     }

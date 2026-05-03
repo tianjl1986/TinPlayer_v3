@@ -69,8 +69,11 @@ class MusicPlayer: ObservableObject {
             isSearchingLyrics = true
             let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
             await MainActor.run {
-                self.currentTrackLyrics = lyrics
-                self.isSearchingLyrics = false
+                // 仅当当前播放轨道未改变时更新
+                if self.currentTrack?.id == track.id {
+                    self.currentTrackLyrics = lyrics
+                    self.isSearchingLyrics = false
+                }
             }
         }
         

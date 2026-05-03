@@ -24,13 +24,6 @@ struct LyricsView: View {
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(DesignTokens.textPrimary)
                         }
-                    ),
-                    rightItem: AnyView(
-                        Button(action: { showLyrics = false }) {
-                            Text("LRC")
-                                .font(.system(size: 11, weight: .black))
-                                .foregroundColor(DesignTokens.textActive)
-                        }
                     )
                 )
                 
@@ -89,32 +82,30 @@ struct LyricsView: View {
                     .offset(y: 40)
                     .zIndex(1)
                     
-                    // Roller Assembly - Dynamically scaled to full width
-                    HStack(spacing: 0) {
+                    // Roller Assembly - Fixed geometry
+                    HStack(spacing: -knobSize/2) { // Overlap for tight mechanical look
                         knobView
                         
                         ZStack {
                             Image(theme.isDark ? "roller_dark" : "roller_light")
                                 .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: rollerHeight)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .skeuoRaised(cornerRadius: 12)
+                                .aspectRatio(contentMode: .fit) // Fit to diameter
+                                .frame(height: 44) // Smaller roller per user request
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .skeuoRaised(cornerRadius: 8)
                             
                             DesignTokens.rollerGradient
-                                .frame(height: rollerHeight)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .opacity(0.6)
+                                .frame(height: 44)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .opacity(0.5)
                         }
                         .frame(maxWidth: .infinity)
-                        .offset(x: -15) // Overlap with left knob
-                        .offset(x: 7.5) // Balance
                         
                         knobView
-                            .offset(x: -30) // Overlap with roller
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 10)
                     .frame(width: fullGeo.size.width)
+                    .offset(y: -5) // Alignment
                     .zIndex(2)
                 }
                 .frame(maxHeight: .infinity)

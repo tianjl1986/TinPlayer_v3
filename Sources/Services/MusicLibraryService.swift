@@ -61,7 +61,6 @@ class MusicLibraryService: ObservableObject {
             let query = MPMediaQuery.albums()
             guard let collections = query.collections else { return }
             
-            var tempSystemAlbums: [Album] = []
             for collection in collections {
                 guard let representativeItem = collection.representativeItem else { continue }
                 
@@ -80,20 +79,25 @@ class MusicLibraryService: ObservableObject {
                     tracks.append(track)
                 }
                 
-                let newAlbum = Album(
-                    title: albumTitle,
-                    artist: artist,
-                    coverImage: artwork,
-                    trackCount: collection.count,
-                    releaseYear: "System Library",
-                    tracks: tracks
-                )
-                tempSystemAlbums.append(newAlbum)
-            }
-            
-            let finalSystemAlbums = tempSystemAlbums
-            await MainActor.run {
-                self.albums.append(contentsOf: finalSystemAlbums)
+                await MainActor.run {
+                    if let existingIdx = self.albums.firstIndex(where: { $0.title == albumTitle && $0.artist == artist }) {
+                        // Merge tracks if needed, but usually system library is separate
+                        // To avoid flickering, we only update if counts differ
+                        if self.albums[existingIdx].tracks.count != tracks.count {
+                            self.albums[existingIdx].tracks = tracks
+                        }
+                    } else {
+                        let newAlbum = Album(
+                            title: albumTitle,
+                            artist: artist,
+                            coverImage: artwork,
+                            trackCount: collection.count,
+                            releaseYear: "System Library",
+                            tracks: tracks
+                        )
+                        self.albums.append(newAlbum)
+                    }
+                }
             }
         }
     }
@@ -113,9 +117,16 @@ class MusicLibraryService: ObservableObject {
             }
         }
         
-        let finalAlbums = tempAlbums
+        let localAlbums = tempAlbums
         await MainActor.run {
-            self.albums.append(contentsOf: finalAlbums)
+            for newAlbum in localAlbums {
+                if let existingIdx = self.albums.firstIndex(where: { $0.title == newAlbum.title && $0.artist == newAlbum.artist }) {
+                    // Update tracks
+                    self.albums[existingIdx].tracks = newAlbum.tracks
+                } else {
+                    self.albums.append(newAlbum)
+                }
+            }
         }
     }
     

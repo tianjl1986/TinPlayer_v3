@@ -26,7 +26,14 @@ class LocalizationManager: ObservableObject {
             "MEDIA FOLDERS": "MEDIA FOLDERS",
             "SCANNING OPTIONS": "SCANNING OPTIONS",
             "MAINTENANCE": "MAINTENANCE",
-            "GENERAL SETTINGS": "GENERAL SETTINGS"
+            "GENERAL SETTINGS": "GENERAL SETTINGS",
+            "DONE": "DONE",
+            "CLASSIFICATION": "CLASSIFICATION",
+            "MEDIA LIBRARY": "MEDIA LIBRARY",
+            "Folders": "Folders",
+            "RESET APPLICATION DATA": "RESET APPLICATION DATA",
+            "By Album": "By Album",
+            "By Artist": "By Artist"
         ],
         "zh": [
             "MY COLLECTION": "我的收藏",
@@ -45,7 +52,14 @@ class LocalizationManager: ObservableObject {
             "MEDIA FOLDERS": "媒体文件夹",
             "SCANNING OPTIONS": "扫描选项",
             "MAINTENANCE": "维护",
-            "GENERAL SETTINGS": "常规设置"
+            "GENERAL SETTINGS": "常规设置",
+            "DONE": "完成",
+            "CLASSIFICATION": "分类",
+            "MEDIA LIBRARY": "媒体库",
+            "Folders": "个文件夹",
+            "RESET APPLICATION DATA": "重置应用程序数据",
+            "By Album": "按专辑",
+            "By Artist": "按艺术家"
         ]
     ]
     
