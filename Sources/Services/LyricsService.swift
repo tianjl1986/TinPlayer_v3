@@ -7,33 +7,30 @@ class LyricsService {
     struct LRCLibResponse: Codable {
         let syncedLyrics: String?
         let plainLyrics: String?
+        let artistName: String?
+        let trackName: String?
+        let duration: Double?
     }
     
-    func searchLyrics(for title: String, artist: String) async -> [LyricLine] {
+    func searchLyrics(for title: String, artist: String, duration: Double? = nil) async -> [LyricLine] {
         let cleanTitle = cleanSearchTerm(title)
         let cleanArtist = cleanSearchTerm(artist)
         
         // 🚀 Strategy 1: Exact match with original metadata
-        if let lyrics = await tryExactMatch(artist: artist, title: title) {
+        if let lyrics = await tryExactMatch(artist: artist, title: title, duration: duration) {
             return lyrics
         }
         
-        // 🚀 Strategy 2: Exact match with cleaned metadata (if different)
+        // 🚀 Strategy 2: Exact match with cleaned metadata
         if cleanTitle != title || cleanArtist != artist {
-            if let lyrics = await tryExactMatch(artist: cleanArtist, title: cleanTitle) {
+            if let lyrics = await tryExactMatch(artist: cleanArtist, title: cleanTitle, duration: duration) {
                 return lyrics
             }
         }
         
-        // 🚀 Strategy 3: Search API with cleaned terms
+        // 🚀 Strategy 3: Search API with cleaned terms + Validation
         let searchUrl = "https://lrclib.net/api/search?q=\(urlEncode(cleanArtist))%20\(urlEncode(cleanTitle))"
-        if let lyrics = await fetchLyricsFromSearch(from: searchUrl) {
-            return lyrics
-        }
-        
-        // 🚀 Strategy 4: Search API with only title (Fuzzy fallback)
-        let fuzzyUrl = "https://lrclib.net/api/search?track_name=\(urlEncode(cleanTitle))"
-        if let lyrics = await fetchLyricsFromSearch(from: fuzzyUrl) {
+        if let lyrics = await fetchLyricsFromSearch(from: searchUrl, targetArtist: cleanArtist, targetTitle: cleanTitle, targetDuration: duration) {
             return lyrics
         }
         
@@ -43,13 +40,16 @@ class LyricsService {
         ]
     }
     
-    private func tryExactMatch(artist: String, title: String) async -> [LyricLine]? {
-        let url = "https://lrclib.net/api/get?artist=\(urlEncode(artist))&track_name=\(urlEncode(title))"
+    private func tryExactMatch(artist: String, title: String, duration: Double?) async -> [LyricLine]? {
+        var url = "https://lrclib.net/api/get?artist=\(urlEncode(artist))&track_name=\(urlEncode(title))"
+        if let dur = duration {
+            url += "&duration=\(Int(dur))"
+        }
         return await fetchLyrics(from: url)
     }
     
     private func urlEncode(_ string: String) -> String {
-        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&+"))
+        let allowed = CharacterSet.urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&+?="))
         return string.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
     }
     
@@ -57,13 +57,12 @@ class LyricsService {
         var cleaned = term
         // Remove common suffixes and parentheticals
         let patterns = [
+            "^\\d+[\\s\\.\\-、]*", // 🚀 Remove leading track numbers (e.g., "02 ", "02.", "02-", "02、")
             "\\s*\\(.*?\\)",      // Anything in parentheses
             "\\s*\\[.*?\\]",      // Anything in brackets
-            "\\s*-\\s*.*$",       // Anything after a dash (e.g., - Remastered)
+            "\\s*-\\s*(Remaster|Remastered|Studio|Single|Explicit|Live).*$", // Common suffixes
             "\\s*feat\\..*$",     // Featured artists
             "\\s*ft\\..*$",       // Featured artists
-            "\\s+Live\\s*",       // Live tags
-            "\\s+Acoustic\\s*",   // Acoustic tags
         ]
         
         for pattern in patterns {
@@ -80,32 +79,44 @@ class LyricsService {
         guard let url = URL(string: urlString) else { return nil }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            // Debug: print(String(data: data, encoding: .utf8) ?? "")
             let response = try JSONDecoder().decode(LRCLibResponse.self, from: data)
             if let synced = response.syncedLyrics {
                 return parseLRC(synced)
             } else if let plain = response.plainLyrics {
-                return plain.components(separatedBy: "\n").enumerated().map { (index, line) in
+                return plain.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.enumerated().map { (index, line) in
                     LyricLine(text: line, startTime: Double(index * 5))
                 }
             }
         } catch {
-            print("Lyrics exact fetch failed: \(error)")
+            // print("Lyrics exact fetch failed: \(error)")
         }
         return nil
     }
     
-    private func fetchLyricsFromSearch(from urlString: String) async -> [LyricLine]? {
+    private func fetchLyricsFromSearch(from urlString: String, targetArtist: String, targetTitle: String, targetDuration: Double?) async -> [LyricLine]? {
         guard let url = URL(string: urlString) else { return nil }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             let responses = try JSONDecoder().decode([LRCLibResponse].self, from: data)
-            // Try to find the first result that has some lyrics
-            for response in responses {
-                if let synced = response.syncedLyrics {
+            
+            // 🔍 Smart Filter: Find the best candidate
+            let candidate = responses.first { res in
+                let artistMatch = res.artistName?.lowercased().contains(targetArtist.lowercased()) ?? false
+                let titleMatch = res.trackName?.lowercased().contains(targetTitle.lowercased()) ?? false
+                
+                var durationMatch = true
+                if let targetDur = targetDuration, let resDur = res.duration {
+                    durationMatch = abs(targetDur - resDur) < 8.0 // Allow 8s tolerance
+                }
+                
+                return artistMatch && titleMatch && durationMatch
+            }
+            
+            if let bestRes = candidate {
+                if let synced = bestRes.syncedLyrics {
                     return parseLRC(synced)
-                } else if let plain = response.plainLyrics {
-                    return plain.components(separatedBy: "\n").enumerated().map { (index, line) in
+                } else if let plain = bestRes.plainLyrics {
+                    return plain.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.enumerated().map { (index, line) in
                         LyricLine(text: line, startTime: Double(index * 5))
                     }
                 }

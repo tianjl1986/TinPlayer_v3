@@ -97,7 +97,10 @@ class MusicPlayer: ObservableObject {
         
         Task {
             isSearchingLyrics = true
-            let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
+            // 🚀 注入时长校验，防止误匹配
+            let trackDuration = parseDuration(track.duration)
+            let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist, duration: trackDuration)
+            
             await MainActor.run {
                 if self.currentTrack?.id == track.id {
                     self.currentTrackLyrics = lyrics
@@ -175,11 +178,20 @@ class MusicPlayer: ObservableObject {
     func manualSearchLyrics() async {
         guard let track = currentTrack else { return }
         await MainActor.run { isSearchingLyrics = true }
-        let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist)
+        let trackDuration = parseDuration(track.duration)
+        let lyrics = await LyricsService.shared.searchLyrics(for: track.title, artist: track.artist, duration: trackDuration)
         await MainActor.run {
             self.currentTrackLyrics = lyrics
             self.isSearchingLyrics = false
         }
+    }
+    
+    private func parseDuration(_ durationStr: String) -> Double? {
+        let components = durationStr.components(separatedBy: ":")
+        if components.count == 2, let min = Double(components[0]), let sec = Double(components[1]) {
+            return min * 60 + sec
+        }
+        return nil
     }
     
     func pause() { 
