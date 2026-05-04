@@ -3,6 +3,7 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var player = MusicPlayer.shared
     @Binding var showLyrics: Bool
+    @Environment(\.colorScheme) var scheme // 🚀 监听系统主题并重命名避免冲突
     
     private let paperWidth: CGFloat = UIScreen.main.bounds.width * 0.85
     
@@ -98,21 +99,21 @@ struct LyricsView: View {
                 // 3. The Roller Assembly (1:1 Design)
                 ZStack {
                     // 底层：全宽黑色滚筒 - 使用官方切片
-                    Image(colorScheme == .dark ? "roller_dark" : "roller_light")
+                    Image(scheme == .dark ? "roller_dark" : "roller_light")
                         .resizable()
                         .frame(width: UIScreen.main.bounds.width, height: 35)
                     
                     // 顶层：悬浮旋钮 - 使用官方切片
                     HStack {
                         // 左旋钮
-                        Image(colorScheme == .dark ? "knob_dark" : "knob_light")
+                        Image(scheme == .dark ? "knob_dark" : "knob_light")
                             .resizable()
                             .frame(width: 25, height: 45)
                         
                         Spacer()
                         
                         // 右旋钮
-                        Image(colorScheme == .dark ? "knob_dark" : "knob_light")
+                        Image(scheme == .dark ? "knob_dark" : "knob_light")
                             .resizable()
                             .frame(width: 25, height: 45)
                     }
@@ -120,7 +121,7 @@ struct LyricsView: View {
                     .frame(width: UIScreen.main.bounds.width)
                 }
                 .offset(y: 0)
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.3), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(scheme == .dark ? 0.5 : 0.3), radius: 10, x: 0, y: 5)
                 .zIndex(10)
             }
             .padding(.bottom, 20)
