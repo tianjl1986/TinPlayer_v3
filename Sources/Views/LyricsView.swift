@@ -97,7 +97,7 @@ struct LyricsView: View {
                 
                 // 3. The Roller Assembly (1:1 Design)
                 ZStack {
-                    // 底层：全宽黑色滚筒
+                    // 底层：全宽黑色滚筒 - 强制拉满屏幕宽度
                     Rectangle()
                         .fill(
                             LinearGradient(
@@ -106,10 +106,10 @@ struct LyricsView: View {
                                 endPoint: .bottom
                             )
                         )
-                        .frame(height: 35)
+                        .frame(width: UIScreen.main.bounds.width, height: 35) // 🚀 强制物理全屏宽
                     
-                    // 顶层：悬浮旋钮
-                    HStack(spacing: 0) {
+                    // 顶层：悬浮旋钮 - 建立在全屏宽度基础上
+                    HStack {
                         // 左旋钮
                         RoundedRectangle(cornerRadius: 10)
                             .fill(
@@ -121,7 +121,6 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .padding(.leading, 5) // 🚀 距离边缘 5px
                         
                         Spacer()
                         
@@ -136,10 +135,11 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .padding(.trailing, 5) // 🚀 距离边缘 5px
                     }
+                    .padding(.horizontal, 5) // 🚀 距离屏幕物理边缘精确 5px
+                    .frame(width: UIScreen.main.bounds.width) // 🚀 确保整个水平栈也是全屏宽
                 }
-                .padding(.horizontal, 0)
+                .offset(y: 0)
                 .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                 .zIndex(10)
             }
