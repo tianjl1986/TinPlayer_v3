@@ -97,50 +97,30 @@ struct LyricsView: View {
                 
                 // 3. The Roller Assembly (1:1 Design)
                 ZStack {
-                    // 底层：全宽黑色滚筒 - 强制拉满屏幕宽度
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color(UIColor(hexString: "#1A1A1A")), Color(UIColor(hexString: "#333333")), Color(UIColor(hexString: "#111111"))]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(width: UIScreen.main.bounds.width, height: 35) // 🚀 强制物理全屏宽
+                    // 底层：全宽黑色滚筒 - 使用官方切片
+                    Image(colorScheme == .dark ? "roller_dark" : "roller_light")
+                        .resizable()
+                        .frame(width: UIScreen.main.bounds.width, height: 35)
                     
-                    // 顶层：悬浮旋钮 - 建立在全屏宽度基础上
+                    // 顶层：悬浮旋钮 - 使用官方切片
                     HStack {
                         // 左旋钮
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#E0E0E0")), Color(UIColor(hexString: "#F5F5F5")), Color(UIColor(hexString: "#BDBDBD"))]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
+                        Image(colorScheme == .dark ? "knob_dark" : "knob_light")
+                            .resizable()
                             .frame(width: 25, height: 45)
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
                         
                         Spacer()
                         
                         // 右旋钮
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#E0E0E0")), Color(UIColor(hexString: "#F5F5F5")), Color(UIColor(hexString: "#BDBDBD"))]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
+                        Image(colorScheme == .dark ? "knob_dark" : "knob_light")
+                            .resizable()
                             .frame(width: 25, height: 45)
-                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
                     }
-                    .padding(.horizontal, 5) // 🚀 距离屏幕物理边缘精确 5px
-                    .frame(width: UIScreen.main.bounds.width) // 🚀 确保整个水平栈也是全屏宽
+                    .padding(.horizontal, 5)
+                    .frame(width: UIScreen.main.bounds.width)
                 }
                 .offset(y: 0)
-                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.3), radius: 10, x: 0, y: 5)
                 .zIndex(10)
             }
             .padding(.bottom, 20)
