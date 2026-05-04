@@ -109,6 +109,7 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
+                            .offset(x: 5) // 🚀 向右（内）移动 5px
                         
                         // Main Black Bar
                         Rectangle()
@@ -132,6 +133,7 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
+                            .offset(x: -5) // 🚀 向左（内）移动 5px
                     }
                     .padding(.horizontal, 10)
                     .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
