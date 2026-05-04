@@ -109,7 +109,8 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .offset(x: 5) // 🚀 向右（内）移动 5px
+                            .offset(x: 5)
+                            .zIndex(1) // 🚀 确保旋钮在滚筒上方
                         
                         // Main Black Bar
                         Rectangle()
@@ -121,6 +122,7 @@ struct LyricsView: View {
                                 )
                             )
                             .frame(height: 35)
+                            .zIndex(0) // 🚀 滚筒在底层
                         
                         // Right Chrome Cap
                         RoundedRectangle(cornerRadius: 10)
@@ -133,9 +135,10 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .offset(x: -5) // 🚀 向左（内）移动 5px
+                            .offset(x: -5)
+                            .zIndex(1) // 🚀 确保旋钮在滚筒上方
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 0) // 🚀 边距减为 0，紧贴屏幕
                     .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
                 .zIndex(10)
