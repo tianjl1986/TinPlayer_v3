@@ -96,9 +96,21 @@ struct LyricsView: View {
                 .offset(y: 35)
                 
                 // 3. The Roller Assembly (1:1 Design)
-                VStack(spacing: 0) {
+                ZStack {
+                    // 底层：全宽黑色滚筒
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color(UIColor(hexString: "#1A1A1A")), Color(UIColor(hexString: "#333333")), Color(UIColor(hexString: "#111111"))]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(height: 35)
+                    
+                    // 顶层：悬浮旋钮
                     HStack(spacing: 0) {
-                        // Left Chrome Cap
+                        // 左旋钮
                         RoundedRectangle(cornerRadius: 10)
                             .fill(
                                 LinearGradient(
@@ -109,22 +121,11 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .offset(x: 5)
-                            .zIndex(1) // 🚀 确保旋钮在滚筒上方
+                            .padding(.leading, 5) // 🚀 距离边缘 5px
                         
-                        // Main Black Bar
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(UIColor(hexString: "#1A1A1A")), Color(UIColor(hexString: "#333333")), Color(UIColor(hexString: "#111111"))]),
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .frame(height: 35)
-                            .zIndex(0) // 🚀 滚筒在底层
+                        Spacer()
                         
-                        // Right Chrome Cap
+                        // 右旋钮
                         RoundedRectangle(cornerRadius: 10)
                             .fill(
                                 LinearGradient(
@@ -135,12 +136,11 @@ struct LyricsView: View {
                             )
                             .frame(width: 25, height: 45)
                             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.black.opacity(0.1), lineWidth: 1))
-                            .offset(x: -5)
-                            .zIndex(1) // 🚀 确保旋钮在滚筒上方
+                            .padding(.trailing, 5) // 🚀 距离边缘 5px
                     }
-                    .padding(.horizontal, 0) // 🚀 边距减为 0，紧贴屏幕
-                    .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                 }
+                .padding(.horizontal, 0)
+                .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                 .zIndex(10)
             }
             .padding(.bottom, 20)
