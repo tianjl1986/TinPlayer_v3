@@ -24,21 +24,7 @@ struct SettingsView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 32) {
                     
-                    // 1. CLASSIFICATION
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("CLASSIFICATION")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(DesignTokens.textSecondary)
-                            .padding(.horizontal, 4)
-                        
-                        SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: "By Album", value: ">", isLink: true, showBackground: false)
-                            Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: "By Artist", value: ">", isLink: true, showBackground: false)
-                        }
-                    }
-                    
-                    // 2. MEDIA FOLDERS
+                    // 1. MEDIA FOLDERS
                     VStack(alignment: .leading, spacing: 12) {
                         Text("MEDIA FOLDERS")
                             .font(.system(size: 11, weight: .black))

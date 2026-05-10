@@ -3,15 +3,17 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var player = MusicPlayer.shared
     @Binding var showLyrics: Bool
-    @Environment(\.colorScheme) var scheme // 🚀 监听系统主题并重命名避免冲突
+    @Environment(\.colorScheme) var scheme
+    @ObservedObject private var loc = LocalizationManager.shared
+    @ObservedObject private var theme = ThemeManager.shared
     
     private let paperWidth: CGFloat = UIScreen.main.bounds.width * 0.85
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header (1:1 Design)
+            // 1. Header
             AppHeader(
-                title: "LYRICS",
+                title: loc.t("LYRICS"),
                 leftItem: AnyView(
                     Button(action: { showLyrics = false }) {
                         Image(systemName: "chevron.left")
@@ -29,27 +31,26 @@ struct LyricsView: View {
             )
             
             ZStack(alignment: .top) {
-                // Background shadow layer for paper
                 Color.clear
                 
                 // 2. The Paper Scroll
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .center, spacing: 32) {
-                            Spacer(minLength: 80) // Gap for the roller
+                            Spacer(minLength: 80)
                             
                             if player.isSearchingLyrics {
                                 VStack(spacing: 16) {
                                     ProgressView()
                                         .tint(DesignTokens.textPrimary)
-                                    Text("Searching lyrics...")
+                                    Text(loc.t("Searching lyrics..."))
                                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                                         .foregroundColor(DesignTokens.textSecondary)
                                 }
                                 .padding(.top, 100)
                             } else if player.currentTrackLyrics.isEmpty || player.currentTrackLyrics.first?.text == "Lyrics not found online" {
                                 VStack(spacing: 20) {
-                                    Text("Lyrics not found")
+                                    Text(loc.t("Lyrics not found"))
                                         .font(.system(size: 16, weight: .medium, design: .monospaced))
                                         .foregroundColor(DesignTokens.textSecondary.opacity(0.5))
                                     
@@ -58,7 +59,7 @@ struct LyricsView: View {
                                             await player.manualSearchLyrics()
                                         }
                                     }) {
-                                        Text("RETRY SEARCH")
+                                        Text(loc.t("RETRY SEARCH"))
                                             .font(.system(size: 12, weight: .black))
                                             .padding(.horizontal, 20)
                                             .padding(.vertical, 10)
@@ -96,23 +97,19 @@ struct LyricsView: View {
                 .skeuoRaised(cornerRadius: 4)
                 .offset(y: 35)
                 
-                // 3. The Roller Assembly (1:1 Design)
+                // 3. The Roller Assembly
                 ZStack {
-                    // 底层：全宽黑色滚筒 - 使用官方切片
                     Image(scheme == .dark ? "roller_dark" : "roller_light")
                         .resizable()
                         .frame(width: UIScreen.main.bounds.width, height: 35)
                     
-                    // 顶层：悬浮旋钮 - 使用官方切片
                     HStack {
-                        // 左旋钮
                         Image(scheme == .dark ? "knob_dark" : "knob_light")
                             .resizable()
                             .frame(width: 25, height: 45)
                         
                         Spacer()
                         
-                        // 右旋钮
                         Image(scheme == .dark ? "knob_dark" : "knob_light")
                             .resizable()
                             .frame(width: 25, height: 45)
@@ -126,35 +123,52 @@ struct LyricsView: View {
             }
             .padding(.bottom, 20)
             
-            // 4. Progress Bar & Controls (1:1 Design)
+            // 4. Progress Bar & Controls
             VStack(spacing: 24) {
                 HStack(spacing: 12) {
                     Text(formatDuration(player.currentTime))
                         .font(.system(size: 13, weight: .bold, design: .monospaced))
                         .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 50, alignment: .leading)
                     
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(Color.black.opacity(0.1))
-                            .frame(height: 6)
-                        
-                        Capsule()
-                            .fill(Color.black.opacity(0.2))
-                            .frame(width: (UIScreen.main.bounds.width - 150) * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 6)
-                    }
+                    progressBar
                     
                     Text(formatDuration(player.duration))
                         .font(.system(size: 13, weight: .bold, design: .monospaced))
                         .foregroundColor(DesignTokens.textSecondary)
+                        .frame(width: 50, alignment: .trailing)
                 }
                 .padding(.horizontal, 32)
                 
                 BottomControlsView(showLyrics: $showLyrics)
-                    .padding(.bottom, 30) // Adjusted bottom padding
+                    .padding(.bottom, 30)
             }
-            .padding(.top, 50) // Shifted down by 30px from 20px
+            .padding(.top, 50)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+    }
+    
+    private var progressBar: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black.opacity(0.1))
+                    .frame(height: 8)
+                    .skeuoSunken(cornerRadius: 6)
+                
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(theme.isDark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
+                    .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
+            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let percentage = min(max(0, value.location.x / geo.size.width), 1)
+                        player.seek(to: player.duration * Double(percentage))
+                    }
+            )
+        }
+        .frame(height: 8)
     }
 }

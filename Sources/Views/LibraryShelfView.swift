@@ -4,6 +4,7 @@ struct LibraryShelfView: View {
     @StateObject private var libraryService = MusicLibraryService.shared
     @StateObject private var player = MusicPlayer.shared
     @ObservedObject var theme = ThemeManager.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @State private var expandedAlbumID: String? = nil
     @Environment(\.presentationMode) var presentationMode
     
@@ -11,9 +12,9 @@ struct LibraryShelfView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1. Header: 统一处理切换逻辑
+            // 1. Header
             AppHeader(
-                title: isGridView ? "COLLECTION" : "MY COLLECTION",
+                title: isGridView ? loc.t("COLLECTION") : loc.t("MY COLLECTION"),
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -27,7 +28,6 @@ struct LibraryShelfView: View {
                             isGridView.toggle() 
                         }
                     }) {
-                        // 切换图标：根据当前模式显示另一个模式的图标
                         Image(systemName: isGridView ? "list.bullet" : "square.grid.2x2.fill")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(DesignTokens.textPrimary)
@@ -35,7 +35,7 @@ struct LibraryShelfView: View {
                 )
             )
             
-            // 2. Content: 动态切换布局
+            // 2. Content
             if isGridView {
                 GridViewContent()
             } else {
@@ -81,6 +81,7 @@ struct ShelfViewContent: View {
 
 struct GridViewContent: View {
     @StateObject private var libraryService = MusicLibraryService.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     
     private let columns = [
         GridItem(.flexible(), spacing: 20),
@@ -90,8 +91,7 @@ struct GridViewContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // 网格标题（根据设计稿补齐）
-                Text("\(libraryService.albums.count) ALBUMS")
+                Text("\(libraryService.albums.count) \(loc.t("ALBUMS"))")
                     .font(.system(size: 11, weight: .black))
                     .foregroundColor(DesignTokens.textSecondary)
                     .padding(.horizontal, 24)
@@ -111,13 +111,14 @@ struct GridViewContent: View {
     }
 }
 
-// MARK: - 原有组件逻辑保留并优化
+// MARK: - 组件
 
 struct AlbumShelfPill: View {
     let album: Album
     let isExpanded: Bool
     let onToggle: () -> Void
     @StateObject private var player = MusicPlayer.shared
+    @ObservedObject private var loc = LocalizationManager.shared
     @State private var navigateToAlbum: Album? = nil
     
     var body: some View {
@@ -127,7 +128,7 @@ struct AlbumShelfPill: View {
                     Image(uiImage: cover)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(height: 52) // Unified height reduction
+                        .frame(height: 52)
                         .blur(radius: 12)
                         .overlay(Color.black.opacity(0.4))
                         .clipped()
@@ -147,12 +148,11 @@ struct AlbumShelfPill: View {
                 }
                 .padding(.horizontal, 24)
             }
-            .frame(height: 52) // Unified height reduction
+            .frame(height: 52)
             .background(Color.black)
             .cornerRadius(6)
             .contentShape(Rectangle())
             .onTapGesture { onToggle() }
-            // Removed skeuoRaised for shelf cards per user request to clean up shadows
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 0) {
@@ -174,7 +174,7 @@ struct AlbumShelfPill: View {
                                 
                                 Text(track.title)
                                     .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(DesignTokens.textPrimary)
+                                    .foregroundColor(player.currentTrack?.id == track.id ? DesignTokens.textActive : DesignTokens.textPrimary)
                                 
                                 Spacer()
                             }
@@ -192,7 +192,7 @@ struct AlbumShelfPill: View {
                     Button(action: { navigateToAlbum = album }) {
                         HStack {
                             Spacer()
-                            Text("VIEW FULL ALBUM")
+                            Text(loc.t("VIEW FULL ALBUM"))
                                 .font(.system(size: 10, weight: .black))
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)

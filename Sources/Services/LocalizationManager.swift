@@ -34,7 +34,12 @@ class LocalizationManager: ObservableObject {
             "Folders": "Folders",
             "RESET APPLICATION DATA": "RESET APPLICATION DATA",
             "By Album": "By Album",
-            "By Artist": "By Artist"
+            "By Artist": "By Artist",
+            "COLLECTION": "COLLECTION",
+            "ALBUM": "ALBUM",
+            "Play All": "Play All",
+            "Shuffle": "Shuffle",
+            "VIEW FULL ALBUM": "VIEW FULL ALBUM"
         ],
         "zh": [
             "MY COLLECTION": "我的收藏",
@@ -61,7 +66,12 @@ class LocalizationManager: ObservableObject {
             "Folders": "个文件夹",
             "RESET APPLICATION DATA": "重置应用程序数据",
             "By Album": "按专辑",
-            "By Artist": "按艺术家"
+            "By Artist": "按艺术家",
+            "COLLECTION": "收藏",
+            "ALBUM": "专辑",
+            "Play All": "全部播放",
+            "Shuffle": "随机播放",
+            "VIEW FULL ALBUM": "查看完整专辑"
         ]
     ]
     

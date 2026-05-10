@@ -32,9 +32,9 @@ struct NowPlayingView: View {
                     VinylTurntableView(showLyrics: $showLyrics)
                 }
                 .frame(height: 360)
-                .padding(.top, 30) // Shifted down by 20px (10 -> 30)
+                .padding(.top, 30)
                 
-                // 3. Track Info (Left Aligned as per Image 6)
+                // 3. Track Info
                 VStack(alignment: .leading, spacing: 8) {
                     Text(player.currentTrack?.title ?? "Unknown Title")
                         .font(.system(size: 28, weight: .bold))
@@ -52,7 +52,7 @@ struct NowPlayingView: View {
                 
                 Spacer(minLength: 20)
                 
-                // 4. Progress Bar (1:1 Sunken Style)
+                // 4. Progress Bar (Draggable & Unified Color)
                 VStack(spacing: 12) {
                     HStack(spacing: 12) {
                         Text(formatDuration(player.currentTime))
@@ -80,7 +80,7 @@ struct NowPlayingView: View {
             .blur(radius: showLyrics ? 20 : 0)
             .animation(.easeInOut, value: showLyrics)
             
-            // 6. Lyrics Overlay (ZStack instead of Sheet)
+            // 6. Lyrics Overlay
             if showLyrics {
                 LyricsView(showLyrics: $showLyrics)
                     .transition(.move(edge: .bottom))
@@ -89,27 +89,30 @@ struct NowPlayingView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
-        .preferredColorScheme(theme.isDark ? .dark : .light) // 🚀 Force Status Bar Color
+        .preferredColorScheme(theme.isDark ? .dark : .light)
     }
     
     private var progressBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
+                // Background Track
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.black.opacity(0.1))
                     .frame(height: 8)
                     .skeuoSunken(cornerRadius: 6)
                 
+                // Played Progress (Unified to Light Gray)
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [DesignTokens.textActive, DesignTokens.textActive.opacity(0.8)]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .fill(theme.isDark ? Color.white.opacity(0.2) : Color.black.opacity(0.2))
                     .frame(width: geo.size.width * CGFloat(player.currentTime / (player.duration > 0 ? player.duration : 1)), height: 8)
             }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let percentage = min(max(0, value.location.x / geo.size.width), 1)
+                        player.seek(to: player.duration * Double(percentage))
+                    }
+            )
         }
         .frame(height: 8)
     }
