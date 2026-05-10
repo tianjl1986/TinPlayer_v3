@@ -54,30 +54,45 @@ jobs:
               exit 1
           fi
           
-          echo "🛠 Patching Info.plist with Python..."
+          echo "🎨 Processing Icon (Removing Alpha Channel)..."
+          ICON_SOURCE="Sources/Assets.xcassets/AppIcon.appiconset/icon.png"
+          TARGET_DIR="Payload/TinPlayer.app"
+          
+          # 关键点：强制去除 Alpha 通道（转为不透明）并缩放
+          # 先转为无透明的 TIFF 再转回 PNG，这是最稳妥的去透明方法
+          sips -s format tiff "$ICON_SOURCE" --out icon_temp.tiff
+          sips -s format png icon_temp.tiff --out icon_clean.png
+          
+          # 制作各个倍率的图标
+          sips -z 120 120 icon_clean.png --out "$TARGET_DIR/AppIcon60x60@2x.png"
+          sips -z 180 180 icon_clean.png --out "$TARGET_DIR/AppIcon60x60@3x.png"
+          sips -z 1024 1024 icon_clean.png --out "$TARGET_DIR/AppIcon1024x1024.png"
+          
+          echo "🛠 Patching Info.plist..."
           python3 - << 'EOF'
           import plistlib
-          import os
 
           plist_path = 'Payload/TinPlayer.app/Info.plist'
           with open(plist_path, 'rb') as f:
               plist = plistlib.load(f)
 
-          # 更新基础信息
+          # 强制更新核心元数据
           plist['CFBundleIdentifier'] = 'com.skeuo.tinplayer'
           plist['CFBundleShortVersionString'] = '1.3.0'
-          plist['CFBundleVersion'] = '40'
+          plist['CFBundleVersion'] = '50'
           plist['MinimumOSVersion'] = '16.0'
           
-          # 注入图标配置 (核心修复)
+          # 冗余图标配置 (覆盖所有可能的识别路径)
+          icon_list = ['AppIcon60x60']
+          plist['CFBundleIconFiles'] = icon_list
           plist['CFBundleIcons'] = {
               'CFBundlePrimaryIcon': {
-                  'CFBundleIconFiles': ['AppIcon'],
+                  'CFBundleIconFiles': icon_list,
                   'CFBundleIconName': 'AppIcon'
               }
           }
           
-          # 注入权限描述
+          # 权限补丁
           plist['NSAppleMusicUsageDescription'] = '我们需要访问您的媒体库以播放本地音乐。'
           plist['NSPhotoLibraryUsageDescription'] = '我们需要访问相册以保存或读取封面图片。'
           plist['NSLocalNetworkUsageDescription'] = '我们需要访问本地网络以获取歌词和元数据。'
