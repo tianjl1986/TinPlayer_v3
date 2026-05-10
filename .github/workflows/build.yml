@@ -33,7 +33,6 @@ jobs:
           rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive DerivedData
           
           echo "🚀 Building TinPlayer.swiftpm..."
-          # 注意：这里我们让 xcodebuild 正常生成图标
           /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
@@ -47,7 +46,7 @@ jobs:
           APP_BUNDLE="./TinPlayer.xcarchive/Products/Applications/TinPlayer.app"
           
           if [ -d "$APP_BUNDLE" ]; then
-              echo "✅ Found App Bundle in xcarchive"
+              echo "✅ Found App Bundle"
               mkdir -p Payload
               cp -R "$APP_BUNDLE" Payload/
           else
@@ -55,22 +54,38 @@ jobs:
               exit 1
           fi
           
-          # 📝 使用 plutil 精确修改 Info.plist，保留原有的图标配置
-          PLIST="Payload/TinPlayer.app/Info.plist"
+          echo "🛠 Patching Info.plist with Python..."
+          python3 - << 'EOF'
+          import plistlib
+          import os
+
+          plist_path = 'Payload/TinPlayer.app/Info.plist'
+          with open(plist_path, 'rb') as f:
+              plist = plistlib.load(f)
+
+          # 更新基础信息
+          plist['CFBundleIdentifier'] = 'com.skeuo.tinplayer'
+          plist['CFBundleShortVersionString'] = '1.3.0'
+          plist['CFBundleVersion'] = '40'
+          plist['MinimumOSVersion'] = '16.0'
           
-          echo "🛠 Patching Info.plist..."
-          plutil -replace CFBundleIdentifier -string "com.skeuo.tinplayer" "$PLIST"
-          plutil -replace CFBundleShortVersionString -string "1.3.0" "$PLIST"
-          plutil -replace CFBundleVersion -string "35" "$PLIST"
-          plutil -replace MinimumOSVersion -string "16.0" "$PLIST"
+          # 注入图标配置 (核心修复)
+          plist['CFBundleIcons'] = {
+              'CFBundlePrimaryIcon': {
+                  'CFBundleIconFiles': ['AppIcon'],
+                  'CFBundleIconName': 'AppIcon'
+              }
+          }
           
           # 注入权限描述
-          plutil -replace NSAppleMusicUsageDescription -string "我们需要访问您的媒体库以播放本地音乐。" "$PLIST"
-          plutil -replace NSPhotoLibraryUsageDescription -string "我们需要访问相册以保存或读取封面图片。" "$PLIST"
-          plutil -replace NSLocalNetworkUsageDescription -string "我们需要访问本地网络以获取歌词和元数据。" "$PLIST"
-          
-          # 确保后台播放模式
-          plutil -replace UIBackgroundModes -array -string "audio" "$PLIST"
+          plist['NSAppleMusicUsageDescription'] = '我们需要访问您的媒体库以播放本地音乐。'
+          plist['NSPhotoLibraryUsageDescription'] = '我们需要访问相册以保存或读取封面图片。'
+          plist['NSLocalNetworkUsageDescription'] = '我们需要访问本地网络以获取歌词和元数据。'
+          plist['UIBackgroundModes'] = ['audio']
+
+          with open(plist_path, 'wb') as f:
+              plistlib.dump(plist, f)
+          EOF
           
           echo "📊 Final Payload size: $(du -sh Payload | cut -f1)"
           zip -q -r TinPlayer.ipa Payload
