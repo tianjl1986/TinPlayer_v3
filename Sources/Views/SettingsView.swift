@@ -11,7 +11,7 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             // Header
             AppHeader(
-                title: "SETTINGS",
+                title: loc.t("SETTINGS"),
                 leftItem: AnyView(
                     Button(action: { presentationMode.wrappedValue.dismiss() }) {
                         Image(systemName: "chevron.left")
@@ -26,7 +26,7 @@ struct SettingsView: View {
                     
                     // 1. MEDIA FOLDERS
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("MEDIA FOLDERS")
+                        Text(loc.t("MEDIA FOLDERS"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                             .padding(.horizontal, 4)
@@ -55,7 +55,7 @@ struct SettingsView: View {
                                 HStack {
                                     Image(systemName: "plus")
                                         .font(.system(size: 14, weight: .bold))
-                                    Text("Add Music Folder")
+                                    Text(loc.t("Add Music Folder"))
                                         .font(.system(size: 14, weight: .heavy))
                                 }
                                 .foregroundColor(DesignTokens.textPrimary)
@@ -68,30 +68,30 @@ struct SettingsView: View {
                     
                     // 3. SCANNING OPTIONS
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("SCANNING OPTIONS")
+                        Text(loc.t("SCANNING OPTIONS"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                             .padding(.horizontal, 4)
                         
                         SkeuoSettingsGroup {
-                            SkeuoSettingsRow(title: "Parse .cue sheets", value: "[ ON ]", isLink: true, showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Parse .cue sheets"), value: "[ ON ]", isLink: true, showBackground: false)
                             Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: "Search for .lrc lyrics", value: "[ ON ]", isLink: true, showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Search for .lrc lyrics"), value: "[ ON ]", isLink: true, showBackground: false)
                             Divider().padding(.horizontal, 20)
-                            SkeuoSettingsRow(title: "Auto-scan on startup", value: "[ OFF ]", isLink: false, showBackground: false)
+                            SkeuoSettingsRow(title: loc.t("Auto-scan on startup"), value: "[ OFF ]", isLink: false, showBackground: false)
                         }
                     }
                     
                     // 4. APPEARANCE & LOCALIZATION
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("APPEARANCE")
+                        Text(loc.t("APPEARANCE"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                             .padding(.horizontal, 4)
                         
                         SkeuoSettingsGroup {
                             HStack {
-                                Text("Dark Mode")
+                                Text(loc.t("Dark Mode"))
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DesignTokens.textPrimary)
                                 Spacer()
@@ -108,7 +108,7 @@ struct SettingsView: View {
                             Divider().padding(.horizontal, 20)
                             
                             HStack {
-                                Text("Language")
+                                Text(loc.t("Language"))
                                     .font(.system(size: 14, weight: .bold))
                                     .foregroundColor(DesignTokens.textPrimary)
                                 Spacer()
@@ -127,14 +127,14 @@ struct SettingsView: View {
                     
                     // 5. MAINTENANCE
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("MAINTENANCE")
+                        Text(loc.t("MAINTENANCE"))
                             .font(.system(size: 11, weight: .black))
                             .foregroundColor(DesignTokens.textSecondary)
                             .padding(.horizontal, 4)
                         
                         VStack(spacing: 16) {
                             Button(action: { libraryService.scanLibrary() }) {
-                                Text("Rescan Now")
+                                Text(loc.t("Rescan Now"))
                                     .font(.system(size: 14, weight: .heavy))
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)
@@ -143,7 +143,7 @@ struct SettingsView: View {
                             .buttonStyle(SkeuoRectButtonStyle(cornerRadius: 12))
                             
                             Button(action: { libraryService.clearLibrary() }) {
-                                Text("Clear Library")
+                                Text(loc.t("Clear Library"))
                                     .font(.system(size: 14, weight: .heavy))
                                     .foregroundColor(DesignTokens.textPrimary)
                                     .frame(maxWidth: .infinity)

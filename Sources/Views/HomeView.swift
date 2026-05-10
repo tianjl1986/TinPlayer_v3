@@ -53,13 +53,13 @@ struct HomeView: View {
                             
                             SkeuoSettingsGroup {
                                 NavigationLink(destination: LibraryShelfView()) {
-                                    SkeuoSettingsRow(title: loc.language == "en" ? "Browse All Music" : "浏览所有音乐", value: ">", isLink: true, showBackground: false)
+                                    SkeuoSettingsRow(title: loc.t("Browse All Music"), value: ">", isLink: true, showBackground: false)
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 
                                 Divider().padding(.horizontal, 20)
                                 
-                                SkeuoSettingsRow(title: loc.language == "en" ? "Recently Added" : "最近添加", value: "12 New", showBackground: false)
+                                SkeuoSettingsRow(title: loc.t("Recently Added"), value: loc.t("12 New"), showBackground: false)
                             }
                         }
                         

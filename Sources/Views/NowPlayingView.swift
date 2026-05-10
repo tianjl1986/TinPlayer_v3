@@ -89,6 +89,19 @@ struct NowPlayingView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.startLocation.x < 50 && value.translation.width > 100 {
+                        if showLyrics {
+                            withAnimation { showLyrics = false }
+                        } else {
+                            player.showNowPlaying = false
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }
+        )
         .preferredColorScheme(theme.isDark ? .dark : .light)
     }
     

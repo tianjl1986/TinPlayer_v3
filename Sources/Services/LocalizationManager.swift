@@ -39,7 +39,17 @@ class LocalizationManager: ObservableObject {
             "ALBUM": "ALBUM",
             "Play All": "Play All",
             "Shuffle": "Shuffle",
-            "VIEW FULL ALBUM": "VIEW FULL ALBUM"
+            "VIEW FULL ALBUM": "VIEW FULL ALBUM",
+            "APPEARANCE": "APPEARANCE",
+            "Dark Mode": "Dark Mode",
+            "Language": "Language",
+            "Add Music Folder": "Add Music Folder",
+            "Searching lyrics...": "Searching lyrics...",
+            "Lyrics not found": "Lyrics not found",
+            "RETRY SEARCH": "RETRY SEARCH",
+            "Browse All Music": "Browse All Music",
+            "Recently Added": "Recently Added",
+            "12 New": "12 New"
         ],
         "zh": [
             "MY COLLECTION": "我的收藏",
@@ -71,7 +81,17 @@ class LocalizationManager: ObservableObject {
             "ALBUM": "专辑",
             "Play All": "全部播放",
             "Shuffle": "随机播放",
-            "VIEW FULL ALBUM": "查看完整专辑"
+            "VIEW FULL ALBUM": "查看完整专辑",
+            "APPEARANCE": "外观",
+            "Dark Mode": "深色模式",
+            "Language": "语言",
+            "Add Music Folder": "添加音乐文件夹",
+            "Searching lyrics...": "正在搜索歌词...",
+            "Lyrics not found": "未找到歌词",
+            "RETRY SEARCH": "重试搜索",
+            "Browse All Music": "浏览所有音乐",
+            "Recently Added": "最近添加",
+            "12 New": "12 首新曲"
         ]
     ]
     

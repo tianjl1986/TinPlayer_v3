@@ -147,6 +147,14 @@ struct LyricsView: View {
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.startLocation.x < 50 && value.translation.width > 100 {
+                        withAnimation { showLyrics = false }
+                    }
+                }
+        )
     }
     
     private var progressBar: some View {
