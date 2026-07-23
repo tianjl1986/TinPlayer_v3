@@ -1,125 +1,170 @@
-name: TinPlayer Final Fix
+name: TinPlayer Build
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: macos-latest
+
     permissions:
       contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app
-
-      - name: Build and Package
+      - name: Verify Xcode
         run: |
-          set -e
-          
-          echo "🚀 Preparing project structure..."
-          ORIGINAL_FOLDER=$(basename $(pwd))
+          echo "Developer directory: $(xcode-select -p)"
+          xcodebuild -version
+          swift --version
+
+      - name: Build and package IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Preparing project structure..."
+
+          ORIGINAL_FOLDER="$(basename "$PWD")"
+
+          # 防止旧入口文件与 Sources/main.swift 重复
           rm -f Sources/SkeuoPlayerApp.swift
-          
+
           cd ..
           mv "$ORIGINAL_FOLDER" TinPlayer.swiftpm
           cd TinPlayer.swiftpm
-          
-          rm -rf Payload TinPlayer.ipa TinPlayer.xcarchive DerivedData
-          
-          echo "🚀 Building TinPlayer.swiftpm..."
-          /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild archive \
+
+          rm -rf \
+            Payload \
+            TinPlayer.ipa \
+            TinPlayer.xcarchive \
+            DerivedData
+
+          echo "Building TinPlayer.swiftpm..."
+
+          xcrun xcodebuild archive \
             -scheme "TinPlayer" \
             -destination "generic/platform=iOS" \
-            -archivePath ./TinPlayer.xcarchive \
-            -derivedDataPath ./DerivedData \
+            -archivePath "./TinPlayer.xcarchive" \
+            -derivedDataPath "./DerivedData" \
             CODE_SIGNING_ALLOWED=NO \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             SKIP_INSTALL=NO
-          
-          echo "📦 Assembling Bundle..."
+
+          echo "Locating application bundle..."
+
           APP_BUNDLE="./TinPlayer.xcarchive/Products/Applications/TinPlayer.app"
-          
-          if [ -d "$APP_BUNDLE" ]; then
-              echo "✅ Found App Bundle"
-              mkdir -p Payload
-              cp -R "$APP_BUNDLE" Payload/
-          else
-              echo "❌ ERROR: Cannot find TinPlayer.app!"
-              exit 1
+
+          if [ ! -d "$APP_BUNDLE" ]; then
+            echo "ERROR: TinPlayer.app was not generated."
+            find "./TinPlayer.xcarchive/Products" -maxdepth 4 -type d -name "*.app" || true
+            exit 1
           fi
-          
-          echo "🎨 Processing Icon (Removing Alpha Channel)..."
+
+          mkdir -p Payload
+          cp -R "$APP_BUNDLE" Payload/
+
+          echo "Processing application icon..."
+
           ICON_SOURCE="Sources/Assets.xcassets/AppIcon.appiconset/icon.png"
           TARGET_DIR="Payload/TinPlayer.app"
-          
-          # 关键点：强制去除 Alpha 通道（转为不透明）并缩放
-          # 先转为无透明的 TIFF 再转回 PNG，这是最稳妥的去透明方法
-          sips -s format tiff "$ICON_SOURCE" --out icon_temp.tiff
-          sips -s format png icon_temp.tiff --out icon_clean.png
-          
-          # 制作各个倍率的图标
-          sips -z 120 120 icon_clean.png --out "$TARGET_DIR/AppIcon60x60@2x.png"
-          sips -z 180 180 icon_clean.png --out "$TARGET_DIR/AppIcon60x60@3x.png"
-          sips -z 1024 1024 icon_clean.png --out "$TARGET_DIR/AppIcon1024x1024.png"
-          
-          echo "🛠 Patching Info.plist..."
-          python3 - << 'EOF'
+
+          if [ -f "$ICON_SOURCE" ]; then
+            sips -s format tiff "$ICON_SOURCE" --out icon_temp.tiff
+            sips -s format png icon_temp.tiff --out icon_clean.png
+
+            sips -z 120 120 icon_clean.png \
+              --out "$TARGET_DIR/AppIcon60x60@2x.png"
+
+            sips -z 180 180 icon_clean.png \
+              --out "$TARGET_DIR/AppIcon60x60@3x.png"
+
+            sips -z 1024 1024 icon_clean.png \
+              --out "$TARGET_DIR/AppIcon1024x1024.png"
+
+            rm -f icon_temp.tiff icon_clean.png
+          else
+            echo "WARNING: App icon source was not found at $ICON_SOURCE"
+          fi
+
+          echo "Updating Info.plist..."
+
+          python3 <<'PYTHON'
           import plistlib
+          from pathlib import Path
 
-          plist_path = 'Payload/TinPlayer.app/Info.plist'
-          with open(plist_path, 'rb') as f:
-              plist = plistlib.load(f)
+          plist_path = Path("Payload/TinPlayer.app/Info.plist")
 
-          # 强制更新核心元数据
-          plist['CFBundleIdentifier'] = 'com.skeuo.tinplayer'
-          plist['CFBundleShortVersionString'] = '1.3.0'
-          plist['CFBundleVersion'] = '50'
-          plist['MinimumOSVersion'] = '16.0'
-          
-          # 冗余图标配置 (覆盖所有可能的识别路径)
-          icon_list = ['AppIcon60x60']
-          plist['CFBundleIconFiles'] = icon_list
-          plist['CFBundleIcons'] = {
-              'CFBundlePrimaryIcon': {
-                  'CFBundleIconFiles': icon_list,
-                  'CFBundleIconName': 'AppIcon'
+          if not plist_path.exists():
+              raise FileNotFoundError(f"Info.plist not found: {plist_path}")
+
+          with plist_path.open("rb") as file:
+              plist = plistlib.load(file)
+
+          plist["CFBundleIdentifier"] = "com.skeuo.tinplayer"
+          plist["CFBundleShortVersionString"] = "1.3.0"
+          plist["CFBundleVersion"] = "50"
+          plist["MinimumOSVersion"] = "16.0"
+
+          icon_files = ["AppIcon60x60"]
+
+          plist["CFBundleIconFiles"] = icon_files
+          plist["CFBundleIcons"] = {
+              "CFBundlePrimaryIcon": {
+                  "CFBundleIconFiles": icon_files,
+                  "CFBundleIconName": "AppIcon",
               }
           }
-          
-          # 权限补丁
-          plist['NSAppleMusicUsageDescription'] = '我们需要访问您的媒体库以播放本地音乐。'
-          plist['NSPhotoLibraryUsageDescription'] = '我们需要访问相册以保存或读取封面图片。'
-          plist['NSLocalNetworkUsageDescription'] = '我们需要访问本地网络以获取歌词和元数据。'
-          plist['UIBackgroundModes'] = ['audio']
 
-          with open(plist_path, 'wb') as f:
-              plistlib.dump(plist, f)
-          EOF
-          
-          echo "📊 Final Payload size: $(du -sh Payload | cut -f1)"
+          plist["NSAppleMusicUsageDescription"] = (
+              "我们需要访问您的媒体库以播放本地音乐。"
+          )
+          plist["NSPhotoLibraryUsageDescription"] = (
+              "我们需要访问相册以保存或读取封面图片。"
+          )
+          plist["NSLocalNetworkUsageDescription"] = (
+              "我们需要访问网络以获取歌词和音乐元数据。"
+          )
+          plist["UIBackgroundModes"] = ["audio"]
+
+          with plist_path.open("wb") as file:
+              plistlib.dump(plist, file)
+          PYTHON
+
+          echo "Packaging IPA..."
+
           zip -q -r TinPlayer.ipa Payload
-          
+
+          if [ ! -f TinPlayer.ipa ]; then
+            echo "ERROR: IPA packaging failed."
+            exit 1
+          fi
+
+          echo "IPA size: $(du -sh TinPlayer.ipa | cut -f1)"
+
           cd ..
           mv TinPlayer.swiftpm "$ORIGINAL_FOLDER"
-          echo "✅ Done! IPA Created."
 
-      - name: Upload IPA Artifact
+          echo "TinPlayer.ipa created successfully."
+
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: TinPlayer-v1.3.0-IPA
           path: TinPlayer.ipa
+          if-no-files-found: error
 
-      - name: Create Release
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v1.3.0-final-${{ github.run_number }}"
-          name: "Tin Player Release #${{ github.run_number }}"
+          tag_name: v1.3.0-build-${{ github.run_number }}
+          name: TinPlayer Build ${{ github.run_number }}
           files: TinPlayer.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
