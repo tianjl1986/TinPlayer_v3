@@ -3,11 +3,8 @@ import SwiftUI
 struct LyricsView: View {
     @ObservedObject var player = MusicPlayer.shared
     @Binding var showLyrics: Bool
-    @Environment(\.colorScheme) var scheme
     @ObservedObject private var loc = LocalizationManager.shared
     @ObservedObject private var theme = ThemeManager.shared
-    
-    private let paperWidth: CGFloat = UIScreen.main.bounds.width * 0.85
     
     var body: some View {
         VStack(spacing: 0) {
@@ -30,14 +27,20 @@ struct LyricsView: View {
                 )
             )
             
-            ZStack(alignment: .top) {
-                Color.clear
-                
-                // 2. The Paper Scroll
+            // 2. Minimal raised lyrics panel
+            ZStack {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(DesignTokens.surfaceMain)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(DesignTokens.skeuoShadowLight.opacity(theme.isDark ? 0.12 : 0.5), lineWidth: 1)
+                    )
+                    .skeuoRaised(cornerRadius: 28)
+
                 ScrollViewReader { proxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .center, spacing: 32) {
-                            Spacer(minLength: 80)
+                            Spacer(minLength: 140)
                             
                             if player.isSearchingLyrics {
                                 VStack(spacing: 16) {
@@ -80,7 +83,7 @@ struct LyricsView: View {
                                 }
                             }
                             
-                            Spacer(minLength: 200)
+                            Spacer(minLength: 140)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 30)
@@ -91,37 +94,12 @@ struct LyricsView: View {
                         }
                     }
                 }
-                .frame(width: paperWidth)
-                .background(DesignTokens.surfaceMain)
-                .cornerRadius(4)
-                .skeuoRaised(cornerRadius: 4)
-                .offset(y: 35)
-                
-                // 3. The Roller Assembly
-                ZStack {
-                    Image(scheme == .dark ? "roller_dark" : "roller_light")
-                        .resizable()
-                        .frame(width: UIScreen.main.bounds.width, height: 35)
-                    
-                    HStack {
-                        Image(scheme == .dark ? "knob_dark" : "knob_light")
-                            .resizable()
-                            .frame(width: 25, height: 45)
-                        
-                        Spacer()
-                        
-                        Image(scheme == .dark ? "knob_dark" : "knob_light")
-                            .resizable()
-                            .frame(width: 25, height: 45)
-                    }
-                    .padding(.horizontal, 5)
-                    .frame(width: UIScreen.main.bounds.width)
-                }
-                .offset(y: 0)
-                .shadow(color: Color.black.opacity(scheme == .dark ? 0.5 : 0.3), radius: 10, x: 0, y: 5)
-                .zIndex(10)
+                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .mask(lyricsFadeMask)
             }
-            .padding(.bottom, 20)
+            .padding(.horizontal, 28)
+            .padding(.top, 18)
+            .padding(.bottom, 16)
             
             // 4. Progress Bar & Controls
             VStack(spacing: 24) {
@@ -143,7 +121,7 @@ struct LyricsView: View {
                 BottomControlsView(showLyrics: $showLyrics)
                     .padding(.bottom, 30)
             }
-            .padding(.top, 50)
+            .padding(.top, 20)
         }
         .background(DesignTokens.surfaceMain.ignoresSafeArea())
         .navigationBarHidden(true)
@@ -154,6 +132,21 @@ struct LyricsView: View {
                         withAnimation { showLyrics = false }
                     }
                 }
+        )
+    }
+
+    /// Keeps the active lyric readable in the center while lines gently
+    /// disappear at both edges of the raised panel.
+    private var lyricsFadeMask: some View {
+        LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: 0.16),
+                .init(color: .black, location: 0.84),
+                .init(color: .clear, location: 1)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
         )
     }
     

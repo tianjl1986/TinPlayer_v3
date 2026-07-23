@@ -1,79 +1,64 @@
 import SwiftUI
 
-struct VinylTurntableView: View {
+/// A responsive neumorphic album-art card used by the Now Playing screen.
+///
+/// The old implementation assembled a turntable from several fixed-size PNGs.
+/// Keeping this view asset-light makes it scale correctly on every iPhone size
+/// and lets the album artwork remain the visual focus.
+struct SquareAlbumArtworkView: View {
     @ObservedObject var player = MusicPlayer.shared
     @ObservedObject var theme = ThemeManager.shared
-    @Binding var showLyrics: Bool
-    @State private var rotation: Double = 0
-    
-    private let baseSize: CGFloat = 400 // Increased size
-    
+
     var body: some View {
-        ZStack {
-            // 1. Bottom Base (Image Asset)
-            Image(theme.isDark ? "turntable_base_dark" : "turntable_base_light")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: baseSize, height: baseSize)
-                .skeuoRaised(cornerRadius: 40) // Added skeuomorphic shadow to base
-            
-            // 1.5 Platter (Using PNG Assets)
-            Image(theme.isDark ? "platter_dark" : "platter_light")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 300, height: 300)
-            
-            // 2. Spinning Vinyl (Image Asset)
+        GeometryReader { geometry in
+            let cardSize = min(geometry.size.width, geometry.size.height)
+            let outerRadius = max(24, cardSize * 0.09)
+            let artworkInset = max(18, cardSize * 0.075)
+            let artworkRadius = max(16, cardSize * 0.055)
+
             ZStack {
-                Image(theme.isDark ? "vinyl_record_dark" : "vinyl_record_light")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 280, height: 280)
-                
-                // Album Art Center
-                Group {
+                RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
+                    .fill(DesignTokens.surfaceMain)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
+                            .stroke(DesignTokens.skeuoShadowLight.opacity(theme.isDark ? 0.16 : 0.55), lineWidth: 1)
+                    )
+                    .skeuoRaised(cornerRadius: outerRadius)
+
+                ZStack {
                     if let cover = player.currentAlbum?.coverImage {
-                        ZStack {
-                            Image(uiImage: cover)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 115, height: 115) // Increased by 20px
-                                .clipShape(Circle())
-                            
-                            // 2.5 Center Spindle (Size reduced by half)
-                            Image(theme.isDark ? "spindle_dark" : "spindle_light")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 16, height: 16) // 16x16
-                        }
+                        Image(uiImage: cover)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        DesignTokens.surfaceFlat
+
+                        Image(systemName: "music.note")
+                            .font(.system(size: cardSize * 0.18, weight: .medium))
+                            .foregroundColor(DesignTokens.textSecondary.opacity(0.28))
                     }
                 }
+                .frame(
+                    width: cardSize - artworkInset * 2,
+                    height: cardSize - artworkInset * 2
+                )
+                .clipShape(RoundedRectangle(cornerRadius: artworkRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: artworkRadius, style: .continuous)
+                        .stroke(DesignTokens.skeuoShadowLight.opacity(theme.isDark ? 0.12 : 0.65), lineWidth: 1)
+                )
+                .shadow(
+                    color: Color.black.opacity(theme.isDark ? 0.38 : 0.18),
+                    radius: 10,
+                    x: 5,
+                    y: 7
+                )
             }
-            .rotationEffect(.degrees(rotation))
-            
-            // 3. Tonearm Assembly
-            TonearmView(isMoving: player.isPlaying)
-                .offset(x: 110, y: -90) 
+            .frame(width: cardSize, height: cardSize)
+            .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
         }
-        .onReceive(Timer.publish(every: 0.02, on: .main, in: .common).autoconnect()) { _ in
-            if player.isPlaying {
-                rotation += 0.5
-            }
-        }
-    }
-}
-
-struct TonearmView: View {
-    var isMoving: Bool
-    @ObservedObject var theme = ThemeManager.shared
-    
-    var body: some View {
-        // The Tonearm is a single slice image
-        Image(theme.isDark ? "tonearm_dark" : "tonearm_light")
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 110, height: 290) 
-            .rotationEffect(.degrees(isMoving ? 0 : -10), anchor: .top) // Playing: 0, Paused: -10
-            .animation(.spring(response: 0.8, dampingFraction: 0.7), value: isMoving)
+        .aspectRatio(1, contentMode: .fit)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(player.currentAlbum?.title ?? "Album artwork")
     }
 }

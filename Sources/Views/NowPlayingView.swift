@@ -27,12 +27,10 @@ struct NowPlayingView: View {
                     )
                 )
                 
-                // 2. Turntable Area
-                ZStack {
-                    VinylTurntableView(showLyrics: $showLyrics)
-                }
-                .frame(height: 360)
-                .padding(.top, 30)
+                // 2. Responsive neumorphic album artwork
+                SquareAlbumArtworkView()
+                    .padding(.horizontal, 34)
+                    .padding(.top, 24)
                 
                 // 3. Track Info
                 VStack(alignment: .leading, spacing: 8) {
@@ -48,7 +46,7 @@ struct NowPlayingView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 40)
-                .padding(.top, 40)
+                .padding(.top, 28)
                 
                 Spacer(minLength: 20)
                 
@@ -130,4 +128,3 @@ struct NowPlayingView: View {
         .frame(height: 8)
     }
 }
-
